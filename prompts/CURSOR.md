@@ -13,10 +13,10 @@ python -m unittest discover -s tests -v
 theta demo --steps 24 --db runs/demo.sqlite
 ```
 
-Recommended next milestone: implement confirmatory v0.2 forced-choice trials. Add a
-procedural map generator with held-out causal mappings, a probe API separate from free
-navigation, matched token budgets for ablations, raw numerator/denominator metrics,
-and a blinded paired-analysis command. Preserve current schema through a migration.
+Version 0.2 controlled trials, paired analysis, recovery and worker infrastructure are
+implemented. The next milestone is the API pilot gate in `ROADMAP.md`: add recorded
+provider fixtures, matched-context padding, mapping/delay reversal and blinded exports.
+Preserve schema 2 through an explicit migration.
 
 Constraints for any coding agent:
 
@@ -29,4 +29,3 @@ Constraints for any coding agent:
 
 Before accepting changes, inspect the exact adapter context in the SQLite `steps`
 table for leakage and compare full/ablation component counts.
-

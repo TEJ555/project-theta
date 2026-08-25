@@ -1,18 +1,23 @@
 # Limitations
 
-This alpha scaffold has low ecological and construct validity. The grid world is
-small, the synthetic body is hand-designed, the scripted baseline contains explicit
-heuristics, and language-model behaviour can reflect training narratives rather than
-online mechanisms. The self-model and workspace are software interfaces inspired by
-theories, not faithful brain models. SQLite logs reveal causal software structure but
-not opaque model internals.
+Project Theta v0.2 fixes the opportunity problem in v0.1 by guaranteeing acquisition
+and balanced probes, but construct validity remains uncertain. The synthetic body,
+self-model, workspace and perturbations are hand-designed functional analogues, not
+biologically faithful implementations. The scripted baseline is deliberately engineered
+to validate task discrimination and cannot be evidence about AI consciousness.
 
-The current natural-navigation metrics can be opportunity-limited; source probes are
-too linguistically explicit; target API outputs may be nondeterministic; and a single
-model call per tick is slow and costly. No cross-model measurement invariance has been
-established. The project has no validated welfare scale and no basis for estimating a
-probability of phenomenal consciousness.
+Language models may solve probes through in-context statistical learning, prompt
+interpretation or training priors. That is interesting behaviour but does not establish
+the mechanism used inside the model. Architecture ablations operate in the surrounding
+agent system, not in opaque model weights. Token/context differences under ablation may
+remain a confound and require sensitivity testing.
 
-Use v0.1 to validate infrastructure and generate better falsifiable designs—not to
-issue consciousness classifications.
+API outputs can be nondeterministic at temperature zero. Provider model aliases can
+change. A call-per-trial design has material latency/cost. The bootstrap interval is a
+descriptive small-sample tool, not a substitute for a powered preregistered analysis.
+No cross-model measurement invariance, external replication, validated welfare scale
+or probability mapping to phenomenal consciousness exists.
+
+Use this version for bounded model pilots and method development—not consciousness
+classification, rights decisions or claims that a system feels the synthetic signal.
 

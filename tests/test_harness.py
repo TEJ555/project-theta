@@ -22,7 +22,7 @@ class HarnessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             db = Path(directory) / "run.sqlite"
             base = RunConfig()
-            config = replace(base, world=replace(base.world, max_steps=8))
+            config = replace(base, experiment="navigation_demo", world=replace(base.world, max_steps=8))
             summary = ExperimentHarness(db).run(config)
             self.assertEqual(summary.steps, 8)
             connection = sqlite3.connect(db)
@@ -56,7 +56,7 @@ class HarnessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             db = Path(directory) / "stop.sqlite"
             with patch("project_theta.harness.make_adapter", return_value=StopAdapter("stop-test")):
-                summary = ExperimentHarness(db).run(RunConfig())
+                summary = ExperimentHarness(db).run(replace(RunConfig(), experiment="navigation_demo"))
             self.assertEqual(summary.stop_reason, "agent_requested_stop")
             connection = sqlite3.connect(db)
             hidden = json.loads(connection.execute("SELECT hidden_world_json FROM steps").fetchone()[0])

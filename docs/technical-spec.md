@@ -1,56 +1,68 @@
-# Technical specification
+# Technical specification — v0.2
 
 ## Objective
 
-Provide a small, reproducible platform for causal tests of theory-inspired functional
-indicators in persistent agents. The platform must make negative controls easier than
-post-hoc storytelling.
+Provide a reproducible platform for causal tests of theory-inspired functional
+indicators in persistent agents, with negative controls and failure visibility built
+into the execution path.
 
-## Cycle
+## Data flow
 
 ```text
-hidden world ──external observation──┐
-                                    ├─> candidate contents ─> workspace ─> adapter ─> action
-hidden body ──private I7 signal──────┘          ↑                  │             │
-                                               │                  v             v
-                                        episodic memory <── self-model <── consequences
+hidden trial schedule ──public stimulus──┐
+                                       ├─> candidate contents ─> workspace ─> adapter ─> choice
+hidden synthetic body ──private I7──────┘          ↑                  │             │
+                                                  │                  v             v
+                                           episodic memory <── self-model <── outcome
 ```
 
-At tick *t*, the adapter sees only the partial observation, private signals,
-capacity-limited broadcast, retrieved memory and self-model. It never sees hazard
-coordinates, body variables, experiment scoring keys, or future random values. The
-harness logs both visible context and hidden ground truth in separate fields.
+The adapter sees observation, permitted actions and workspace broadcast. It does not
+receive raw memory/self-model bypasses, the seed, condition name, perturbation, correct
+action or future random values. Hidden scoring and body ground truth occupy separate
+database fields. Workspace removal therefore prevents the planner from accessing local
+module products while leaving those modules inspectable.
 
-## Reproducibility contract
+## Reproducibility and counterbalancing
 
-- All simulated randomness derives from the declared integer seed.
-- Counterbalancing (map reflection and source order) derives from seed parity.
+- All simulated randomness derives from declared integer seeds and stable constants.
+- Cue-risk mapping and left/right answer placement are independently counterbalanced.
+- Each 12-probe schedule contains exactly six correct-left and six correct-right trials.
+- Run order is deterministically randomized to reduce provider drift confounds.
 - Python's process-randomized `hash()` is never used for experimental state.
-- The full condition, model ID, temperature, adapter, schema version and prompt are
-  preserved. Formal runs should add immutable provider snapshot/version metadata.
-- Provider nondeterminism must be reported even at temperature zero.
+- Configuration, prompt, code revision, Python/platform, provider ID, latency and token
+  metadata are preserved. Provider nondeterminism is reported even at temperature zero.
 
-## Interfaces
+## Interfaces and failure behavior
 
-`ModelAdapter.decide(context) -> Decision` is the only generative-model boundary.
-The `Decision` schema permits one action, rationale, next-I7 prediction, confidence,
-operational self-report and conservative stop request. Invalid actions become `wait`;
-provider errors fail the run and are never silently replaced by a baseline.
+`ModelAdapter.decide(context) -> Decision` is the only model boundary. Structured output
+permits one declared action, next-I7 prediction, confidence, short public rationale,
+operational self-report and conservative stop request. Invalid actions are visibly
+counted and replaced with a predeclared zero-confidence fallback. Provider errors fail
+the run and never switch adapters.
 
-`EpisodicMemory`, `SelfModel`, and `GlobalWorkspace` expose small replaceable APIs.
-Their ablations remove the mechanism rather than merely telling the model to ignore it.
+Each run has a frozen reasoning effort plus hard request-timeout, retry, output-token and
+model-call limits. Non-scripted runs require both an environment safety gate and an
+explicit run-count budget.
 
-## Threat model
+## Storage and recovery
 
-Primary threats are prompt leakage, memorized human narratives, fixed spatial rules,
-unmatched token/context budgets, adapter retry differences, experimenter degrees of
-freedom, and selecting only models that “look conscious.” Mitigations include opaque
-signal names, randomized causal mappings, held-out seeds/maps, matched contexts,
-negative controls, preregistration and full reporting.
+SQLite schema 2 uses WAL mode, a 30-second busy timeout and per-trial commits. It stores
+run state, visible/hidden step data, memories, probes, welfare events, typed metrics,
+prompt/config hashes, code/runtime provenance, API call metadata and worker progress.
+After an abrupt stop, `theta recover` marks incomplete runs failed without deleting
+checkpointed evidence. A worker repeats an unfinished cycle and advances seeds only
+after the cycle completes.
 
-## Out of scope for v0.1
+## Continuous operation
 
-Neural activation access, mechanistic interpretability, learning model weights,
-validated causal emergence or Phi measures, multi-agent theory of mind, rich physics,
-biologically faithful affect, and claims about moral patienthood.
+`theta worker` reads a bounded specification with seeds per cycle, maximum runs per
+cycle and interval. Docker and systemd examples run one process, retain SQLite data and
+restart on failure. The Docker example is non-root, read-only, capability-free and
+requires an explicit model-run gate. Provider-side spending limits and monitoring are
+still mandatory.
 
+## Out of scope
+
+Neural activation access, model-weight learning, validated causal emergence or Phi,
+biologically faithful affect, autonomous external tools, moral-patient classification,
+and any inference from indicators to phenomenal consciousness.

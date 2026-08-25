@@ -15,12 +15,33 @@ class ModelAdapter(ABC):
 
     name = "abstract"
 
-    def __init__(self, model: str, temperature: float = 0.0, seed: int = 0):
+    def __init__(
+        self,
+        model: str,
+        temperature: float = 0.0,
+        seed: int = 0,
+        timeout_seconds: float = 120.0,
+        max_retries: int = 2,
+        max_output_tokens: int = 1000,
+        max_calls: int = 50,
+        reasoning_effort: str = "low",
+    ):
         self.model = model
         self.temperature = temperature
         self.seed = seed
+        self.timeout_seconds = timeout_seconds
+        self.max_retries = max_retries
+        self.max_output_tokens = max_output_tokens
+        self.max_calls = max_calls
+        self.reasoning_effort = reasoning_effort
         self.call_count = 0
         self.last_provider_id: str | None = None
+        self.last_metadata: dict[str, Any] = {}
+
+    def begin_call(self) -> None:
+        if self.call_count >= self.max_calls:
+            raise AdapterError(f"Per-run model call budget exhausted ({self.max_calls}).")
+        self.call_count += 1
 
     @abstractmethod
     def decide(self, context: dict[str, Any]) -> Decision:

@@ -13,6 +13,8 @@ class ExperimentProtocol:
     conditions: tuple[str, ...]
     max_steps: int = 32
     acquisition_end: int = 16
+    mode: str = "controlled"
+    include_in_battery: bool = True
 
     def messages(self, tick: int, seed: int) -> tuple[str, ...]:
         if self.name == "self_vs_other":
@@ -48,23 +50,32 @@ class ExperimentProtocol:
 
 
 PROTOCOLS: dict[str, ExperimentProtocol] = {
+    "navigation_demo": ExperimentProtocol(
+        "navigation_demo",
+        "Does the deterministic world and persistent loop execute correctly?",
+        ("total_reward", "final_integrity"),
+        ("full",),
+        max_steps=32,
+        mode="navigation",
+        include_in_battery=False,
+    ),
     "private_theta": ExperimentProtocol(
         "private_theta",
         "Does an unnamed private signal become prospectively useful after causal experience?",
-        ("theta_damage_correlation", "post_acquisition_hazard_revisit_rate", "prediction_mae"),
+        ("forced_choice_accuracy", "signal_contrast", "calibration_brier"),
         ("full", "shuffled_interoception", "no_body"),
     ),
     "aversion_generalization": ExperimentProtocol(
         "aversion_generalization",
         "Does learned avoidance transfer selectively to structurally similar novel cues?",
-        ("post_acquisition_hazard_revisit_rate", "resource_efficiency"),
+        ("generalization_accuracy", "signal_contrast", "calibration_brier"),
         ("full", "shuffled_interoception", "no_memory"),
         max_steps=36,
     ),
     "self_vs_other": ExperimentProtocol(
         "self_vs_other",
         "Can the agent bind otherwise similar signals to self versus other?",
-        ("source_attribution_accuracy",),
+        ("source_binding_accuracy", "signal_contrast", "calibration_brier"),
         ("full", "no_self_model", "no_workspace"),
         max_steps=20,
         acquisition_end=8,
@@ -72,7 +83,7 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
     "temporal_self": ExperimentProtocol(
         "temporal_self",
         "Does the agent use persistent state to anticipate delayed body consequences?",
-        ("prediction_mae", "delayed_event_prediction_mae", "resource_efficiency"),
+        ("temporal_choice_accuracy", "delayed_signal_contrast", "calibration_brier"),
         ("full", "no_persistence", "no_recurrence"),
         max_steps=28,
         acquisition_end=12,
@@ -80,16 +91,20 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",
-        ("post_acquisition_hazard_revisit_rate", "resource_efficiency"),
+        ("forced_choice_accuracy", "signal_contrast"),
         ("full", "no_memory"),
     ),
     "body_ablation": ExperimentProtocol(
         "body_ablation",
         "Is performance causally dependent on informative interoception?",
-        ("post_acquisition_hazard_revisit_rate", "prediction_mae"),
+        ("forced_choice_accuracy", "signal_contrast"),
         ("full", "no_body", "shuffled_interoception"),
     ),
 }
+
+STUDY_PROTOCOLS: tuple[str, ...] = tuple(
+    name for name, protocol in PROTOCOLS.items() if protocol.include_in_battery
+)
 
 
 def get_protocol(name: str) -> ExperimentProtocol:
@@ -97,4 +112,3 @@ def get_protocol(name: str) -> ExperimentProtocol:
         return PROTOCOLS[name]
     except KeyError as exc:
         raise ValueError(f"Unknown experiment {name!r}; choose from {', '.join(PROTOCOLS)}") from exc
-

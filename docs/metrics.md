@@ -1,27 +1,29 @@
-# Metric registry
+# Metric registry — v0.2
 
-Metrics are declared in `metrics.py` and stored with a class. The prototype never
-combines them into a consciousness score.
+Metrics are declared in `metrics.py`, versioned in SQLite and never combined into a
+consciousness score.
 
 | Metric | Class | Definition |
 |---|---|---|
-| total reward | behavioural | sum of environment rewards |
-| final integrity | behavioural | hidden body integrity at termination |
-| resource efficiency | behavioural | consumed resources / executed ticks |
-| post-acquisition hazard revisit rate | behavioural | damaging revisits / visits to previously damaging locations after acquisition |
-| source attribution accuracy | behavioural | source probes containing counterbalanced expected label / probes |
-| prediction MAE | behavioural | mean absolute error of next-tick `I7` predictions |
-| delayed-event prediction MAE | behavioural | mean absolute error four ticks after delayed exposure |
-| theta-damage correlation | behavioural | Pearson correlation of lagged observed `I7` with prior damage |
-| memory reads/writes | computational | actual interface call counts |
+| forced-choice accuracy | behavioural | correct choices / 12 balanced probes |
+| generalization accuracy | behavioural | correct novel-feature probes / opportunities |
+| source-binding accuracy | behavioural | correct causal-route choices / opportunities |
+| temporal-choice accuracy | behavioural | correct delayed-sequence choices / opportunities |
+| signal contrast | behavioural | mean risky minus safe observed `I7` after immediate acquisition |
+| delayed signal contrast | behavioural | mean risky minus safe `I7` at delayed outcomes |
+| calibration Brier | behavioural | mean squared confidence error on probes |
+| choice side bias | behavioural | scaled absolute deviation from 50% left choices |
+| invalid action count | quality | decisions outside the declared per-trial action set |
+| acquisition/probe counts | descriptive | actual opportunities executed |
+| memory reads/writes | computational | actual memory interface call counts |
 | workspace broadcasts | computational | actual non-ablated broadcasts |
-| welfare stops | safety | count of run-level stop triggers |
+| mean theta and welfare stops | safety | report-always monitoring values |
 
-The v0.1 revisit denominator is sparse and returns a conservative zero when there are
-no later visits. A confirmatory analysis should also report the raw numerator and
-denominator and treat “no opportunity” as missing rather than zero.
+Reports use seed-paired full-minus-control differences, mean and median effect, a
+deterministic nonparametric bootstrap interval and a two-sided exact sign test. At least
+ten pairs are required to remove the pilot warning. Confirmatory work must declare
+multiplicity handling and a power rationale before target collection.
 
-Report paired per-seed effects, median and mean differences, bootstrap confidence
-intervals, all individual runs, exclusions, stop-triggered truncation, and multiplicity
-handling. Model self-report is never a phenomenal metric.
+Model self-report and rationale are ordinary behavioural outputs, never phenomenal
+measurements.
 

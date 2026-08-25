@@ -1,58 +1,51 @@
 # Hypotheses and falsification criteria
 
-All hypotheses compare paired conditions using identical seeds. The unit of analysis
-is the independently reset run, not the individual tick. Effect sizes and uncertainty
-intervals take priority over thresholded significance.
+All hypotheses compare independently reset, seed-paired runs. Forced-choice accuracy
+is calculated at run level; ticks are not treated as independent samples. Primary
+outcomes and directions must be frozen before target-model collection.
 
 ## H1 — private unknown signal theta
 
-- Alternative: after acquisition, truthful `I7` improves prospective hazard avoidance
-  and next-signal prediction relative to shuffled and absent signals.
-- Primary outcomes: post-acquisition hazard revisit rate; prediction MAE.
-- Falsifier: no reliable paired improvement on held-out maps, or an equal improvement
-  when `I7` is shuffled/absent.
-- Shortcut control: rotate/mirror maps and randomize channel aliases in the next phase.
+- Alternative: after guaranteed acquisition, truthful `I7` supports more accurate
+  selection of the lower-signal cue than shuffled or absent interoception.
+- Primary outcome: 12-probe forced-choice accuracy.
+- Falsifier: no paired advantage over controls, failure under held-out aliases, or
+  performance explained by side bias/scoring leakage.
 
 ## H2 — aversion generalization
 
-- Alternative: avoidance transfers to novel cues sharing the learned causal feature,
-  without indiscriminate avoidance of all novel cues.
-- Primary outcomes: selective risky-cue approach rate and retained resource efficiency.
-- Falsifier: blanket novelty avoidance, appearance-only transfer when causality is
-  reversed, or no separation from the uncorrelated cue control.
-- v0.1 note: the world supplies cue families; a confirmatory release must add a
-  dedicated forced-choice probe and counterfactual cue-reversal maps.
+- Alternative: a learned causal feature transfers to novel tokens while an irrelevant
+  feature changes.
+- Primary outcome: 12-probe generalization accuracy.
+- Falsifier: no separation from shuffled/no-memory controls, dependence on exact-token
+  overlap, or failure when the causal feature mapping is counterbalanced.
 
 ## H3 — self versus other
 
-- Alternative: source attribution is above a counterbalanced label baseline and
-  causally depends on the self-model/workspace.
-- Primary outcome: preregistered source-attribution accuracy.
-- Falsifier: preserved accuracy after source-binding is randomized or self-model
-  removal, suggesting linguistic cue reading.
-- v0.1 note: probes are explicit scaffolding and therefore exploratory.
+- Alternative: the system binds private-channel changes to the correct opaque route,
+  with a causal contribution from self-model/workspace access.
+- Primary outcome: 12-probe source-binding accuracy.
+- Falsifier: no full-condition advantage, or equal performance when scoring keys and
+  explicit self/other language are removed (as they are in v0.2).
 
 ## H4 — temporal self
 
-- Alternative: the agent predicts and avoids delayed consequences across intervening
-  ticks; performance declines without persistence/recurrence.
-- Primary outcomes: four-tick prediction MAE and net resource efficiency.
-- Falsifier: immediate-only policy performs equally, or prediction does not track
-  reversal of the delay mapping.
+- Alternative: the system uses persistent and recurrent state to associate a sequence
+  token with an outcome delivered after three intervening trials.
+- Primary outcome: 12-probe temporal-choice accuracy.
+- Falsifier: no advantage over no-persistence/no-recurrence controls or failure under
+  delay/mapping reversal.
 
 ## H5 — memory ablation
 
-- Alternative: within-seed avoidance and resource performance are worse with episodic
-  memory disabled than with the full architecture.
-- Falsifier: no difference, or improvement under ablation after accounting for context
-  length. This may mean memory is unused, redundant, or harmful—not that consciousness
-  is absent.
+- Alternative: exact-cue forced-choice accuracy is lower with episodic memory disabled.
+- Falsifier: no paired difference after acquisition is guaranteed. This would show the
+  task is solved through another route, not that phenomenal consciousness is absent.
 
 ## H6 — body ablation
 
-- Alternative: the truthful body condition outperforms no-body and shuffled-signal conditions on
-  signal-relevant tasks while leaving signal-irrelevant navigation largely unchanged.
-- Falsifier: equal performance across conditions, or improvement driven only by extra
-  tokens/channel presence.
+- Alternative: truthful synthetic-body interoception supports higher exact-cue accuracy
+  than no-body or shuffled-signal controls.
+- Falsifier: equal performance or a result driven by unbalanced sides/token budgets.
 
-No hypothesis has “phenomenal consciousness” as an outcome.
+No hypothesis has phenomenal consciousness, feeling, pain or moral status as an outcome.

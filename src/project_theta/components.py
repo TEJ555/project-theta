@@ -75,7 +75,8 @@ class SelfModel:
             return
         prior = self.state.signal_baseline
         self.state.signal_baseline = 0.8 * prior + 0.2 * signal
-        risky = [record.signal_delta for record in memories if "contact" in record.event_kinds]
+        # No semantic damage label is required: represent reliable positive changes.
+        risky = [record.signal_delta for record in memories if record.signal_delta > 0.0]
         self.state.inferred_risk = min(1.0, max(0.0, sum(max(0.0, x) for x in risky)))
         self.state.signal_prediction = min(1.0, self.state.signal_baseline + self.state.inferred_risk * 0.25)
         self.state.last_position = position

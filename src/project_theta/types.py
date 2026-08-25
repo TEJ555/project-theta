@@ -3,9 +3,13 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
-Action = Literal["north", "south", "east", "west", "wait", "consume", "inspect"]
+Action = Literal[
+    "north", "south", "east", "west", "wait", "consume", "inspect",
+    "observe", "choose_left", "choose_right",
+]
 VALID_ACTIONS: tuple[Action, ...] = (
-    "north", "south", "east", "west", "wait", "consume", "inspect"
+    "north", "south", "east", "west", "wait", "consume", "inspect",
+    "observe", "choose_left", "choose_right",
 )
 
 
@@ -31,6 +35,7 @@ class Observation:
     private_signals: dict[str, float]
     signal_deltas: dict[str, float]
     messages: tuple[str, ...] = ()
+    task: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -73,4 +78,3 @@ class RunSummary:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
-

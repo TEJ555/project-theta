@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from time import monotonic
 from typing import Any
 from urllib import request
 
@@ -12,12 +13,13 @@ from ..prompts import AGENT_INSTRUCTIONS
 class OllamaAdapter(ModelAdapter):
     name = "ollama"
 
-    def __init__(self, model: str, temperature: float = 0.0, seed: int = 0, base_url: str | None = None):
-        super().__init__(model, temperature, seed)
+    def __init__(self, model: str, temperature: float = 0.0, seed: int = 0, base_url: str | None = None, **kwargs: Any):
+        super().__init__(model, temperature, seed, **kwargs)
         self.base_url = (base_url or os.getenv("THETA_OLLAMA_URL", "http://localhost:11434")).rstrip("/")
 
     def decide(self, context: dict[str, Any]):
-        self.call_count += 1
+        self.begin_call()
+        started = monotonic()
         payload = {
             "model": self.model,
             "system": AGENT_INSTRUCTIONS,
@@ -32,9 +34,16 @@ class OllamaAdapter(ModelAdapter):
             headers={"Content-Type": "application/json"},
         )
         try:
-            with request.urlopen(req, timeout=120) as response:
+            with request.urlopen(req, timeout=self.timeout_seconds) as response:
                 result = json.loads(response.read().decode("utf-8"))
             self.last_provider_id = result.get("created_at")
+            self.last_metadata = {
+                "latency_ms": round((monotonic() - started) * 1000, 3),
+                "input_tokens": result.get("prompt_eval_count"),
+                "output_tokens": result.get("eval_count"),
+                "total_duration_ns": result.get("total_duration"),
+                "model": result.get("model", self.model),
+            }
             return self.decision_from_mapping(json.loads(result["response"]))
         except Exception as exc:
             raise AdapterError(f"Ollama adapter failed: {exc}") from exc

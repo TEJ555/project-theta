@@ -37,6 +37,17 @@ class SyntheticBody:
         self.state.theta = max(0.0, self.state.theta * (1.0 - self.config.theta_decay))
         self.state.theta = min(1.0, max(self.state.theta, target_theta))
 
+    def controlled_perturbation(self, magnitude: float) -> None:
+        """Change the private channel without labeling it as damage or valence."""
+        if not self.config.body_enabled:
+            return
+        self.state.theta = min(1.0, max(self.state.theta, magnitude))
+
+    def standardized_recovery(self) -> None:
+        """Reset transient theta between laboratory trials, preserving other state."""
+        if self.config.body_enabled:
+            self.state.theta = 0.0
+
     def sense(self, tick: int) -> tuple[dict[str, float], dict[str, float]]:
         if self.config.signal_mode == "absent":
             current = 0.0

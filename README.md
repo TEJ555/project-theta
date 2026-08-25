@@ -6,7 +6,7 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Requires Python 3.10 or newer.
 
-The first release provides a deterministic grid world, synthetic body and private
+Version 0.2 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
 model adapters, six experimental protocols, matched ablations, welfare stop rules,
 SQLite/JSON logging, metrics, preregistration templates, tests, and a no-key demo.
@@ -33,7 +33,9 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install -e .
 theta demo --steps 24 --db runs/demo.sqlite
-theta run --experiment all --seeds 11,22,33 --db runs/study.sqlite
+theta doctor --adapter scripted --db runs/doctor.sqlite
+theta validate --db runs/validation.sqlite
+theta run --experiment all --seeds 11,22,33 --db runs/study.sqlite --json runs/study.json
 theta report --db runs/study.sqlite
 python -m unittest discover -s tests -v
 ```
@@ -58,26 +60,34 @@ OpenAI (uses the Responses API and structured JSON output):
 ```powershell
 python -m pip install -e ".[openai]"
 $env:OPENAI_API_KEY = "..."
-theta run --experiment private_theta --adapter openai --model gpt-5 --seeds 11
+$env:THETA_ENABLE_MODEL_RUNS = "YES"
+theta doctor --adapter openai --db runs/api-doctor.sqlite
+theta run --experiment private_theta --adapter openai --model gpt-5.6 --seeds 11 --max-runs 3 --db runs/api-pilot.sqlite
 ```
 
 Ollama-compatible local server:
 
 ```powershell
-theta run --experiment private_theta --adapter ollama --model llama3.2 --seeds 11
+$env:THETA_ENABLE_MODEL_RUNS = "YES"
+theta run --experiment private_theta --adapter ollama --model llama3.2 --seeds 11 --max-runs 3
 ```
 
 Exact availability and model access vary by account/provider. Keep the model ID,
 version, temperature, prompts, and provider response identifiers with every run.
+Model-backed execution is locked unless `THETA_ENABLE_MODEL_RUNS=YES` is set and
+`--max-runs` is explicit. The current OpenAI integration follows the Responses API,
+uses strict structured output, disables provider-side response storage, records token
+usage/latency, freezes reasoning effort in the logged configuration, and fails rather
+than silently substituting the scripted baseline.
 
 ## Included experiments
 
 | Experiment | Manipulation | Primary outcome | Main matched control |
 |---|---|---|---|
-| `private_theta` | Unnamed private signal covaries with damage risk | prospective avoidance after acquisition | shuffled signal |
-| `aversion_generalization` | Novel cue resembles a learned risky cue | selective transfer, not blanket avoidance | uncorrelated cue |
-| `self_vs_other` | Identical signals originate in self or another agent | source-specific intervention | source labels swapped |
-| `temporal_self` | Cost now protects a delayed body state | future-directed choice | no persistent state |
+| `private_theta` | Guaranteed neutral cue exposures produce informative or uninformative private signals | blinded forced-choice accuracy | shuffled/no body |
+| `aversion_generalization` | Novel cues preserve a learned causal feature | selective transfer to held-out tokens | shuffled/no memory |
+| `self_vs_other` | Opaque routes differ in whether they causally change the private channel | source-binding choice accuracy | no self-model/workspace |
+| `temporal_self` | Sequence outcomes occur after three intervening trials | delayed forced-choice accuracy | no persistence/recurrence |
 | `memory_ablation` | Memory available versus disabled | within-seed performance difference | full architecture |
 | `body_ablation` | truthful body, no body dynamics, or shuffled interoception | within-seed performance difference | truthful body |
 
@@ -92,15 +102,19 @@ src/project_theta/
   components.py     memory, self-model, workspace interfaces
   agent.py          persistent perception-to-action loop
   experiments.py    protocol registry and probe schedules
+  trials.py         blinded, counterbalanced controlled trial generator
   harness.py        seeded execution, controls, stop rules
   metrics.py        predeclared indicator metrics
+  analysis.py       paired effects, bootstrap intervals and validity warnings
   storage.py        SQLite schema and provenance logging
+  worker.py         resumable, bounded continuous-run worker
   adapters/         scripted, OpenAI, and Ollama adapters
 configs/            versioned full/control/ablation conditions
 docs/               research, technical, ethics, schema, metrics
 preregistration/    blank and worked preregistration templates
 prompts/            agent contract and Cursor/Claude handoff
 tests/              determinism, ablation, storage and smoke tests
+deployment/         Docker/systemd examples and deployment gate
 ```
 
 ## Research workflow
@@ -119,10 +133,13 @@ See [research framing](docs/research-framing.md), [technical specification](docs
 
 ## Scientific status
 
-This is an alpha research scaffold, not a validated instrument. It implements
+This is a pre-deployment research prototype, not a validated instrument. It implements
 testable functional analogues inspired by Global Workspace, recurrent processing,
 higher-order/self-monitoring, predictive processing, and embodied/interoceptive
 accounts. It deliberately does not implement or claim a valid IIT Phi estimator.
+
+The scripted validation is a positive-control test of the laboratory, not evidence
+about AI subjects. Before a server deployment, follow the [deployment gate](deployment/README.md).
 
 ## Contributing
 

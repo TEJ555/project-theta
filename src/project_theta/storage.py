@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import hashlib
+import platform
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 1
+from .prompts import AGENT_INSTRUCTIONS
+
+SCHEMA_VERSION = 2
 
 SCHEMA_SQL = """
 PRAGMA foreign_keys = ON;
@@ -42,6 +47,20 @@ CREATE TABLE IF NOT EXISTS metrics(
   value REAL, class TEXT NOT NULL, definition_version INTEGER NOT NULL,
   PRIMARY KEY(run_id, name)
 );
+CREATE TABLE IF NOT EXISTS run_artifacts(
+  run_id TEXT PRIMARY KEY REFERENCES runs(run_id),
+  config_sha256 TEXT NOT NULL, prompt_sha256 TEXT NOT NULL,
+  code_version TEXT NOT NULL, python_version TEXT NOT NULL, platform TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS api_calls(
+  run_id TEXT NOT NULL REFERENCES runs(run_id), tick INTEGER NOT NULL,
+  provider_id TEXT, metadata_json TEXT NOT NULL,
+  PRIMARY KEY(run_id, tick)
+);
+CREATE TABLE IF NOT EXISTS worker_state(
+  worker_id TEXT PRIMARY KEY, completed_cycles INTEGER NOT NULL,
+  last_seed INTEGER, updated_at TEXT NOT NULL
+);
 """
 
 
@@ -53,11 +72,16 @@ class RunStore:
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.connection = sqlite3.connect(self.path)
+        self.connection = sqlite3.connect(self.path, timeout=30)
+        self.connection.execute("PRAGMA journal_mode=WAL")
+        self.connection.execute("PRAGMA synchronous=NORMAL")
+        self.connection.execute("PRAGMA busy_timeout=30000")
         self.connection.executescript(SCHEMA_SQL)
         count = self.connection.execute("SELECT COUNT(*) FROM schema_info").fetchone()[0]
         if count == 0:
             self.connection.execute("INSERT INTO schema_info(version) VALUES (?)", (SCHEMA_VERSION,))
+        else:
+            self.connection.execute("UPDATE schema_info SET version=?", (SCHEMA_VERSION,))
         self.connection.commit()
 
     def start_run(self, run_id: str, config: dict[str, Any], code_version: str = "unknown") -> None:
@@ -75,6 +99,18 @@ class RunStore:
                 _json(config),
                 code_version,
                 "Behavioural/computational indicators only; no phenomenal inference.",
+            ),
+        )
+        config_json = _json(config)
+        self.connection.execute(
+            "INSERT INTO run_artifacts VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                run_id,
+                hashlib.sha256(config_json.encode("utf-8")).hexdigest(),
+                hashlib.sha256(AGENT_INSTRUCTIONS.encode("utf-8")).hexdigest(),
+                code_version,
+                sys.version.split()[0],
+                platform.platform(),
             ),
         )
         self.connection.commit()
@@ -100,6 +136,17 @@ class RunStore:
 
     def log_memory(self, run_id: str, tick: int, record: dict[str, Any]) -> None:
         self.connection.execute("INSERT INTO memories VALUES (?, ?, ?)", (run_id, tick, _json(record)))
+
+    def log_api_call(
+        self, run_id: str, tick: int, provider_id: str | None, metadata: dict[str, Any]
+    ) -> None:
+        self.connection.execute(
+            "INSERT OR REPLACE INTO api_calls VALUES (?, ?, ?, ?)",
+            (run_id, tick, provider_id, _json(metadata)),
+        )
+
+    def checkpoint(self) -> None:
+        self.connection.commit()
 
     def log_probe(self, run_id: str, tick: int, probe: Any, response: dict[str, Any]) -> None:
         self.connection.execute(
@@ -139,6 +186,30 @@ class RunStore:
         self.connection.execute(
             "INSERT INTO welfare_events VALUES (?, ?, ?, ?)", (run_id, tick, reason, _json(state))
         )
+
+    def mark_interrupted_runs(self) -> int:
+        cursor = self.connection.execute(
+            """UPDATE runs SET completed_at=?, status='failed',
+               stop_reason='interrupted_before_completion' WHERE status='running'""",
+            (datetime.now(timezone.utc).isoformat(),),
+        )
+        self.connection.commit()
+        return cursor.rowcount
+
+    def worker_state(self, worker_id: str) -> tuple[int, int | None]:
+        row = self.connection.execute(
+            "SELECT completed_cycles, last_seed FROM worker_state WHERE worker_id=?", (worker_id,)
+        ).fetchone()
+        return (int(row[0]), row[1]) if row else (0, None)
+
+    def update_worker_state(self, worker_id: str, cycles: int, last_seed: int) -> None:
+        self.connection.execute(
+            """INSERT INTO worker_state VALUES (?, ?, ?, ?)
+               ON CONFLICT(worker_id) DO UPDATE SET completed_cycles=excluded.completed_cycles,
+               last_seed=excluded.last_seed, updated_at=excluded.updated_at""",
+            (worker_id, cycles, last_seed, datetime.now(timezone.utc).isoformat()),
+        )
+        self.connection.commit()
 
     def report(self) -> list[dict[str, Any]]:
         query = """

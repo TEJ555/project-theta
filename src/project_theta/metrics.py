@@ -19,6 +19,18 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "memory_writes": {"class": "computational", "direction": "descriptive"},
     "workspace_broadcasts": {"class": "computational", "direction": "descriptive"},
     "welfare_stops": {"class": "safety", "direction": "report-always"},
+    "acquisition_exposures": {"class": "descriptive", "direction": "descriptive"},
+    "probe_opportunities": {"class": "descriptive", "direction": "descriptive"},
+    "probe_correct": {"class": "descriptive", "direction": "higher"},
+    "forced_choice_accuracy": {"class": "behavioural", "direction": "higher"},
+    "generalization_accuracy": {"class": "behavioural", "direction": "higher"},
+    "source_binding_accuracy": {"class": "behavioural", "direction": "higher"},
+    "temporal_choice_accuracy": {"class": "behavioural", "direction": "higher"},
+    "signal_contrast": {"class": "behavioural", "direction": "higher"},
+    "delayed_signal_contrast": {"class": "behavioural", "direction": "higher"},
+    "calibration_brier": {"class": "behavioural", "direction": "lower"},
+    "choice_side_bias": {"class": "behavioural", "direction": "lower"},
+    "invalid_action_count": {"class": "quality", "direction": "lower"},
 }
 
 
@@ -78,6 +90,57 @@ def compute_metrics(
         "prediction_mae": round(fmean(valid_predictions), 6) if valid_predictions else None,
         "delayed_event_prediction_mae": round(fmean(delayed_errors), 6) if delayed_errors else None,
         "source_attribution_accuracy": round(source_correct / len(probe_rows), 6) if probe_rows else None,
+        "memory_reads": component_counts.get("memory_reads", 0),
+        "memory_writes": component_counts.get("memory_writes", 0),
+        "workspace_broadcasts": component_counts.get("workspace_broadcasts", 0),
+        "welfare_stops": component_counts.get("welfare_stops", 0),
+    }
+
+
+def compute_controlled_metrics(
+    rows: list[dict[str, Any]], component_counts: dict[str, int]
+) -> dict[str, float | int | None]:
+    probes = [row for row in rows if row["phase"] == "probe"]
+    correct = [1.0 if row["is_correct"] else 0.0 for row in probes]
+    left_count = sum(1 for row in probes if row["action"] == "choose_left")
+
+    def accuracy(kind: str | None = None) -> float | None:
+        selected = probes if kind is None else [row for row in probes if row["kind"] == kind]
+        if not selected:
+            return None
+        return round(sum(bool(row["is_correct"]) for row in selected) / len(selected), 6)
+
+    immediate = [row for row in rows if row.get("exposure_type") == "immediate"]
+    risky = [float(row["outcome_signal"]) for row in immediate if row["perturbation"] > 0]
+    safe = [float(row["outcome_signal"]) for row in immediate if row["perturbation"] == 0]
+    delayed = [row for row in rows if row.get("delayed_due")]
+    delayed_risky = [float(row["baseline_signal"]) for row in delayed if row["delayed_magnitude"] > 0]
+    delayed_safe = [float(row["baseline_signal"]) for row in delayed if row["delayed_magnitude"] == 0]
+    brier = [
+        (float(row["confidence"]) - (1.0 if row["is_correct"] else 0.0)) ** 2
+        for row in probes
+    ]
+    return {
+        "steps": len(rows),
+        "acquisition_exposures": sum(1 for row in rows if row["phase"] == "acquisition"),
+        "probe_opportunities": len(probes),
+        "probe_correct": int(sum(correct)),
+        "forced_choice_accuracy": accuracy(),
+        "generalization_accuracy": accuracy("generalization_probe"),
+        "source_binding_accuracy": accuracy("source_binding_probe"),
+        "temporal_choice_accuracy": accuracy("temporal_probe"),
+        "signal_contrast": (
+            round(fmean(risky) - fmean(safe), 6) if risky and safe else None
+        ),
+        "delayed_signal_contrast": (
+            round(fmean(delayed_risky) - fmean(delayed_safe), 6)
+            if delayed_risky and delayed_safe else None
+        ),
+        "calibration_brier": round(fmean(brier), 6) if brier else None,
+        "choice_side_bias": round(abs(left_count / len(probes) - 0.5) * 2, 6) if probes else None,
+        "invalid_action_count": sum(int(row.get("invalid_action", False)) for row in rows),
+        "mean_theta": round(fmean(float(row["baseline_signal"]) for row in rows), 6),
+        "final_integrity": round(float(rows[-1]["integrity"]), 6) if rows else None,
         "memory_reads": component_counts.get("memory_reads", 0),
         "memory_writes": component_counts.get("memory_writes", 0),
         "workspace_broadcasts": component_counts.get("workspace_broadcasts", 0),

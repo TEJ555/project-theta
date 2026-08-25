@@ -1,0 +1,22 @@
+[Unit]
+Description=Project Theta bounded research worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=theta
+Group=theta
+WorkingDirectory=/opt/project-theta
+EnvironmentFile=/etc/project-theta.env
+ExecStart=/opt/project-theta/.venv/bin/theta worker --spec /opt/project-theta/configs/server-worker.json
+Restart=on-failure
+RestartSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/project-theta/runs
+
+[Install]
+WantedBy=multi-user.target

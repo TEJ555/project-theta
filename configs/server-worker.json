@@ -1,0 +1,14 @@
+{
+  "worker_id": "theta-primary",
+  "database": "runs/server.sqlite",
+  "experiment": "private_theta",
+  "conditions": ["full", "no_body", "shuffled_interoception"],
+  "adapter": "openai",
+  "model": "gpt-5.6",
+  "temperature": 0.0,
+  "base_config": "configs/server-base.json",
+  "start_seed": 1000,
+  "seeds_per_cycle": 1,
+  "max_runs_per_cycle": 3,
+  "interval_seconds": 3600
+}

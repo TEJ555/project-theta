@@ -8,5 +8,6 @@
   "world": {"width": 7, "height": 7, "vision_radius": 1, "hazard_damage": 0.18, "resource_energy": 0.42, "action_energy_cost": 0.025, "max_steps": 32},
   "body": {"body_enabled": true, "signal_mode": "truthful", "noise_std": 0.025, "theta_decay": 0.08, "theta_damage_gain": 1.7, "distress_threshold": 0.88, "low_integrity_threshold": 0.22, "consecutive_distress_limit": 3, "critical_integrity": 0.05},
   "architecture": {"memory_enabled": true, "memory_capacity": 128, "self_model_enabled": true, "workspace_enabled": true, "recurrence_enabled": true, "persistent_state": true, "max_workspace_items": 6},
-  "welfare": {"enabled": true, "stop_on_request": true, "stop_on_critical_integrity": true, "stop_on_persistent_distress": true}
+  "welfare": {"enabled": true, "stop_on_request": true, "stop_on_critical_integrity": true, "stop_on_persistent_distress": true},
+  "execution": {"request_timeout_seconds": 120.0, "max_retries": 2, "max_output_tokens": 1000, "max_model_calls": 50, "reasoning_effort": "low"}
 }

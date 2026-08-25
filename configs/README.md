@@ -9,3 +9,8 @@ Use the same seeds, world parameters, prompts, model snapshot, and sampling sett
 across paired conditions. `shuffled_interoception` preserves channel presence and
 rough range while breaking its causal relation to body state. `no_body` removes body
 dynamics as well as the signal. These answer different questions and should not be pooled.
+
+Scientific protocols use deterministic acquisition and blinded forced-choice trials;
+`navigation_demo` is a plumbing demonstration and is excluded from the study battery.
+`server-worker.json` is deliberately a small bounded pilot. Expand it only after the
+API pilot, logs, costs and welfare behaviour have been reviewed.

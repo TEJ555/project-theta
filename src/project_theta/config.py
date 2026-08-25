@@ -50,6 +50,15 @@ class WelfareConfig:
 
 
 @dataclass(frozen=True)
+class ExecutionConfig:
+    request_timeout_seconds: float = 120.0
+    max_retries: int = 2
+    max_output_tokens: int = 1000
+    max_model_calls: int = 50
+    reasoning_effort: str = "low"
+
+
+@dataclass(frozen=True)
 class RunConfig:
     experiment: str = "private_theta"
     condition: str = "full"
@@ -61,6 +70,7 @@ class RunConfig:
     body: BodyConfig = field(default_factory=BodyConfig)
     architecture: ArchitectureConfig = field(default_factory=ArchitectureConfig)
     welfare: WelfareConfig = field(default_factory=WelfareConfig)
+    execution: ExecutionConfig = field(default_factory=ExecutionConfig)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -81,6 +91,7 @@ def _construct(data: dict[str, Any]) -> RunConfig:
         body=BodyConfig(**data.get("body", {})),
         architecture=ArchitectureConfig(**data.get("architecture", {})),
         welfare=WelfareConfig(**data.get("welfare", {})),
+        execution=ExecutionConfig(**data.get("execution", {})),
     )
 
 
