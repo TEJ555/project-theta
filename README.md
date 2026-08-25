@@ -4,6 +4,8 @@ Project Theta is an open-source prototype laboratory for testing **theory-inspir
 behavioural and computational indicators** in persistent artificial agents. It does
 not detect, prove, create, or rule out phenomenal consciousness.
 
+Requires Python 3.10 or newer.
+
 The first release provides a deterministic grid world, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
 model adapters, six experimental protocols, matched ablations, welfare stop rules,
@@ -35,6 +37,9 @@ theta run --experiment all --seeds 11,22,33 --db runs/study.sqlite
 theta report --db runs/study.sqlite
 python -m unittest discover -s tests -v
 ```
+
+If installation fails, the `theta` command will not exist yet. Resolve the Python or
+installation error first, reactivate the environment, and rerun `python -m pip install -e .`.
 
 Without installation, from the repository root:
 
