@@ -1,0 +1,1 @@
+{"experiment":"memory_ablation","condition":"no_memory","seed":11,"adapter":"scripted","model":"scripted-baseline-v1","architecture":{"memory_enabled":false}}

@@ -1,0 +1,1 @@
+{"experiment":"self_vs_other","condition":"no_self_model","seed":11,"adapter":"scripted","model":"scripted-baseline-v1","architecture":{"self_model_enabled":false}}

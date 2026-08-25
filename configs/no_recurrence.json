@@ -1,0 +1,1 @@
+{"experiment":"temporal_self","condition":"no_recurrence","seed":11,"adapter":"scripted","model":"scripted-baseline-v1","architecture":{"recurrence_enabled":false}}

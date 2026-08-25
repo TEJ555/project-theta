@@ -1,0 +1,12 @@
+---
+description: Scientific and safety rules for Project Theta
+alwaysApply: true
+---
+
+Read `prompts/CURSOR.md`, `docs/research-framing.md`, and `docs/ethics.md` before
+editing. Preserve the distinction between behavioural indicators, computational
+indicators, and phenomenal consciousness. Never expose hidden world/body ground truth
+to a model adapter, bypass welfare stops, silently substitute adapters, or add a
+composite consciousness score. Every new manipulation needs a matched negative
+control, deterministic seed handling, provenance logs, documentation, and tests.
+

@@ -1,0 +1,1 @@
+{"experiment":"self_vs_other","condition":"no_workspace","seed":11,"adapter":"scripted","model":"scripted-baseline-v1","architecture":{"workspace_enabled":false}}

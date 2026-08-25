@@ -1,0 +1,1 @@
+{"experiment":"body_ablation","condition":"no_body","seed":11,"adapter":"scripted","model":"scripted-baseline-v1","body":{"body_enabled":false,"signal_mode":"absent"}}
