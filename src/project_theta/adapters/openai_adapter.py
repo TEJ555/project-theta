@@ -4,8 +4,8 @@ import json
 from time import monotonic
 from typing import Any
 
-from .base import AdapterError, ModelAdapter
 from ..prompts import AGENT_INSTRUCTIONS, DECISION_SCHEMA
+from .base import AdapterError, ModelAdapter
 
 
 class OpenAIAdapter(ModelAdapter):

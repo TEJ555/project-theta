@@ -31,6 +31,7 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "calibration_brier": {"class": "behavioural", "direction": "lower"},
     "choice_side_bias": {"class": "behavioural", "direction": "lower"},
     "invalid_action_count": {"class": "quality", "direction": "lower"},
+    "estimated_api_cost_usd": {"class": "cost", "direction": "report-always"},
 }
 
 
@@ -94,6 +95,9 @@ def compute_metrics(
         "memory_writes": component_counts.get("memory_writes", 0),
         "workspace_broadcasts": component_counts.get("workspace_broadcasts", 0),
         "welfare_stops": component_counts.get("welfare_stops", 0),
+        "estimated_api_cost_usd": round(
+            float(component_counts.get("estimated_api_cost_usd", 0.0)), 8
+        ),
     }
 
 
@@ -145,4 +149,7 @@ def compute_controlled_metrics(
         "memory_writes": component_counts.get("memory_writes", 0),
         "workspace_broadcasts": component_counts.get("workspace_broadcasts", 0),
         "welfare_stops": component_counts.get("welfare_stops", 0),
+        "estimated_api_cost_usd": round(
+            float(component_counts.get("estimated_api_cost_usd", 0.0)), 8
+        ),
     }

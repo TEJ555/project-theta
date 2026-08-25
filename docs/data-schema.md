@@ -6,11 +6,12 @@ SQLite schema version 2 is created and migrated non-destructively by `storage.py
 - `run_artifacts`: SHA-256 config/prompt hashes, immutable code revision and runtime.
 - `steps`: agent-visible observation/context/decision plus separately stored hidden
   trial/body/scoring state and provider response ID.
-- `api_calls`: per-trial token, latency and provider metadata when available.
+- `api_calls`: per-trial token, latency, conservative cost estimate and provider metadata
+  when available.
 - `memories`: exact records made available to episodic memory.
 - `probes`: hidden expected action and observed structured response.
 - `welfare_events`: trigger, tick and state at conservative termination.
-- `metrics`: typed behavioural/computational/quality/safety values.
+- `metrics`: typed behavioural/computational/quality/safety/cost values.
 - `worker_state`: completed cycles and last seed for resumable continuous execution.
 - `schema_info`: migration version.
 
@@ -22,4 +23,3 @@ JSON uses sorted compact encoding and timestamps use UTC ISO 8601. Raw chain-of-
 is neither requested nor stored. API keys are never written to configuration/logs.
 Before publication, lock the database read-only, calculate a file digest, publish the
 analysis code/data dictionary and apply a documented retention/redaction policy.
-

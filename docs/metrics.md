@@ -18,6 +18,11 @@ consciousness score.
 | memory reads/writes | computational | actual memory interface call counts |
 | workspace broadcasts | computational | actual non-ablated broadcasts |
 | mean theta and welfare stops | safety | report-always monitoring values |
+| estimated API cost USD | cost | provider-token estimate; not an invoice |
+
+Claude estimates use frozen regular-input, output, cache-write and cache-read rates. The
+per-run guard can overshoot by one call because billed usage is available only after a
+response. A provider-side spending limit is still required.
 
 Reports use seed-paired full-minus-control differences, mean and median effect, a
 deterministic nonparametric bootstrap interval and a two-sided exact sign test. At least
@@ -26,4 +31,3 @@ multiplicity handling and a power rationale before target collection.
 
 Model self-report and rationale are ordinary behavioural outputs, never phenomenal
 measurements.
-

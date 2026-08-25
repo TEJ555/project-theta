@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 - 2026-08-25
+
+- Added an Anthropic Claude Messages API adapter with JSON-schema output, timeout and
+  retry controls, per-call usage provenance and conservative cost estimation.
+- Added a $1.25 estimated-cost guard per run and a three-run Claude Sonnet 4.6 pilot
+  configuration. Provider-side spending limits remain mandatory.
+- Added Anthropic preflight checks, provider installation extras and documentation.
+
 ## 0.2.0 - 2026-08-25
 
 - Replaced under-stimulating free navigation as the scientific battery with

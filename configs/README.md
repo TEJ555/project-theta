@@ -14,3 +14,7 @@ Scientific protocols use deterministic acquisition and blinded forced-choice tri
 `navigation_demo` is a plumbing demonstration and is excluded from the study battery.
 `server-worker.json` is deliberately a small bounded pilot. Expand it only after the
 API pilot, logs, costs and welfare behaviour have been reviewed.
+
+`claude-pilot.json` is a three-run local pilot base using the pinned Claude Sonnet 4.6
+model, a 30-call cap and a $1.25 estimated-cost guard per run. It is not a continuous
+worker configuration.

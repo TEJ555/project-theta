@@ -6,7 +6,7 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Requires Python 3.10 or newer.
 
-Version 0.2 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
+Version 0.2.1 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
 model adapters, six experimental protocols, matched ablations, welfare stop rules,
 SQLite/JSON logging, metrics, preregistration templates, tests, and a no-key demo.
@@ -55,6 +55,28 @@ show that the harness, controls and metrics work. They are not scientific eviden
 
 ## Optional model adapters
 
+Anthropic Claude (recommended first bounded pilot):
+
+```powershell
+python -m pip install -e ".[anthropic]"
+$secureKey = Read-Host "Anthropic API key" -AsSecureString
+$env:ANTHROPIC_API_KEY = [System.Net.NetworkCredential]::new("", $secureKey).Password
+$env:THETA_ENABLE_MODEL_RUNS = "YES"
+theta doctor --adapter anthropic --db runs/claude-doctor.sqlite
+theta run --config configs/claude-pilot.json --seeds 11 --max-runs 3 --db runs/claude-pilot.sqlite
+theta report --db runs/claude-pilot.sqlite
+```
+
+The Claude pilot uses pinned `claude-sonnet-4-6`, at most 30 calls and an estimated
+$1.25 USD guard per run. Three runs therefore have a planned guard of $3.75 USD, with
+a possible one-call overshoot because the provider reports tokens after a response.
+The estimate uses frozen regular-input, output, cache-write and cache-read rates.
+Configure a provider-side spending limit as the authoritative billing ceiling.
+
+For isolation, create a dedicated `project-theta` workspace in the Claude Console, set
+its monthly spend limit to $5 USD, and create the pilot key inside that workspace. Do
+not use the unrestricted Default Workspace key and do not paste the key into chat.
+
 OpenAI (uses the Responses API and structured JSON output):
 
 ```powershell
@@ -75,10 +97,9 @@ theta run --experiment private_theta --adapter ollama --model llama3.2 --seeds 1
 Exact availability and model access vary by account/provider. Keep the model ID,
 version, temperature, prompts, and provider response identifiers with every run.
 Model-backed execution is locked unless `THETA_ENABLE_MODEL_RUNS=YES` is set and
-`--max-runs` is explicit. The current OpenAI integration follows the Responses API,
-uses strict structured output, disables provider-side response storage, records token
-usage/latency, freezes reasoning effort in the logged configuration, and fails rather
-than silently substituting the scripted baseline.
+`--max-runs` is explicit. Both hosted adapters use schema-constrained output, record
+usage/latency, freeze reasoning effort in the logged configuration, and fail rather than
+silently substituting the scripted baseline. OpenAI response storage is disabled.
 
 ## Included experiments
 

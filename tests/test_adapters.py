@@ -1,9 +1,10 @@
-import unittest
 import json
 import sys
+import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from project_theta.adapters.anthropic_adapter import AnthropicAdapter
 from project_theta.adapters.base import AdapterError
 from project_theta.adapters.openai_adapter import OpenAIAdapter
 from project_theta.adapters.scripted import ScriptedAdapter
@@ -53,6 +54,40 @@ class AdapterTests(unittest.TestCase):
         self.assertTrue(captured["text"]["format"]["strict"])
         self.assertEqual(captured["reasoning"], {"effort": "low"})
         self.assertEqual(adapter.last_metadata["total_tokens"], 15)
+
+    def test_anthropic_adapter_uses_schema_and_enforces_cost_guard(self):
+        captured = {}
+
+        class Messages:
+            def create(self, **kwargs):
+                captured.update(kwargs)
+                return SimpleNamespace(
+                    id="msg-test",
+                    model="claude-sonnet-4-6",
+                    content=[SimpleNamespace(
+                        type="text",
+                        text=json.dumps({
+                            "action": "observe", "rationale": "test",
+                            "prediction": {"I7": 0.0}, "confidence": 0.5,
+                            "self_report": "", "request_stop": False,
+                        }),
+                    )],
+                    usage=SimpleNamespace(input_tokens=500_000, output_tokens=100),
+                )
+
+        class FakeAnthropic:
+            def __init__(self, **kwargs):
+                self.messages = Messages()
+
+        with patch.dict(sys.modules, {"anthropic": SimpleNamespace(Anthropic=FakeAnthropic)}):
+            adapter = AnthropicAdapter("claude-sonnet-4-6", max_estimated_cost_usd=1.25)
+            decision = adapter.decide({"permitted_actions": ["observe"]})
+            with self.assertRaises(AdapterError):
+                adapter.decide({"permitted_actions": ["observe"]})
+        self.assertEqual(decision.action, "observe")
+        self.assertEqual(captured["output_config"]["effort"], "low")
+        self.assertEqual(captured["output_config"]["format"]["type"], "json_schema")
+        self.assertGreater(adapter.estimated_cost_usd, 1.25)
 
 
 if __name__ == "__main__":

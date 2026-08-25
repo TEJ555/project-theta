@@ -5,7 +5,7 @@ from pathlib import Path
 
 from project_theta.config import RunConfig
 from project_theta.harness import ExperimentHarness
-from project_theta.storage import RunStore, SCHEMA_VERSION
+from project_theta.storage import SCHEMA_VERSION, RunStore
 
 
 class StorageV2Tests(unittest.TestCase):

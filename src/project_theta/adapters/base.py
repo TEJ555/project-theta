@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ..types import Decision, VALID_ACTIONS
+from ..types import VALID_ACTIONS, Decision
 
 
 class AdapterError(RuntimeError):
@@ -25,6 +25,7 @@ class ModelAdapter(ABC):
         max_output_tokens: int = 1000,
         max_calls: int = 50,
         reasoning_effort: str = "low",
+        max_estimated_cost_usd: float = 1.25,
     ):
         self.model = model
         self.temperature = temperature
@@ -34,6 +35,8 @@ class ModelAdapter(ABC):
         self.max_output_tokens = max_output_tokens
         self.max_calls = max_calls
         self.reasoning_effort = reasoning_effort
+        self.max_estimated_cost_usd = max_estimated_cost_usd
+        self.estimated_cost_usd = 0.0
         self.call_count = 0
         self.last_provider_id: str | None = None
         self.last_metadata: dict[str, Any] = {}
@@ -41,6 +44,11 @@ class ModelAdapter(ABC):
     def begin_call(self) -> None:
         if self.call_count >= self.max_calls:
             raise AdapterError(f"Per-run model call budget exhausted ({self.max_calls}).")
+        if self.estimated_cost_usd >= self.max_estimated_cost_usd:
+            raise AdapterError(
+                "Per-run estimated provider cost budget exhausted "
+                f"(${self.max_estimated_cost_usd:.2f})."
+            )
         self.call_count += 1
 
     @abstractmethod

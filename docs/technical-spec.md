@@ -41,8 +41,9 @@ counted and replaced with a predeclared zero-confidence fallback. Provider error
 the run and never switch adapters.
 
 Each run has a frozen reasoning effort plus hard request-timeout, retry, output-token and
-model-call limits. Non-scripted runs require both an environment safety gate and an
-explicit run-count budget.
+model-call limits. Supported Claude models also have a usage-derived estimated-cost
+guard. Non-scripted runs require both an environment safety gate and an explicit
+run-count budget.
 
 ## Storage and recovery
 

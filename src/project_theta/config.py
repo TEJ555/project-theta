@@ -56,6 +56,7 @@ class ExecutionConfig:
     max_output_tokens: int = 1000
     max_model_calls: int = 50
     reasoning_effort: str = "low"
+    max_estimated_cost_usd: float = 1.25
 
 
 @dataclass(frozen=True)
@@ -75,7 +76,7 @@ class RunConfig:
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
-    def with_seed(self, seed: int) -> "RunConfig":
+    def with_seed(self, seed: int) -> RunConfig:
         return replace(self, seed=seed)
 
 

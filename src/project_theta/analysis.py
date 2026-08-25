@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import sqlite3
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
-from math import comb, sqrt
+from math import comb
 from pathlib import Path
 from random import Random
 from statistics import fmean, median
-from typing import Any, Iterable
+from typing import Any
 
 from .experiments import PROTOCOLS
 from .types import RunSummary
@@ -117,6 +118,9 @@ def summarize_runs(summaries: Iterable[RunSummary]) -> dict[str, Any]:
     return {
         "runs": len(items),
         "completed": sum(not item.stop_reason for item in items),
+        "estimated_api_cost_usd": round(sum(
+            float(item.metrics.get("estimated_api_cost_usd", 0.0) or 0.0) for item in items
+        ), 8),
         "aggregates": aggregates,
         "paired_comparisons": comparisons,
         "warnings": warnings,
@@ -152,6 +156,7 @@ def summaries_from_database(path: str | Path) -> list[RunSummary]:
 def format_summary(summary: dict[str, Any]) -> str:
     lines = [
         f"Project Theta study: {summary['runs']} runs",
+        f"Estimated API cost: ${summary.get('estimated_api_cost_usd', 0.0):.4f} USD",
         "",
         "Experiment                    Condition                 n   Primary metric                  Mean     Range",
         "-" * 112,

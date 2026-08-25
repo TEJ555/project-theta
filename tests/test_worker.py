@@ -44,9 +44,11 @@ class WorkerTests(unittest.TestCase):
                 "experiment": "private_theta", "adapter": "openai", "model": "test",
                 "seeds_per_cycle": 1, "max_runs_per_cycle": 1,
             }), encoding="utf-8")
-            with patch.dict(os.environ, {"THETA_ENABLE_MODEL_RUNS": "NO"}):
-                with self.assertRaises(RuntimeError):
-                    run_worker(spec, once=True)
+            with (
+                patch.dict(os.environ, {"THETA_ENABLE_MODEL_RUNS": "NO"}),
+                self.assertRaises(RuntimeError),
+            ):
+                run_worker(spec, once=True)
 
 
 if __name__ == "__main__":

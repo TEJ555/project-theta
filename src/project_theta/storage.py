@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import json
-import sqlite3
 import hashlib
+import json
 import platform
+import sqlite3
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -232,7 +232,7 @@ class RunStore:
     def close(self) -> None:
         self.connection.close()
 
-    def __enter__(self) -> "RunStore":
+    def __enter__(self) -> RunStore:  # noqa: PYI034 - Python 3.10 has no typing.Self
         return self
 
     def __exit__(self, *_: object) -> None:

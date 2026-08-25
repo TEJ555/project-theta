@@ -7,7 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from . import EPISTEMIC_NOTICE
-from .analysis import format_summary, summarize_runs, summaries_from_database
+from .analysis import format_summary, summaries_from_database, summarize_runs
 from .config import RunConfig, load_config
 from .doctor import format_doctor, run_doctor
 from .experiments import PROTOCOLS
@@ -36,7 +36,7 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--experiment", choices=[*PROTOCOLS, "all"], default="private_theta")
     run.add_argument("--seeds", type=_seeds, default=[11, 22, 33])
     run.add_argument("--conditions", help="comma-separated override")
-    run.add_argument("--adapter", choices=["scripted", "openai", "ollama"], default="scripted")
+    run.add_argument("--adapter", choices=["scripted", "openai", "anthropic", "ollama"])
     run.add_argument("--model", help="provider model ID (provider-specific default if omitted)")
     run.add_argument("--temperature", type=float, default=0.0)
     run.add_argument("--db", default="runs/study.sqlite")
@@ -61,7 +61,9 @@ def _parser() -> argparse.ArgumentParser:
     worker.add_argument("--once", action="store_true", help="run one cycle and exit")
 
     doctor = sub.add_parser("doctor", help="check local or model-backed deployment readiness")
-    doctor.add_argument("--adapter", choices=["scripted", "openai", "ollama"], default="scripted")
+    doctor.add_argument(
+        "--adapter", choices=["scripted", "openai", "anthropic", "ollama"], default="scripted"
+    )
     doctor.add_argument("--db", default="runs/doctor.sqlite")
 
     sub.add_parser("list", help="list protocols and declared outcomes")
@@ -108,15 +110,18 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"epistemic_notice": EPISTEMIC_NOTICE, "run": summary.to_dict()}, indent=2))
         return 0
     config = load_config(args.config) if args.config else RunConfig()
+    adapter_name = args.adapter or config.adapter
     default_models = {
         "scripted": "scripted-baseline-v1",
         "openai": os.getenv("THETA_OPENAI_MODEL", "gpt-5.6"),
+        "anthropic": os.getenv("THETA_ANTHROPIC_MODEL", "claude-sonnet-4-6"),
         "ollama": os.getenv("THETA_OLLAMA_MODEL", "llama3.2"),
     }
+    configured_model = config.model if args.config and config.adapter == adapter_name else None
     config = replace(
         config,
-        adapter=args.adapter,
-        model=args.model or default_models[args.adapter],
+        adapter=adapter_name,
+        model=args.model or configured_model or default_models[adapter_name],
         temperature=args.temperature,
     )
     if config.adapter != "scripted":

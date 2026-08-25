@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /opt/project-theta
 COPY . .
-RUN python -m pip install --no-cache-dir ".[openai]" \
+RUN python -m pip install --no-cache-dir ".[providers]" \
     && useradd --create-home --uid 10001 theta \
     && mkdir -p /data \
     && chown -R theta:theta /opt/project-theta /data

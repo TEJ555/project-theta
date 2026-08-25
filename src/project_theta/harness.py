@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import replace
 from pathlib import Path
 from random import Random
-from typing import Iterable
 from uuid import uuid4
 
-from .adapters import OllamaAdapter, OpenAIAdapter, ScriptedAdapter
-from .adapters.base import AdapterError, ModelAdapter
+from .adapters import AnthropicAdapter, OllamaAdapter, OpenAIAdapter, ScriptedAdapter
+from .adapters.base import ModelAdapter
 from .agent import PersistentAgent
 from .body import SyntheticBody
 from .config import RunConfig, apply_condition
-from .experiments import PROTOCOLS, STUDY_PROTOCOLS, ExperimentProtocol, get_protocol
+from .experiments import STUDY_PROTOCOLS, ExperimentProtocol, get_protocol
 from .metrics import METRIC_REGISTRY, compute_controlled_metrics, compute_metrics
 from .provenance import code_version
 from .storage import RunStore
@@ -28,11 +28,14 @@ def make_adapter(config: RunConfig) -> ModelAdapter:
         "max_output_tokens": config.execution.max_output_tokens,
         "max_calls": config.execution.max_model_calls,
         "reasoning_effort": config.execution.reasoning_effort,
+        "max_estimated_cost_usd": config.execution.max_estimated_cost_usd,
     }
     if config.adapter == "scripted":
         return ScriptedAdapter(config.model, config.temperature, config.seed, **kwargs)
     if config.adapter == "openai":
         return OpenAIAdapter(config.model, config.temperature, config.seed, **kwargs)
+    if config.adapter == "anthropic":
+        return AnthropicAdapter(config.model, config.temperature, config.seed, **kwargs)
     if config.adapter == "ollama":
         return OllamaAdapter(config.model, config.temperature, config.seed, **kwargs)
     raise ValueError(f"Unknown adapter: {config.adapter}")
@@ -153,6 +156,7 @@ class ExperimentHarness:
                 "memory_writes": agent.memory.write_count,
                 "workspace_broadcasts": agent.workspace.broadcast_count,
                 "welfare_stops": int(stop_reason is not None),
+                "estimated_api_cost_usd": adapter.estimated_cost_usd,
             }
             metrics = compute_metrics(metric_rows, protocol.acquisition_end, counts)
             store.finish_run(run_id, metrics, METRIC_REGISTRY, stop_reason)
@@ -322,6 +326,7 @@ class ExperimentHarness:
                 "memory_writes": agent.memory.write_count,
                 "workspace_broadcasts": agent.workspace.broadcast_count,
                 "welfare_stops": int(stop_reason is not None),
+                "estimated_api_cost_usd": adapter.estimated_cost_usd,
             }
             metrics = compute_controlled_metrics(metric_rows, counts)
             store.finish_run(run_id, metrics, METRIC_REGISTRY, stop_reason)

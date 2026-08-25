@@ -6,8 +6,8 @@ from time import monotonic
 from typing import Any
 from urllib import request
 
-from .base import AdapterError, ModelAdapter
 from ..prompts import AGENT_INSTRUCTIONS
+from .base import AdapterError, ModelAdapter
 
 
 class OllamaAdapter(ModelAdapter):

@@ -3,10 +3,13 @@ services:
     build: .
     restart: unless-stopped
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY:?Set OPENAI_API_KEY in a private .env file}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       THETA_ENABLE_MODEL_RUNS: ${THETA_ENABLE_MODEL_RUNS:-NO}
       THETA_CODE_VERSION: ${THETA_CODE_VERSION:-container-build-unpinned}
       THETA_DATABASE: /data/server.sqlite
+      THETA_ADAPTER: ${THETA_ADAPTER:-openai}
+      THETA_MODEL: ${THETA_MODEL:-gpt-5.6}
     volumes:
       - ./runs:/data
     command: ["theta", "worker", "--spec", "configs/server-worker.json"]

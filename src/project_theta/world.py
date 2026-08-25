@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from random import Random
-from typing import Any
+from typing import Any, ClassVar
 
 from .config import WorldConfig
 from .types import Action
@@ -27,7 +27,7 @@ class WorldEvent:
 class GridWorld:
     """Small deterministic POMDP. Hidden maps are never included in agent context."""
 
-    DELTAS: dict[str, tuple[int, int]] = {
+    DELTAS: ClassVar[dict[str, tuple[int, int]]] = {
         "north": (0, -1),
         "south": (0, 1),
         "east": (1, 0),

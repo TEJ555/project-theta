@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import os
 import re
+import sqlite3
 import sys
 from pathlib import Path
 from typing import Any
@@ -10,7 +11,7 @@ from typing import Any
 from .config import RunConfig
 from .experiments import STUDY_PROTOCOLS
 from .provenance import code_version
-from .storage import RunStore, SCHEMA_VERSION
+from .storage import SCHEMA_VERSION, RunStore
 from .trials import build_trials
 
 
@@ -60,13 +61,18 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
         "pass" if config.execution.reasoning_effort in supported_efforts else "fail",
         config.execution.reasoning_effort,
     )
+    add(
+        "cost_guard",
+        "pass" if config.execution.max_estimated_cost_usd > 0 else "fail",
+        f"${config.execution.max_estimated_cost_usd:.2f} estimated maximum per run",
+    )
     add("welfare", "pass" if config.welfare.enabled else "fail", "online stop monitor enabled")
 
     try:
         with RunStore(database) as store:
             version = store.connection.execute("SELECT version FROM schema_info").fetchone()[0]
         add("database", "pass" if version == SCHEMA_VERSION else "fail", f"SQLite schema {version}")
-    except Exception as exc:
+    except (OSError, sqlite3.Error) as exc:
         add("database", "fail", f"{type(exc).__name__}: {exc}")
 
     if adapter == "openai":
@@ -79,6 +85,19 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
             "api_key",
             "pass" if os.getenv("OPENAI_API_KEY") else "fail",
             "OPENAI_API_KEY is set" if os.getenv("OPENAI_API_KEY") else "OPENAI_API_KEY is missing",
+        )
+    if adapter == "anthropic":
+        add(
+            "anthropic_sdk",
+            "pass" if importlib.util.find_spec("anthropic") else "fail",
+            "Anthropic Python SDK installed"
+            if importlib.util.find_spec("anthropic") else "install .[anthropic]",
+        )
+        add(
+            "api_key",
+            "pass" if os.getenv("ANTHROPIC_API_KEY") else "fail",
+            "ANTHROPIC_API_KEY is set"
+            if os.getenv("ANTHROPIC_API_KEY") else "ANTHROPIC_API_KEY is missing",
         )
     if adapter != "scripted":
         add(

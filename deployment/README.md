@@ -13,8 +13,12 @@ cycle.
 4. Run one bounded API condition with an explicit `--max-runs` and inspect raw context
    for leakage, invalid actions, stop requests, latency and token usage.
 5. Back up the SQLite database and test `theta recover` on a copy.
-6. Set provider usage limits and alerts outside Project Theta. The project limits calls
-   per run and runs per cycle; it does not know current provider pricing.
+6. Set provider usage limits and alerts outside Project Theta. Claude runs also use a
+   frozen conservative price table, but only the provider can enforce the real bill.
+
+For Claude, create a dedicated workspace and key, then set that workspace's monthly
+spend limit before running the pilot. The Default Workspace cannot take a lower custom
+workspace limit.
 
 ## Docker
 
@@ -22,6 +26,10 @@ Create a private `.env` file that is excluded from Git:
 
 ```text
 OPENAI_API_KEY=...
+# Or, when THETA_ADAPTER=anthropic:
+ANTHROPIC_API_KEY=...
+THETA_ADAPTER=anthropic
+THETA_MODEL=claude-sonnet-4-6
 THETA_ENABLE_MODEL_RUNS=YES
 THETA_CODE_VERSION=<immutable git commit>
 ```

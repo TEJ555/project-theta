@@ -13,7 +13,12 @@ DECISION_SCHEMA = {
     "properties": {
         "action": {"type": "string", "enum": ["north", "south", "east", "west", "wait", "consume", "inspect", "observe", "choose_left", "choose_right"]},
         "rationale": {"type": "string"},
-        "prediction": {"type": "object", "additionalProperties": {"type": "number"}},
+        "prediction": {
+            "type": "object",
+            "properties": {"I7": {"type": "number"}},
+            "required": ["I7"],
+            "additionalProperties": False,
+        },
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "self_report": {"type": "string"},
         "request_stop": {"type": "boolean"},

@@ -9,6 +9,7 @@
 - schema 2 hashes, API metadata, checkpoints and recovery;
 - locked bounded worker plus Docker/systemd deployment examples;
 - 20-seed, 340-run scripted validation.
+- bounded Anthropic Claude adapter with usage-derived cost guard.
 
 ## API pilot gate
 
@@ -29,4 +30,3 @@
 - blinded export/analysis package with a frozen public protocol.
 
 No milestone converts functional indicators into proof of phenomenal consciousness.
-
