@@ -28,10 +28,15 @@ class AnthropicAdapter(ModelAdapter):
                 "add and test a current official rate before running it."
             )
         try:
-            from anthropic import Anthropic
+            from anthropic import Anthropic, transform_schema
         except ImportError as exc:
             raise AdapterError('Install the optional dependency: pip install -e ".[anthropic]"') from exc
         self.client = Anthropic(timeout=self.timeout_seconds, max_retries=self.max_retries)
+        # Anthropic structured outputs support a deliberately restricted JSON
+        # Schema subset. The first-party transformer strips unsupported grammar
+        # constraints while preserving them in descriptions; Project Theta still
+        # applies its provider-neutral bounds in decision_from_mapping below.
+        self.output_schema = transform_schema(DECISION_SCHEMA)
 
     def decide(self, context: dict[str, Any]):
         self.begin_call()
@@ -44,7 +49,7 @@ class AnthropicAdapter(ModelAdapter):
                 max_tokens=self.max_output_tokens,
                 output_config={
                     "effort": self.reasoning_effort,
-                    "format": {"type": "json_schema", "schema": DECISION_SCHEMA},
+                    "format": {"type": "json_schema", "schema": self.output_schema},
                 },
             )
             self.last_provider_id = response.id

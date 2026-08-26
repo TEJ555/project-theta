@@ -79,7 +79,17 @@ class AdapterTests(unittest.TestCase):
             def __init__(self, **kwargs):
                 self.messages = Messages()
 
-        with patch.dict(sys.modules, {"anthropic": SimpleNamespace(Anthropic=FakeAnthropic)}):
+        transformed_schema = {
+            "type": "object",
+            "properties": {"confidence": {"type": "number", "description": "0 to 1"}},
+            "required": ["confidence"],
+            "additionalProperties": False,
+        }
+        fake_module = SimpleNamespace(
+            Anthropic=FakeAnthropic,
+            transform_schema=lambda schema: transformed_schema,
+        )
+        with patch.dict(sys.modules, {"anthropic": fake_module}):
             adapter = AnthropicAdapter("claude-sonnet-4-6", max_estimated_cost_usd=1.25)
             decision = adapter.decide({"permitted_actions": ["observe"]})
             with self.assertRaises(AdapterError):
@@ -88,6 +98,10 @@ class AdapterTests(unittest.TestCase):
         self.assertNotIn("temperature", captured)
         self.assertEqual(captured["output_config"]["effort"], "low")
         self.assertEqual(captured["output_config"]["format"]["type"], "json_schema")
+        self.assertIs(captured["output_config"]["format"]["schema"], transformed_schema)
+        self.assertNotIn(
+            "minimum", captured["output_config"]["format"]["schema"]["properties"]["confidence"]
+        )
         self.assertEqual(adapter.last_metadata["temperature_requested"], 0.0)
         self.assertIsNone(adapter.last_metadata["temperature_applied"])
         self.assertGreater(adapter.estimated_cost_usd, 1.25)

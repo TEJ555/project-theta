@@ -87,12 +87,40 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
             "OPENAI_API_KEY is set" if os.getenv("OPENAI_API_KEY") else "OPENAI_API_KEY is missing",
         )
     if adapter == "anthropic":
+        anthropic_installed = bool(importlib.util.find_spec("anthropic"))
         add(
             "anthropic_sdk",
-            "pass" if importlib.util.find_spec("anthropic") else "fail",
+            "pass" if anthropic_installed else "fail",
             "Anthropic Python SDK installed"
-            if importlib.util.find_spec("anthropic") else "install .[anthropic]",
+            if anthropic_installed else "install .[anthropic]",
         )
+        if anthropic_installed:
+            try:
+                from anthropic import transform_schema
+
+                from .prompts import DECISION_SCHEMA
+
+                transformed = transform_schema(DECISION_SCHEMA)
+
+                def unsupported_keys(value: Any) -> set[str]:
+                    if isinstance(value, dict):
+                        own = {key for key in value if key in {"minimum", "maximum"}}
+                        return own | set().union(
+                            *(unsupported_keys(item) for item in value.values()), set()
+                        )
+                    if isinstance(value, list):
+                        return set().union(*(unsupported_keys(item) for item in value), set())
+                    return set()
+
+                unsupported = unsupported_keys(transformed)
+                add(
+                    "anthropic_schema",
+                    "fail" if unsupported else "pass",
+                    "provider-compatible structured-output schema"
+                    if not unsupported else f"unsupported constraints: {sorted(unsupported)}",
+                )
+            except (ImportError, TypeError, ValueError) as exc:
+                add("anthropic_schema", "fail", f"{type(exc).__name__}: {exc}")
         add(
             "api_key",
             "pass" if os.getenv("ANTHROPIC_API_KEY") else "fail",
