@@ -70,6 +70,17 @@ exists, the launcher preserves it and automatically selects the next numbered fi
 The Claude pilot uses pinned `claude-sonnet-4-6`, at most 30 calls and an estimated
 $1.25 USD guard per run. Three runs therefore have a planned guard of $3.75 USD, with
 a possible one-call overshoot because the provider reports tokens after a response.
+
+After reviewing the exploratory pilot, the bounded six-seed replication is launched
+separately so it remains auditable:
+
+```powershell
+.\scripts\run_claude_replication.ps1
+```
+
+Its frozen design is in `preregistration/claude-replication-01.md`. The launcher runs
+each matched three-condition seed as a bundle and checks a $4.20 cumulative replication
+budget before beginning the next bundle.
 The estimate uses frozen regular-input, output, cache-write and cache-read rates.
 Configure a provider-side spending limit as the authoritative billing ceiling.
 
