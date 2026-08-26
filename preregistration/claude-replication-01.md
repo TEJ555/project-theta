@@ -44,7 +44,7 @@ Secondary outcomes are calibration Brier score, signal contrast, choice-side bia
 invalid-action count, component access counts, welfare stops, token use and cost.
 
 Report condition means, seed-paired mean differences, deterministic bootstrap 95%
-intervals and exact two-sided sign tests. Runs—not trials—are the inferential units.
+intervals and exact two-sided sign tests. Runs, not trials, are the inferential units.
 With six pairs this remains a small replication below Project Theta's ten-pair
 validation threshold; all inferential results must retain a pilot-sized warning.
 

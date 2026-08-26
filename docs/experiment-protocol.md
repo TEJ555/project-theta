@@ -1,4 +1,4 @@
-# Experiment protocol — v0.2
+# Experiment protocol v0.2
 
 ## Common procedure
 
@@ -65,4 +65,3 @@ into a consciousness score.
 
 Passing these criteria validates task discrimination and logging only. It does not
 validate the construct of phenomenal consciousness.
-

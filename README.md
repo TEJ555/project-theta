@@ -6,7 +6,7 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Requires Python 3.10 or newer.
 
-Version 0.2.1 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
+Version 0.2.3 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
 model adapters, six experimental protocols, matched ablations, welfare stop rules,
 SQLite/JSON logging, metrics, preregistration templates, tests, and a no-key demo.
@@ -145,6 +145,8 @@ configs/            versioned full/control/ablation conditions
 docs/               research, technical, ethics, schema, metrics
 preregistration/    blank and worked preregistration templates
 prompts/            agent contract and Cursor/Claude handoff
+references/         checked BibTeX bibliography
+research/           raw searches, screening record, evidence table, verification
 tests/              determinism, ablation, storage and smoke tests
 deployment/         Docker/systemd examples and deployment gate
 ```
@@ -159,9 +161,18 @@ deployment/         Docker/systemd examples and deployment gate
 5. Interpret converging indicators under multiple theories; do not manufacture a
    single “consciousness score.”
 
-See [research framing](docs/research-framing.md), [technical specification](docs/technical-spec.md),
+See the [full literature review](docs/literature-review.md), [evidence table](research/evidence-table.md),
+[research framing](docs/research-framing.md), [technical specification](docs/technical-spec.md),
 [hypotheses](docs/hypotheses.md), [ethics and stop rules](docs/ethics.md), and
 [experiment protocol](docs/experiment-protocol.md).
+
+The completed six-seed Claude study is documented in
+[replication results](results/claude-replication-01.md). Public repository and website
+work is organized in the [publication plan](docs/publication-plan.md).
+
+The literature review is reproducible and its limitations are explicit. It has one
+primary reviewer, capped database retrieval, and requires independent second-reviewer
+screening before journal submission or a claim of exhaustive coverage.
 
 ## Scientific status
 

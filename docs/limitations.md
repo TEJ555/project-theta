@@ -18,6 +18,5 @@ descriptive small-sample tool, not a substitute for a powered preregistered anal
 No cross-model measurement invariance, external replication, validated welfare scale
 or probability mapping to phenomenal consciousness exists.
 
-Use this version for bounded model pilots and method development—not consciousness
+Use this version for bounded model pilots and method development, not consciousness
 classification, rights decisions or claims that a system feels the synthetic signal.
-

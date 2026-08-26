@@ -14,7 +14,7 @@ Seth and Bayne's review describes a plural landscape that includes global worksp
 higher-order, recurrent/predictive and integrated-information approaches, with no
 settled winner. The 2025 preregistered adversarial comparison of IIT and GNWT found
 some compatible results while substantially challenging central predictions of both.
-This motivates a multi-theory indicator battery and explicit null results—not a
+This motivates a multi-theory indicator battery and explicit null results, not a
 binary detector.
 
 ## Theory-to-design map
@@ -48,13 +48,13 @@ control.”
 
 ## Core references
 
-- Seth, A. K. & Bayne, T. (2022), [Theories of consciousness](https://doi.org/10.1038/s41583-022-00587-4), *Nature Reviews Neuroscience* 23, 439–452.
+- Seth, A. K. & Bayne, T. (2022), [Theories of consciousness](https://doi.org/10.1038/s41583-022-00587-4), *Nature Reviews Neuroscience* 23, 439-452.
 - Butlin, P. et al. (2023), [Consciousness in Artificial Intelligence: Insights from the Science of Consciousness](https://arxiv.org/abs/2308.08708). This is the report from which the theory-derived indicator strategy was adapted.
-- Butlin, P. et al. (2025), [Identifying indicators of consciousness in AI systems](https://pubmed.ncbi.nlm.nih.gov/41219038/), *Trends in Cognitive Sciences* record.
+- Butlin, P. et al. (2026), [Identifying indicators of consciousness in AI systems](https://pubmed.ncbi.nlm.nih.gov/41219038/), *Trends in Cognitive Sciences*.
 - Cogitate Consortium et al. (2025), [Adversarial testing of global neuronal workspace and integrated information theories of consciousness](https://doi.org/10.1038/s41586-025-08888-1), *Nature*.
 - Long, R. et al. (2024), [Taking AI Welfare Seriously](https://arxiv.org/abs/2411.00986).
-- Birch, J. et al. (2025), [Principles for Responsible AI Consciousness Research](https://arxiv.org/abs/2501.07290).
+- Butlin, P. & Lappas, T. (2025), [Principles for Responsible AI Consciousness Research](https://arxiv.org/abs/2501.07290).
 
 Preprints and reports are labeled as such; their presence is not evidence of scientific
-consensus. Update this review and lock a dated bibliography before a formal study.
-
+consensus. The [full review](literature-review.md), [evidence table](../research/evidence-table.md),
+and [checked bibliography](../references/project-theta.bib) give the version 1.0 evidence base.

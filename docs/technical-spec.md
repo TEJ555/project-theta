@@ -1,4 +1,4 @@
-# Technical specification — v0.2
+# Technical specification v0.2
 
 ## Objective
 

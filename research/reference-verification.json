@@ -1,0 +1,937 @@
+{
+  "records": [
+    {
+      "doi": "10.1038/s41583-022-00587-4",
+      "title": "Theories of consciousness",
+      "authors": [
+        "Anil K. Seth",
+        "Tim Bayne"
+      ],
+      "published": [
+        [
+          2022,
+          5,
+          3
+        ]
+      ],
+      "container": "Nature Reviews Neuroscience",
+      "volume": "23",
+      "issue": "7",
+      "pages": "439-452",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1038/s41586-025-08888-1",
+      "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness",
+      "authors": [
+        "",
+        "Oscar Ferrante",
+        "Urszula Gorska-Klimowska",
+        "Simon Henin",
+        "Rony Hirschhorn",
+        "Aya Khalaf",
+        "Alex Lepauvre",
+        "Ling Liu",
+        "David Richter",
+        "Yamil Vidal",
+        "Niccol\u00f2 Bonacchi",
+        "Tanya Brown",
+        "Praveen Sripad",
+        "Marcelo Armendariz",
+        "Katarina Bendtz",
+        "Tara Ghafari",
+        "Dorottya Hetenyi",
+        "Jay Jeschke",
+        "Csaba Kozma",
+        "David R. Mazumder",
+        "Stephanie Montenegro",
+        "Alia Seedat",
+        "Abdelrahman Sharafeldin",
+        "Shujun Yang",
+        "Sylvain Baillet",
+        "David J. Chalmers",
+        "Radoslaw M. Cichy",
+        "Francis Fallon",
+        "Theofanis I. Panagiotaropoulos",
+        "Hal Blumenfeld",
+        "Floris P. de Lange",
+        "Sasha Devore",
+        "Ole Jensen",
+        "Gabriel Kreiman",
+        "Huan Luo",
+        "Melanie Boly",
+        "Stanislas Dehaene",
+        "Christof Koch",
+        "Giulio Tononi",
+        "Michael Pitts",
+        "Liad Mudrik",
+        "Lucia Melloni"
+      ],
+      "published": [
+        [
+          2025,
+          4,
+          30
+        ]
+      ],
+      "container": "Nature",
+      "volume": "642",
+      "issue": "8066",
+      "pages": "133-142",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.neubiorev.2025.106053",
+      "title": "Unpacking the complexities of consciousness: Theories and reflections",
+      "authors": [
+        "Liad Mudrik",
+        "Melanie Boly",
+        "Stanislas Dehaene",
+        "Stephen M. Fleming",
+        "Victor Lamme",
+        "Anil Seth",
+        "Lucia Melloni"
+      ],
+      "published": [
+        [
+          2025,
+          3
+        ]
+      ],
+      "container": "Neuroscience &amp; Biobehavioral Reviews",
+      "volume": "170",
+      "issue": null,
+      "pages": "106053",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1038/s41562-021-01284-5",
+      "title": "The ConTraSt database for analysing and comparing empirical studies of consciousness theories",
+      "authors": [
+        "Itay Yaron",
+        "Lucia Melloni",
+        "Michael Pitts",
+        "Liad Mudrik"
+      ],
+      "published": [
+        [
+          2022,
+          2,
+          21
+        ]
+      ],
+      "container": "Nature Human Behaviour",
+      "volume": "6",
+      "issue": "4",
+      "pages": "593-604",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1073/pnas.2116933119",
+      "title": "A conceptual framework for consciousness",
+      "authors": [
+        "Michael S. A. Graziano"
+      ],
+      "published": [
+        [
+          2022,
+          4,
+          29
+        ]
+      ],
+      "container": "Proceedings of the National Academy of Sciences",
+      "volume": "119",
+      "issue": "18",
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1080/17588928.2020.1772214",
+      "title": "Hard criteria for empirical theories of consciousness",
+      "authors": [
+        "Adrien Doerig",
+        "Aaron Schurger",
+        "Michael H. Herzog"
+      ],
+      "published": [
+        [
+          2020,
+          7,
+          14
+        ]
+      ],
+      "container": "Cognitive Neuroscience",
+      "volume": "12",
+      "issue": "2",
+      "pages": "41-62",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.concog.2019.04.002",
+      "title": "The unfolding argument: Why IIT and other causal structure theories cannot explain consciousness",
+      "authors": [
+        "Adrien Doerig",
+        "Aaron Schurger",
+        "Kathryn Hess",
+        "Michael H. Herzog"
+      ],
+      "published": [
+        [
+          2019,
+          7
+        ]
+      ],
+      "container": "Consciousness and Cognition",
+      "volume": "72",
+      "issue": null,
+      "pages": "49-59",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1093/nc/niab001",
+      "title": "Falsification and consciousness",
+      "authors": [
+        "Johannes Kleiner",
+        "Erik Hoel"
+      ],
+      "published": [
+        [
+          2021,
+          1,
+          1
+        ]
+      ],
+      "container": "Neuroscience of Consciousness",
+      "volume": "2021",
+      "issue": "1",
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1093/nc/niab019",
+      "title": "Comparing theories of consciousness: why it matters and how to do it",
+      "authors": [
+        "Simon Hviid Del Pin",
+        "Zuzanna Sk\u00f3ra",
+        "Kristian Sandberg",
+        "Morten Overgaard",
+        "Micha\u0142 Wierzcho\u0144"
+      ],
+      "published": [
+        [
+          2021,
+          1,
+          1
+        ]
+      ],
+      "container": "Neuroscience of Consciousness",
+      "volume": "2021",
+      "issue": "2",
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/s0010-0277(00)00123-2",
+      "title": "Towards a cognitive neuroscience of consciousness: basic evidence and a workspace framework",
+      "authors": [
+        "S Dehaene"
+      ],
+      "published": [
+        [
+          2001,
+          4
+        ]
+      ],
+      "container": "Cognition",
+      "volume": "79",
+      "issue": "1-2",
+      "pages": "1-37",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.neuron.2020.01.026",
+      "title": "Conscious Processing and the Global Neuronal Workspace Hypothesis",
+      "authors": [
+        "George A. Mashour",
+        "Pieter Roelfsema",
+        "Jean-Pierre Changeux",
+        "Stanislas Dehaene"
+      ],
+      "published": [
+        [
+          2020,
+          3
+        ]
+      ],
+      "container": "Neuron",
+      "volume": "105",
+      "issue": "5",
+      "pages": "776-798",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1073/pnas.95.24.14529",
+      "title": "A neuronal model of a global workspace in effortful cognitive tasks",
+      "authors": [
+        "Stanislas Dehaene",
+        "Michel Kerszberg",
+        "Jean-Pierre Changeux"
+      ],
+      "published": [
+        [
+          1998,
+          11,
+          24
+        ]
+      ],
+      "container": "Proceedings of the National Academy of Sciences",
+      "volume": "95",
+      "issue": "24",
+      "pages": "14529-14534",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.tics.2019.04.007",
+      "title": "The Global Workspace Needs Metacognition",
+      "authors": [
+        "Nicholas Shea",
+        "Chris D. Frith"
+      ],
+      "published": [
+        [
+          2019,
+          7
+        ]
+      ],
+      "container": "Trends in Cognitive Sciences",
+      "volume": "23",
+      "issue": "7",
+      "pages": "560-571",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.pneurobio.2020.101918",
+      "title": "The predictive global neuronal workspace: A formal active inference model of visual consciousness",
+      "authors": [
+        "Christopher J. Whyte",
+        "Ryan Smith"
+      ],
+      "published": [
+        [
+          2021,
+          4
+        ]
+      ],
+      "container": "Progress in Neurobiology",
+      "volume": "199",
+      "issue": null,
+      "pages": "101918",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.tics.2006.09.001",
+      "title": "Towards a true neural stance on consciousness",
+      "authors": [
+        "Victor A.F. Lamme"
+      ],
+      "published": [
+        [
+          2006,
+          11
+        ]
+      ],
+      "container": "Trends in Cognitive Sciences",
+      "volume": "10",
+      "issue": "11",
+      "pages": "494-501",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.tics.2019.06.009",
+      "title": "Understanding the Higher-Order Approach to Consciousness",
+      "authors": [
+        "Richard Brown",
+        "Hakwan Lau",
+        "Joseph E. LeDoux"
+      ],
+      "published": [
+        [
+          2019,
+          9
+        ]
+      ],
+      "container": "Trends in Cognitive Sciences",
+      "volume": "23",
+      "issue": "9",
+      "pages": "754-768",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.tics.2011.05.009",
+      "title": "Empirical support for higher-order theories of conscious awareness",
+      "authors": [
+        "Hakwan Lau",
+        "David Rosenthal"
+      ],
+      "published": [
+        [
+          2011,
+          8
+        ]
+      ],
+      "container": "Trends in Cognitive Sciences",
+      "volume": "15",
+      "issue": "8",
+      "pages": "365-373",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.3389/fnhum.2014.00443",
+      "title": "How to measure metacognition",
+      "authors": [
+        "Stephen M. Fleming",
+        "Hakwan C. Lau"
+      ],
+      "published": [
+        [
+          2014,
+          7,
+          15
+        ]
+      ],
+      "container": "Frontiers in Human Neuroscience",
+      "volume": "8",
+      "issue": null,
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1093/nc/niz020",
+      "title": "Awareness as inference in a higher-order state space",
+      "authors": [
+        "Stephen M Fleming"
+      ],
+      "published": [
+        [
+          2020,
+          1,
+          1
+        ]
+      ],
+      "container": "Neuroscience of Consciousness",
+      "volume": "2020",
+      "issue": "1",
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1186/1471-2202-5-42",
+      "title": "An information integration theory of consciousness",
+      "authors": [
+        "Giulio Tononi"
+      ],
+      "published": [
+        [
+          2004,
+          11,
+          2
+        ]
+      ],
+      "container": "BMC Neuroscience",
+      "volume": "5",
+      "issue": "1",
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1038/nrn.2016.44",
+      "title": "Integrated information theory: from consciousness to its physical substrate",
+      "authors": [
+        "Giulio Tononi",
+        "Melanie Boly",
+        "Marcello Massimini",
+        "Christof Koch"
+      ],
+      "published": [
+        [
+          2016,
+          5,
+          26
+        ]
+      ],
+      "container": "Nature Reviews Neuroscience",
+      "volume": "17",
+      "issue": "7",
+      "pages": "450-461",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1371/journal.pcbi.1011465",
+      "title": "Integrated information theory (IIT) 4.0: Formulating the properties of phenomenal existence in physical terms",
+      "authors": [
+        "Larissa Albantakis",
+        "Leonardo Barbosa",
+        "Graham Findlay",
+        "Matteo Grasso",
+        "Andrew M. Haun",
+        "William Marshall",
+        "William G. P. Mayner",
+        "Alireza Zaeemzadeh",
+        "Melanie Boly",
+        "Bj\u00f8rn E. Juel",
+        "Shuntaro Sasai",
+        "Keiko Fujii",
+        "Isaac David",
+        "Jeremiah Hendren",
+        "Jonathan P. Lang",
+        "Giulio Tononi"
+      ],
+      "published": [
+        [
+          2023,
+          10,
+          17
+        ]
+      ],
+      "container": "PLOS Computational Biology",
+      "volume": "19",
+      "issue": "10",
+      "pages": "e1011465",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1093/nc/niy007",
+      "title": "On the axiomatic foundations of the integrated information theory of consciousness",
+      "authors": [
+        "Tim Bayne"
+      ],
+      "published": [
+        [
+          2018,
+          1,
+          1
+        ]
+      ],
+      "container": "Neuroscience of Consciousness",
+      "volume": "2018",
+      "issue": "1",
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1017/s0140525x21002387",
+      "title": "The integrated information theory of consciousness: Unmasked and identified",
+      "authors": [
+        "Bjorn Merker",
+        "Kenneth Williford",
+        "David Rudrauf"
+      ],
+      "published": [
+        [
+          2022
+        ]
+      ],
+      "container": "Behavioral and Brain Sciences",
+      "volume": "45",
+      "issue": null,
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.tics.2013.09.007",
+      "title": "Interoceptive inference, emotion, and the embodied self",
+      "authors": [
+        "Anil K. Seth"
+      ],
+      "published": [
+        [
+          2013,
+          11
+        ]
+      ],
+      "container": "Trends in Cognitive Sciences",
+      "volume": "17",
+      "issue": "11",
+      "pages": "565-573",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1038/nrn3950",
+      "title": "Interoceptive predictions in the brain",
+      "authors": [
+        "Lisa Feldman Barrett",
+        "W. Kyle Simmons"
+      ],
+      "published": [
+        [
+          2015,
+          5,
+          28
+        ]
+      ],
+      "container": "Nature Reviews Neuroscience",
+      "volume": "16",
+      "issue": "7",
+      "pages": "419-429",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.tics.2018.08.008",
+      "title": "Being a Beast Machine: The Somatic Basis of Selfhood",
+      "authors": [
+        "Anil K. Seth",
+        "Manos Tsakiris"
+      ],
+      "published": [
+        [
+          2018,
+          11
+        ]
+      ],
+      "container": "Trends in Cognitive Sciences",
+      "volume": "22",
+      "issue": "11",
+      "pages": "969-981",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.3389/fpsyg.2012.00096",
+      "title": "Attention and Conscious Perception in the Hypothesis Testing Brain",
+      "authors": [
+        "Jakob Hohwy"
+      ],
+      "published": [
+        [
+          2012
+        ]
+      ],
+      "container": "Frontiers in Psychology",
+      "volume": "3",
+      "issue": null,
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.crneur.2022.100036",
+      "title": "An active inference model of conscious access: How cognitive action selection reconciles the results of report and no-report paradigms",
+      "authors": [
+        "Christopher J. Whyte",
+        "Jakob Hohwy",
+        "Ryan Smith"
+      ],
+      "published": [
+        [
+          2022
+        ]
+      ],
+      "container": "Current Research in Neurobiology",
+      "volume": "3",
+      "issue": null,
+      "pages": "100036",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.biopsycho.2014.11.004",
+      "title": "Knowing your own heart: Distinguishing interoceptive accuracy from interoceptive awareness",
+      "authors": [
+        "Sarah N. Garfinkel",
+        "Anil K. Seth",
+        "Adam B. Barrett",
+        "Keisuke Suzuki",
+        "Hugo D. Critchley"
+      ],
+      "published": [
+        [
+          2015,
+          1
+        ]
+      ],
+      "container": "Biological Psychology",
+      "volume": "104",
+      "issue": null,
+      "pages": "65-74",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.3389/fpsyg.2015.00500",
+      "title": "The attention schema theory: a mechanistic account of subjective awareness",
+      "authors": [
+        "Michael S. A. Graziano",
+        "Taylor W. Webb"
+      ],
+      "published": [
+        [
+          2015,
+          4,
+          23
+        ]
+      ],
+      "container": "Frontiers in Psychology",
+      "volume": "06",
+      "issue": null,
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1073/pnas.2102421118",
+      "title": "The attention schema theory in a neural network agent: Controlling visuospatial attention using a descriptive model of attention",
+      "authors": [
+        "Andrew I. Wilterson",
+        "Michael S. A. Graziano"
+      ],
+      "published": [
+        [
+          2021,
+          8,
+          12
+        ]
+      ],
+      "container": "Proceedings of the National Academy of Sciences",
+      "volume": "118",
+      "issue": "33",
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.pneurobio.2020.101844",
+      "title": "Attention control and the attention schema theory of consciousness",
+      "authors": [
+        "Andrew I. Wilterson",
+        "Casey M. Kemper",
+        "Noah Kim",
+        "Taylor W. Webb",
+        "Alexandra M.W. Reblando",
+        "Michael S.A. Graziano"
+      ],
+      "published": [
+        [
+          2020,
+          12
+        ]
+      ],
+      "container": "Progress in Neurobiology",
+      "volume": "195",
+      "issue": null,
+      "pages": "101844",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.tics.2015.10.002",
+      "title": "No-Report Paradigms: Extracting the True Neural Correlates of Consciousness",
+      "authors": [
+        "Naotsugu Tsuchiya",
+        "Melanie Wilke",
+        "Stefan Fr\u00e4ssle",
+        "Victor A.F. Lamme"
+      ],
+      "published": [
+        [
+          2015,
+          12
+        ]
+      ],
+      "container": "Trends in Cognitive Sciences",
+      "volume": "19",
+      "issue": "12",
+      "pages": "757-770",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.3389/fnhum.2022.861517",
+      "title": "The No-Report Paradigm: A Revolution in Consciousness Research?",
+      "authors": [
+        "Irem Duman",
+        "Isabell Sophia Ehmann",
+        "Alicia Ronnie Gonsalves",
+        "Zeynep G\u00fcltekin",
+        "Jonathan Van den Berckt",
+        "Cees van Leeuwen"
+      ],
+      "published": [
+        [
+          2022,
+          5,
+          11
+        ]
+      ],
+      "container": "Frontiers in Human Neuroscience",
+      "volume": "16",
+      "issue": null,
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.concog.2018.11.002",
+      "title": "A methodological dilemma for investigating consciousness empirically",
+      "authors": [
+        "Tobias Schlicht"
+      ],
+      "published": [
+        [
+          2018,
+          11
+        ]
+      ],
+      "container": "Consciousness and Cognition",
+      "volume": "66",
+      "issue": null,
+      "pages": "91-100",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1523/jneurosci.0120-20.2020",
+      "title": "Distinguishing the Neural Correlates of Perceptual Awareness and Postperceptual Processing",
+      "authors": [
+        "Michael A. Cohen",
+        "Kevin Ortego",
+        "Andrew Kyroudis",
+        "Michael Pitts"
+      ],
+      "published": [
+        [
+          2020,
+          5,
+          14
+        ]
+      ],
+      "container": "The Journal of Neuroscience",
+      "volume": "40",
+      "issue": "25",
+      "pages": "4925-4935",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1126/science.aan8871",
+      "title": "What is consciousness, and could machines have it?",
+      "authors": [
+        "Stanislas Dehaene",
+        "Hakwan Lau",
+        "Sid Kouider"
+      ],
+      "published": [
+        [
+          2017,
+          10,
+          27
+        ]
+      ],
+      "container": "Science",
+      "volume": "358",
+      "issue": "6362",
+      "pages": "486-492",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.neunet.2013.03.011",
+      "title": "The rise of machine consciousness: Studying consciousness with computational models",
+      "authors": [
+        "James A. Reggia"
+      ],
+      "published": [
+        [
+          2013,
+          8
+        ]
+      ],
+      "container": "Neural Networks",
+      "volume": "44",
+      "issue": null,
+      "pages": "112-131",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.concog.2007.04.005",
+      "title": "Progress in machine consciousness",
+      "authors": [
+        "David Gamez"
+      ],
+      "published": [
+        [
+          2008,
+          9
+        ]
+      ],
+      "container": "Consciousness and Cognition",
+      "volume": "17",
+      "issue": "3",
+      "pages": "887-910",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1016/j.tics.2025.10.011",
+      "title": "Identifying indicators of consciousness in AI systems",
+      "authors": [
+        "Patrick Butlin",
+        "Robert Long",
+        "Tim Bayne",
+        "Yoshua Bengio",
+        "Jonathan Birch",
+        "David Chalmers",
+        "Axel Constant",
+        "George Deane",
+        "Eric Elmoznino",
+        "Stephen M. Fleming",
+        "Xu Ji",
+        "Ryota Kanai",
+        "Colin Klein",
+        "Grace Lindsay",
+        "Matthias Michel",
+        "Liad Mudrik",
+        "Megan A.K. Peters",
+        "Eric Schwitzgebel",
+        "Jonathan Simon",
+        "Rufin VanRullen"
+      ],
+      "published": [
+        [
+          2026,
+          6
+        ]
+      ],
+      "container": "Trends in Cognitive Sciences",
+      "volume": "30",
+      "issue": "6",
+      "pages": "488-501",
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.3389/frobt.2024.1437496",
+      "title": "Synthetic consciousness architecture",
+      "authors": [
+        "Konstantyn Spasokukotskiy"
+      ],
+      "published": [
+        [
+          2024,
+          11,
+          28
+        ]
+      ],
+      "container": "Frontiers in Robotics and AI",
+      "volume": "11",
+      "issue": null,
+      "pages": null,
+      "type": "journal-article"
+    },
+    {
+      "doi": "10.1142/s270507852150003x",
+      "title": "Artificial Suffering: An Argument for a Global Moratorium on Synthetic Phenomenology",
+      "authors": [
+        "Thomas Metzinger"
+      ],
+      "published": [
+        [
+          2021,
+          2,
+          19
+        ]
+      ],
+      "container": "Journal of Artificial Intelligence and Consciousness",
+      "volume": "08",
+      "issue": "01",
+      "pages": "43-66",
+      "type": "journal-article"
+    }
+  ],
+  "errors": []
+}

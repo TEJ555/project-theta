@@ -1,4 +1,4 @@
-# Metric registry — v0.2
+# Metric registry v0.2
 
 Metrics are declared in `metrics.py`, versioned in SQLite and never combined into a
 consciousness score.
