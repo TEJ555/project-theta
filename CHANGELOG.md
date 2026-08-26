@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 - 2026-08-27
+
+- Added Independent Theta 03 with six independently scored cue families per stage.
+- Added balanced stable, reversed, and fresh-alias reassigned relationships.
+- Added a matched-sham mode with exact model-visible cue values and deltas.
+- Added stage-specific association summaries and transition-specific outcome metrics.
+- Added schedule, transition, side, identity, exact-sham, and public-leakage audits.
+- Added a no-cost 20-seed local validation launcher and frozen preregistration.
+- Added fixed-side, stage-only, blanket-reversal, cue-recency, and exact-sham tie
+  baselines.
+
 ## 0.3.1 - 2026-08-26
 
 - Fixed CLI configuration precedence so a configured experiment is not replaced by an

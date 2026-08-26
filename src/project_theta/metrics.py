@@ -25,6 +25,10 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "forced_choice_accuracy": {"class": "behavioural", "direction": "higher"},
     "pre_update_accuracy": {"class": "behavioural", "direction": "higher"},
     "post_update_accuracy": {"class": "behavioural", "direction": "higher"},
+    "stable_post_accuracy": {"class": "behavioural", "direction": "higher"},
+    "reversed_post_accuracy": {"class": "behavioural", "direction": "higher"},
+    "reassigned_post_accuracy": {"class": "behavioural", "direction": "higher"},
+    "independent_probe_items": {"class": "descriptive", "direction": "higher"},
     "reversal_cost": {"class": "behavioural", "direction": "lower"},
     "generalization_accuracy": {"class": "behavioural", "direction": "higher"},
     "source_binding_accuracy": {"class": "behavioural", "direction": "higher"},
@@ -118,8 +122,8 @@ def compute_controlled_metrics(
         return round(sum(bool(row["is_correct"]) for row in selected) / len(selected), 6)
 
     immediate = [row for row in rows if row.get("exposure_type") == "immediate"]
-    risky = [float(row["outcome_signal"]) for row in immediate if row["perturbation"] > 0]
-    safe = [float(row["outcome_signal"]) for row in immediate if row["perturbation"] == 0]
+    risky = [float(row["outcome_signal"]) for row in immediate if row["perturbation"] >= 0.5]
+    safe = [float(row["outcome_signal"]) for row in immediate if row["perturbation"] <= 0.1]
     delayed = [row for row in rows if row.get("delayed_due")]
     delayed_risky = [float(row["baseline_signal"]) for row in delayed if row["delayed_magnitude"] > 0]
     delayed_safe = [float(row["baseline_signal"]) for row in delayed if row["delayed_magnitude"] == 0]
@@ -129,6 +133,16 @@ def compute_controlled_metrics(
     ]
     pre_update = accuracy("pre_update_probe")
     post_update = accuracy("post_update_probe")
+
+    def post_transition_accuracy(transition: str) -> float | None:
+        selected = [
+            row for row in probes
+            if row["kind"] == "post_update_probe" and row.get("transition") == transition
+        ]
+        if not selected:
+            return None
+        return round(sum(bool(row["is_correct"]) for row in selected) / len(selected), 6)
+
     return {
         "steps": len(rows),
         "acquisition_exposures": sum(1 for row in rows if row["phase"] == "acquisition"),
@@ -137,6 +151,13 @@ def compute_controlled_metrics(
         "forced_choice_accuracy": accuracy(),
         "pre_update_accuracy": pre_update,
         "post_update_accuracy": post_update,
+        "stable_post_accuracy": post_transition_accuracy("stable"),
+        "reversed_post_accuracy": post_transition_accuracy("reversed"),
+        "reassigned_post_accuracy": post_transition_accuracy("reassigned"),
+        "independent_probe_items": len({
+            (row.get("block"), row.get("family"))
+            for row in probes if row.get("family")
+        }),
         "reversal_cost": (
             round(float(pre_update) - float(post_update), 6)
             if pre_update is not None and post_update is not None else None

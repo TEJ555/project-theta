@@ -35,14 +35,20 @@ class PersistentAgent:
             for position, records in sorted(groups.items())
         ]
 
-    def _association_summary(self) -> dict[str, dict[str, dict[str, float | int]]]:
+    def _association_summary(self) -> dict[str, Any]:
         by_cue: dict[str, list[MemoryRecord]] = defaultdict(list)
         by_tag: dict[str, list[MemoryRecord]] = defaultdict(list)
+        by_stage_cue: dict[str, dict[str, list[MemoryRecord]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
         for record in self.memory.records:
             if "acquisition" not in record.tags:
                 continue
             if record.cue:
                 by_cue[record.cue].append(record)
+                for stage in ("stage_a", "stage_b"):
+                    if stage in record.tags:
+                        by_stage_cue[stage][record.cue].append(record)
             for tag in record.tags:
                 if tag != "acquisition":
                     by_tag[tag].append(record)
@@ -57,7 +63,13 @@ class PersistentAgent:
                 for key, records in sorted(groups.items())
             }
 
-        return {"by_cue": summarize(by_cue), "by_feature": summarize(by_tag)}
+        return {
+            "by_cue": summarize(by_cue),
+            "by_feature": summarize(by_tag),
+            "by_stage_cue": {
+                stage: summarize(groups) for stage, groups in sorted(by_stage_cue.items())
+            },
+        }
 
     def decide(self, observation: Observation) -> tuple[Decision, dict[str, Any]]:
         memory_limit = min(64, max(1, int(observation.task.get("memory_limit", 5))))
@@ -80,7 +92,7 @@ class PersistentAgent:
         )
         public_protocol = (
             "controlled_signal_study"
-            if self.config.experiment == "adversarial_theta"
+            if self.config.experiment in {"adversarial_theta", "independent_theta"}
             else self.config.experiment
         )
         context = {

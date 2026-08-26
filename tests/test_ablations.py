@@ -13,6 +13,7 @@ class AblationTests(unittest.TestCase):
         self.assertFalse(apply_condition(base, "no_body").body.body_enabled)
         self.assertEqual(apply_condition(base, "shuffled_interoception").body.signal_mode, "shuffled")
         self.assertEqual(apply_condition(base, "sham_body").body.signal_mode, "sham")
+        self.assertEqual(apply_condition(base, "matched_sham").body.signal_mode, "matched_sham")
         self.assertFalse(apply_condition(base, "no_recurrence").architecture.recurrence_enabled)
         self.assertFalse(apply_condition(base, "no_persistence").architecture.persistent_state)
 

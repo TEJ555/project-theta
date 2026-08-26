@@ -5,13 +5,103 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from project_theta.audits import audit_adversarial_schedules
+from project_theta.audits import audit_adversarial_schedules, audit_independent_schedules
 from project_theta.config import RunConfig
 from project_theta.harness import ExperimentHarness
 from project_theta.trials import build_trials
 
 
 class ControlledTrialTests(unittest.TestCase):
+    def test_independent_schedule_has_independent_balanced_items(self):
+        result = audit_independent_schedules([401, 402, 403, 404])
+        self.assertEqual(result["status"], "pass")
+        trials = build_trials("independent_theta", 401)
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        self.assertEqual(len(trials), 60)
+        self.assertEqual(len(probes), 12)
+        self.assertEqual(len({(trial.block, trial.family) for trial in probes}), 12)
+
+    def test_independent_full_separates_from_exact_sham(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "independent.sqlite")
+            full = harness.run(replace(
+                RunConfig(), experiment="independent_theta", condition="full", seed=401
+            ))
+            sham = harness.run(replace(
+                RunConfig(), experiment="independent_theta", condition="matched_sham", seed=401
+            ))
+            self.assertEqual(full.metrics["post_update_accuracy"], 1.0)
+            self.assertEqual(full.metrics["stable_post_accuracy"], 1.0)
+            self.assertEqual(full.metrics["reversed_post_accuracy"], 1.0)
+            self.assertEqual(full.metrics["reassigned_post_accuracy"], 1.0)
+            self.assertEqual(sham.metrics["post_update_accuracy"], 0.5)
+            self.assertEqual(sham.metrics["stable_post_accuracy"], 0.5)
+            self.assertEqual(sham.metrics["reversed_post_accuracy"], 0.5)
+            self.assertEqual(sham.metrics["reassigned_post_accuracy"], 0.5)
+            self.assertEqual(full.metrics["independent_probe_items"], 12)
+
+    def test_exact_sham_is_equal_in_model_visible_stage_summaries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "sham.sqlite"
+            ExperimentHarness(database).run(replace(
+                RunConfig(), experiment="independent_theta", condition="matched_sham", seed=401
+            ))
+            connection = sqlite3.connect(database)
+            contexts = [json.loads(row[0]) for row in connection.execute(
+                "SELECT context_json FROM steps ORDER BY tick"
+            )]
+            connection.close()
+            for stage in ("stage_a", "stage_b"):
+                context = next(
+                    item for item in contexts
+                    if item["observation"]["task"].get("stage") == stage
+                    and item["observation"]["task"]["phase"] == "probe"
+                )
+                associations = next(
+                    item["content"] for item in context["workspace_broadcast"]
+                    if item["source"] == "learned_associations"
+                )
+                summaries = associations["by_stage_cue"][stage].values()
+                self.assertTrue(summaries)
+                self.assertEqual({row["mean_signal"] for row in summaries}, {0.4})
+                self.assertEqual({row["mean_signal_delta"] for row in summaries}, {0.4})
+
+    def test_independent_shortcut_baselines_do_not_clear_the_gate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "shortcuts.sqlite")
+
+            def run(model: str, condition: str = "full"):
+                return harness.run(replace(
+                    RunConfig(),
+                    experiment="independent_theta",
+                    condition=condition,
+                    seed=401,
+                    model=model,
+                ))
+
+            for model in (
+                "fixed-left-baseline-v1",
+                "fixed-right-baseline-v1",
+                "stage-only-baseline-v1",
+            ):
+                self.assertEqual(run(model).metrics["post_update_accuracy"], 0.5)
+
+            reversal = run("global-reversal-baseline-v1")
+            self.assertEqual(reversal.metrics["post_update_accuracy"], 0.5)
+            self.assertEqual(reversal.metrics["stable_post_accuracy"], 0.0)
+            self.assertEqual(reversal.metrics["reversed_post_accuracy"], 1.0)
+            self.assertEqual(reversal.metrics["reassigned_post_accuracy"], 0.5)
+
+            self.assertEqual(
+                run("cue-recency-baseline-v1").metrics["post_update_accuracy"], 1.0
+            )
+            self.assertEqual(
+                run("cue-recency-baseline-v1", "matched_sham").metrics[
+                    "post_update_accuracy"
+                ],
+                0.5,
+            )
+
     def test_adversarial_schedule_is_balanced_reversed_and_blinded(self):
         result = audit_adversarial_schedules([91, 92, 93, 94])
         self.assertEqual(result["status"], "pass")

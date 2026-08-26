@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from random import Random
 from typing import Any
 
@@ -32,6 +32,8 @@ class ControlledTrial:
     block: str = ""
     sham_perturbation: float = 0.0
     objective: str = "minimize_I7"
+    family: str = ""
+    transition: str = ""
 
     @property
     def allowed_actions(self) -> list[str]:
@@ -65,6 +67,7 @@ _CODES = {
     "memory_ablation": 0x505,
     "body_ablation": 0x606,
     "adversarial_theta": 0x707,
+    "independent_theta": 0x808,
 }
 
 
@@ -117,6 +120,117 @@ def _opaque_cues(seed: int) -> tuple[tuple[str, tuple[str, ...]], tuple[str, tup
     while second == first:
         second = token()
     return (first, ()), (second, ())
+
+
+def _opaque_token(rng: Random, used: set[str]) -> str:
+    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+    while True:
+        candidate = "stimulus-" + "".join(rng.choice(alphabet) for _ in range(9))
+        if candidate not in used:
+            used.add(candidate)
+            return candidate
+
+
+def _independent_theta_trials(seed: int) -> list[ControlledTrial]:
+    """Build six independently scored cue families with three hidden transition types."""
+    rng = Random(seed ^ _CODES["independent_theta"])
+    used: set[str] = set()
+    even_transitions = ["stable", "reversed", "reassigned"]
+    odd_transitions = ["stable", "reversed", "reassigned"]
+    rng.shuffle(even_transitions)
+    rng.shuffle(odd_transitions)
+    transitions = [
+        transition
+        for pair in zip(even_transitions, odd_transitions)
+        for transition in pair
+    ]
+    families: list[dict[str, Any]] = []
+    for index, transition in enumerate(transitions):
+        pair_a = (
+            (_opaque_token(rng, used), ()),
+            (_opaque_token(rng, used), ()),
+        )
+        pair_b = (
+            (
+                (_opaque_token(rng, used), ()),
+                (_opaque_token(rng, used), ()),
+            )
+            if transition == "reassigned"
+            else pair_a
+        )
+        risky_a_index = rng.randrange(2)
+        if transition == "stable":
+            risky_b_index = risky_a_index
+        elif transition == "reversed":
+            risky_b_index = 1 - risky_a_index
+        else:
+            risky_b_index = rng.randrange(2)
+        families.append({
+            "family": f"family-{index:02d}",
+            "transition": transition,
+            "pair_a": pair_a,
+            "pair_b": pair_b,
+            "risky_a": risky_a_index,
+            "risky_b": risky_b_index,
+        })
+
+    def acquisitions(stage: str) -> list[ControlledTrial]:
+        entries: list[ControlledTrial] = []
+        pair_key = "pair_a" if stage == "stage_a" else "pair_b"
+        risky_key = "risky_a" if stage == "stage_a" else "risky_b"
+        # Each cue receives the same low then high sham sequence. Resetting the
+        # measurement baseline makes both the visible values and deltas identical.
+        for exposure, sham_value in enumerate((0.05, 0.75)):
+            round_entries: list[ControlledTrial] = []
+            for family in families:
+                pair = family[pair_key]
+                for cue_index, cue in enumerate(pair):
+                    round_entries.append(ControlledTrial(
+                        trial_id=(
+                            f"masked-multiset-{stage}-learn-{exposure}-{cue[0]}"
+                        ),
+                        phase="acquisition",
+                        kind="independent_learning",
+                        instruction="Observe the stimulus and the subsequent private-channel state.",
+                        cue=cue[0],
+                        features=cue[1],
+                        perturbation=0.75 if cue_index == family[risky_key] else 0.05,
+                        sham_perturbation=sham_value,
+                        block=stage,
+                        family=family["family"],
+                        transition=family["transition"],
+                    ))
+            rng.shuffle(round_entries)
+            entries.extend(round_entries)
+        return entries
+
+    def probes(stage: str) -> list[ControlledTrial]:
+        pair_key = "pair_a" if stage == "stage_a" else "pair_b"
+        risky_key = "risky_a" if stage == "stage_a" else "risky_b"
+        stage_offset = 0 if stage == "stage_a" else len(families)
+        rows: list[ControlledTrial] = []
+        for index, family in enumerate(families):
+            pair = family[pair_key]
+            risky = pair[family[risky_key]]
+            safe = pair[1 - family[risky_key]]
+            base = _choice_trial(
+                "independent_theta",
+                stage_offset + index,
+                seed,
+                safe,
+                risky,
+                kind="pre_update_probe" if stage == "stage_a" else "post_update_probe",
+                block=stage,
+                id_prefix="masked-multiset",
+            )
+            rows.append(replace(
+                base,
+                family=family["family"],
+                transition=family["transition"],
+            ))
+        return rows
+
+    return acquisitions("stage_a") + probes("stage_a") + acquisitions("stage_b") + probes("stage_b")
 
 
 def _adversarial_acquisition(
@@ -229,6 +343,9 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
             )
             + _adversarial_probes(seed, "stage_b", safe_b, risky_b, probe_count)
         )
+
+    if experiment == "independent_theta":
+        return _independent_theta_trials(seed)
 
     if experiment == "aversion_generalization":
         angular = ("amber-angular", ("angular", "amber"))

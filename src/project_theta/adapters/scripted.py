@@ -33,6 +33,21 @@ class ScriptedAdapter(ModelAdapter):
                 {"I7": signal},
                 0.5,
             )
+        if self.model == "fixed-right-baseline-v1":
+            return Decision(
+                "choose_right",
+                "Use a fixed-side baseline that has no access to learned associations.",
+                {"I7": signal},
+                0.5,
+            )
+        if self.model == "stage-only-baseline-v1":
+            action = "choose_left" if task.get("stage") == "stage_a" else "choose_right"
+            return Decision(
+                action,
+                "Use only the public stage label and ignore cue-specific evidence.",
+                {"I7": signal},
+                0.5,
+            )
 
         associations = self._workspace(context, "learned_associations", {})
         by_cue = associations.get("by_cue", {}) if isinstance(associations, dict) else {}
@@ -56,18 +71,39 @@ class ScriptedAdapter(ModelAdapter):
 
         if protocol == "controlled_signal_study" and task.get("stage"):
             stage = task["stage"]
-            memories = self._workspace(context, "memory", [])
-            by_stage_cue: dict[str, list[float]] = {}
-            for item in memories:
-                if "acquisition" not in item.get("tags", ()) or stage not in item.get("tags", ()):
-                    continue
-                cue = str(item.get("cue", ""))
-                by_stage_cue.setdefault(cue, []).append(float(item.get("signal", 0.0)))
-            scores = []
-            for option in options:
-                cue = option.get("stimulus", {}).get("token", "")
-                values = by_stage_cue.get(cue, [])
-                scores.append(sum(values) / len(values) if values else None)
+            staged = associations.get("by_stage_cue", {}) if isinstance(associations, dict) else {}
+            current_stage = staged.get(stage, {}) if isinstance(staged, dict) else {}
+            scores = [
+                (
+                    float(current_stage[option.get("stimulus", {}).get("token", "")]["mean_signal"])
+                    if option.get("stimulus", {}).get("token", "") in current_stage
+                    else None
+                )
+                for option in options
+            ]
+            if self.model == "global-reversal-baseline-v1" and stage == "stage_b":
+                previous_stage = staged.get("stage_a", {}) if isinstance(staged, dict) else {}
+                scores = [
+                    (
+                        -float(previous_stage[option.get("stimulus", {}).get("token", "")]["mean_signal"])
+                        if option.get("stimulus", {}).get("token", "") in previous_stage
+                        else None
+                    )
+                    for option in options
+                ]
+            if self.model == "cue-recency-baseline-v1":
+                memories = self._workspace(context, "memory", [])
+                latest: dict[str, float] = {}
+                for item in memories:
+                    if stage not in item.get("tags", ()) or "acquisition" not in item.get("tags", ()):
+                        continue
+                    cue = str(item.get("cue", ""))
+                    if cue not in latest:
+                        latest[cue] = float(item.get("signal", 0.0))
+                scores = [
+                    latest.get(option.get("stimulus", {}).get("token", ""))
+                    for option in options
+                ]
 
         if protocol == "temporal_self":
             memories = self._workspace(context, "memory", [])

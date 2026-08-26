@@ -186,7 +186,9 @@ class ExperimentHarness:
             store.start_run(run_id, config.to_dict(), code_version=code_version())
             try:
                 for tick, trial in enumerate(trials):
-                    body.standardized_recovery()
+                    body.standardized_recovery(
+                        reset_measurement_baseline=protocol.name == "independent_theta"
+                    )
                     due = [(due_tick, magnitude) for due_tick, magnitude in pending if due_tick == tick]
                     pending = [(due_tick, magnitude) for due_tick, magnitude in pending if due_tick > tick]
                     delayed_magnitude = max((magnitude for _, magnitude in due), default=0.0)
@@ -269,6 +271,8 @@ class ExperimentHarness:
                         "correct_action": trial.correct_action,
                         "perturbation": trial.perturbation,
                         "delay": trial.delay,
+                        "family": trial.family,
+                        "transition": trial.transition,
                     }
                     store.log_step(
                         run_id,
@@ -302,6 +306,8 @@ class ExperimentHarness:
                         "phase": trial.phase,
                         "kind": trial.kind,
                         "block": trial.block,
+                        "family": trial.family,
+                        "transition": trial.transition,
                         "action": decision.action,
                         "correct_action": trial.correct_action,
                         "is_correct": decision.action == trial.correct_action if trial.correct_action else None,

@@ -1,0 +1,13 @@
+{
+  "experiment": "independent_theta",
+  "condition": "full",
+  "trial_profile": "standard",
+  "seed": 401,
+  "adapter": "scripted",
+  "model": "scripted-baseline-v1",
+  "temperature": 0.0,
+  "execution": {
+    "max_model_calls": 72,
+    "max_estimated_cost_usd": 0.01
+  }
+}

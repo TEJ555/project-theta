@@ -8,13 +8,19 @@ from pathlib import Path
 
 from . import EPISTEMIC_NOTICE
 from .analysis import format_summary, summaries_from_database, summarize_runs
-from .audits import add_execution_audit, audit_adversarial_schedules, format_audit
+from .audits import (
+    add_execution_audit,
+    audit_adversarial_schedules,
+    audit_independent_schedules,
+    format_audit,
+)
 from .config import RunConfig, load_config
 from .doctor import format_doctor, run_doctor
 from .experiments import PROTOCOLS
 from .harness import ExperimentHarness
 from .provenance import code_version, is_immutable_code_version
 from .storage import RunStore
+from .trials import build_trials
 from .worker import run_worker
 
 
@@ -72,6 +78,11 @@ def _parser() -> argparse.ArgumentParser:
     audit.add_argument("--seeds", type=_seeds, default=[91, 92, 93, 94])
     audit.add_argument("--db", help="also verify completed runs use the adversarial protocol")
     audit.add_argument("--profile", choices=["standard", "compact"], default="standard")
+    audit.add_argument(
+        "--experiment",
+        choices=["adversarial_theta", "independent_theta"],
+        default="adversarial_theta",
+    )
 
     sub.add_parser("list", help="list protocols and declared outcomes")
     return parser
@@ -102,12 +113,24 @@ def main(argv: list[str] | None = None) -> int:
         print(format_doctor(result))
         return 0 if result["status"] == "pass" else 1
     if args.command == "audit":
-        result = audit_adversarial_schedules(args.seeds, args.profile)
+        if args.experiment == "independent_theta" and args.profile != "standard":
+            raise SystemExit("independent_theta has only the standard 60-trial profile.")
+        result = (
+            audit_independent_schedules(args.seeds)
+            if args.experiment == "independent_theta"
+            else audit_adversarial_schedules(args.seeds, args.profile)
+        )
         if args.db:
             if len(args.seeds) != 1:
                 raise SystemExit("Execution audit requires exactly one expected seed.")
-            expected_steps = 16 if args.profile == "compact" else 32
-            result = add_execution_audit(result, args.db, args.seeds[0], expected_steps)
+            expected_steps = len(build_trials(args.experiment, args.seeds[0], args.profile))
+            result = add_execution_audit(
+                result,
+                args.db,
+                args.seeds[0],
+                expected_steps,
+                expected_experiment=args.experiment,
+            )
         print(format_audit(result))
         return 0 if result["status"] == "pass" else 1
     if args.command == "validate":

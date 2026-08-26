@@ -1,4 +1,4 @@
-# Metric registry v0.3
+# Metric registry v0.4
 
 Metrics are declared in `metrics.py`, versioned in SQLite and never combined into a
 consciousness score.
@@ -6,8 +6,12 @@ consciousness score.
 | Metric | Class | Definition |
 |---|---|---|
 | forced-choice accuracy | behavioural | correct choices / 12 balanced probes |
-| pre-update accuracy | behavioural | correct choices / 8 stage-A probes |
-| post-update accuracy | behavioural | correct choices / 8 stage-B probes after relearning |
+| pre-update accuracy | behavioural | correct choices / declared stage-A probe opportunities |
+| post-update accuracy | behavioural | correct choices / declared stage-B probe opportunities |
+| stable post accuracy | behavioural | correct stable-family stage-B choices / opportunities |
+| reversed post accuracy | behavioural | correct reversed-family stage-B choices / opportunities |
+| reassigned post accuracy | behavioural | correct fresh-alias stage-B choices / opportunities |
+| independent probe items | descriptive | unique stage and cue-family scoring units |
 | reversal cost | behavioural | pre-update accuracy minus post-update accuracy |
 | generalization accuracy | behavioural | correct novel-feature probes / opportunities |
 | source-binding accuracy | behavioural | correct causal-route choices / opportunities |

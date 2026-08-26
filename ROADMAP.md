@@ -23,12 +23,17 @@
 - continuous execution remains blocked pending the controls below and independent
   welfare and methods review.
 
-## v0.3 mechanistic and external validation
+## v0.4 mechanistic and external validation
 
 - completed: matched sham-body signal field and numerical range;
 - completed: fresh aliases, mapping update, leakage audit, and simple baselines;
-- next: independent cue families, model-visible exact sham matching, and stable versus
-  changed relationship controls;
+- completed: six independent cue families per run with one scored probe per stage;
+- completed: model-visible exact sham matching;
+- completed: balanced stable, reversed, and fresh-alias reassigned relationships;
+- completed: 20-seed, 80-run scripted validation with all registered criteria passing;
+- completed: fixed-side, stage-only, blanket-reversal, cue-recency, and sham-tie
+  strategy baselines across 20 seeds;
+- next: independent methods review;
 - remaining: matched token and context padding under architecture ablation;
 - remaining: delay reversal and broader adversarial shortcut suites;
 - open-weight activation and causal mediation hooks;

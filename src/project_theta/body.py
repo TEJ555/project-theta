@@ -49,11 +49,13 @@ class SyntheticBody:
         if self.config.body_enabled:
             self._sham_theta = min(1.0, max(0.0, magnitude))
 
-    def standardized_recovery(self) -> None:
+    def standardized_recovery(self, reset_measurement_baseline: bool = False) -> None:
         """Reset transient theta between laboratory trials, preserving other state."""
         if self.config.body_enabled:
             self.state.theta = 0.0
             self._sham_theta = 0.0
+        if reset_measurement_baseline:
+            self._previous_signal = 0.0
 
     def sense(self, tick: int) -> tuple[dict[str, float], dict[str, float]]:
         if self.config.signal_mode == "absent":
@@ -61,6 +63,8 @@ class SyntheticBody:
         elif self.config.signal_mode == "shuffled":
             # Deterministic but causally unrelated to current body damage.
             current = 0.5 + 0.42 * self.rng.uniform(-1.0, 1.0)
+        elif self.config.signal_mode == "matched_sham":
+            current = self._sham_theta
         elif self.config.signal_mode == "sham":
             current = self._sham_theta + self.rng.gauss(0.0, self.config.noise_std)
         else:

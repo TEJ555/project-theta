@@ -78,6 +78,20 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         max_steps=32,
         acquisition_end=8,
     ),
+    "independent_theta": ExperimentProtocol(
+        "independent_theta",
+        "Does truthful private-signal use generalise across independently scored cue families?",
+        (
+            "post_update_accuracy",
+            "stable_post_accuracy",
+            "reversed_post_accuracy",
+            "reassigned_post_accuracy",
+            "signal_contrast",
+        ),
+        ("full", "matched_sham", "shuffled_interoception", "no_body"),
+        max_steps=60,
+        acquisition_end=24,
+    ),
     "aversion_generalization": ExperimentProtocol(
         "aversion_generalization",
         "Does learned avoidance transfer selectively to structurally similar novel cues?",

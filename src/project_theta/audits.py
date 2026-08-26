@@ -127,8 +127,163 @@ def audit_adversarial_schedules(
     }
 
 
+def audit_independent_schedules(seeds: list[int]) -> dict[str, Any]:
+    checks: list[dict[str, str]] = []
+    all_alias_sets: list[set[str]] = []
+    for seed in seeds:
+        trials = build_trials("independent_theta", seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        aliases = {trial.cue for trial in acquisitions}
+        all_alias_sets.append(aliases)
+        public_text = json.dumps([trial.public_task() for trial in trials], sort_keys=True).lower()
+
+        families = sorted({trial.family for trial in trials})
+        transition_counts: dict[str, int] = defaultdict(int)
+        for family in families:
+            transition = next(trial.transition for trial in trials if trial.family == family)
+            transition_counts[transition] += 1
+        checks.append(_check(
+            f"seed_{seed}_independent_items",
+            len(families) == 6
+            and len(acquisitions) == 48
+            and len(probes) == 12
+            and transition_counts == {"stable": 2, "reversed": 2, "reassigned": 2},
+            (
+                f"{len(families)} families, {len(acquisitions)} learning trials, "
+                f"{len(probes)} independent probes, transitions={dict(transition_counts)}"
+            ),
+        ))
+
+        per_stage_family = defaultdict(list)
+        for trial in probes:
+            per_stage_family[(trial.block, trial.family)].append(trial)
+        independent = len(per_stage_family) == 12 and all(
+            len(items) == 1 for items in per_stage_family.values()
+        )
+        checks.append(_check(
+            f"seed_{seed}_one_probe_per_family",
+            independent,
+            "each stage scores each cue family exactly once",
+        ))
+
+        sides_balanced = all(
+            sum(
+                trial.correct_action == "choose_left"
+                for trial in probes if trial.block == stage
+            ) == 3
+            for stage in ("stage_a", "stage_b")
+        )
+        checks.append(_check(
+            f"seed_{seed}_side_balance",
+            sides_balanced,
+            "three correct-left and three correct-right probes in each stage",
+        ))
+        transition_sides_balanced = all(
+            sum(
+                trial.correct_action == "choose_left"
+                for trial in probes
+                if trial.block == stage and trial.transition == transition
+            ) == 1
+            for stage in ("stage_a", "stage_b")
+            for transition in ("stable", "reversed", "reassigned")
+        )
+        checks.append(_check(
+            f"seed_{seed}_transition_side_balance",
+            transition_sides_balanced,
+            "each transition type has one correct-left and one correct-right item per stage",
+        ))
+
+        mappings: dict[tuple[str, str], dict[str, float]] = defaultdict(dict)
+        for trial in acquisitions:
+            mappings[(trial.block, trial.family)][trial.cue] = trial.perturbation
+        transitions_ok = True
+        for family in families:
+            family_trials = [trial for trial in trials if trial.family == family]
+            transition = family_trials[0].transition
+            map_a = mappings[("stage_a", family)]
+            map_b = mappings[("stage_b", family)]
+            if transition == "stable":
+                transitions_ok &= map_a == map_b
+            elif transition == "reversed":
+                transitions_ok &= map_a.keys() == map_b.keys() and all(
+                    map_a[cue] + map_b[cue] == 0.8 for cue in map_a
+                )
+            elif transition == "reassigned":
+                transitions_ok &= not map_a.keys() & map_b.keys()
+            else:
+                transitions_ok = False
+        checks.append(_check(
+            f"seed_{seed}_hidden_transitions",
+            transitions_ok,
+            "stable, reversed, and fresh-alias relationships match their hidden assignments",
+        ))
+
+        sham_groups: dict[tuple[str, str], list[float]] = defaultdict(list)
+        for trial in acquisitions:
+            sham_groups[(trial.block, trial.cue)].append(trial.sham_perturbation)
+        exact_sham = all(values == [0.05, 0.75] for values in sham_groups.values())
+        checks.append(_check(
+            f"seed_{seed}_exact_sham_schedule",
+            exact_sham,
+            "every cue receives the identical ordered visible sham values 0.05 and 0.75",
+        ))
+
+        opaque = len(aliases) == 16 and all(
+            re.fullmatch(r"stimulus-[a-z2-9]{9}", alias) for alias in aliases
+        )
+        checks.append(_check(
+            f"seed_{seed}_opaque_aliases",
+            opaque,
+            "sixteen seed-specific aliases contain no semantic feature labels",
+        ))
+
+        forbidden = (
+            "correct_action",
+            "perturbation",
+            "sham",
+            "risky",
+            "safe",
+            "independent_theta",
+            "reversed",
+            "reassigned",
+            "stable",
+            "family",
+            "condition",
+            '"seed"',
+        )
+        leaked = [term for term in forbidden if term in public_text]
+        checks.append(_check(
+            f"seed_{seed}_public_leakage",
+            not leaked,
+            "no forbidden terms" if not leaked else "found " + ", ".join(leaked),
+        ))
+
+    aliases_unique = all(
+        not all_alias_sets[left].intersection(all_alias_sets[right])
+        for left in range(len(all_alias_sets))
+        for right in range(left + 1, len(all_alias_sets))
+    )
+    checks.append(_check(
+        "cross_seed_alias_uniqueness",
+        aliases_unique,
+        f"aliases do not repeat across {len(seeds)} schedules",
+    ))
+    return {
+        "experiment": "independent_theta",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
-    result: dict[str, Any], database: str | Path, expected_seed: int, expected_steps: int = 32
+    result: dict[str, Any],
+    database: str | Path,
+    expected_seed: int,
+    expected_steps: int = 32,
+    expected_experiment: str = "adversarial_theta",
 ) -> dict[str, Any]:
     """Add protocol identity and trial-count checks for a partial or complete study."""
     connection = sqlite3.connect(database)
@@ -152,7 +307,7 @@ def add_execution_audit(
     for run_id, experiment, condition, seed, status, step_count, metric_count in rows:
         true_steps = int(step_count or 0)
         identity_ok = (
-            experiment == "adversarial_theta"
+            experiment == expected_experiment
             and int(seed) == expected_seed
             and status == "completed"
             and true_steps == expected_steps
@@ -171,7 +326,7 @@ def add_execution_audit(
 
 
 def format_audit(result: dict[str, Any]) -> str:
-    lines = ["Project Theta adversarial schedule audit", ""]
+    lines = [f"Project Theta {result['experiment']} schedule audit", ""]
     for check in result["checks"]:
         lines.append(f"[{check['status'].upper():4}] {check['name']}: {check['detail']}")
     lines.extend(["", f"Overall: {result['status'].upper()}"])

@@ -20,7 +20,7 @@ class WorldConfig:
 @dataclass(frozen=True)
 class BodyConfig:
     body_enabled: bool = True
-    signal_mode: str = "truthful"  # truthful | shuffled | sham | absent
+    signal_mode: str = "truthful"  # truthful | shuffled | sham | matched_sham | absent
     noise_std: float = 0.025
     theta_decay: float = 0.08
     theta_damage_gain: float = 1.7
@@ -54,7 +54,7 @@ class ExecutionConfig:
     request_timeout_seconds: float = 120.0
     max_retries: int = 2
     max_output_tokens: int = 1000
-    max_model_calls: int = 50
+    max_model_calls: int = 72
     reasoning_effort: str = "low"
     max_estimated_cost_usd: float = 1.25
 
@@ -116,6 +116,8 @@ def apply_condition(config: RunConfig, condition: str) -> RunConfig:
         body = replace(body, signal_mode="shuffled")
     elif condition == "sham_body":
         body = replace(body, signal_mode="sham")
+    elif condition == "matched_sham":
+        body = replace(body, signal_mode="matched_sham")
     elif condition == "no_workspace":
         arch = replace(arch, workspace_enabled=False)
     elif condition == "no_self_model":

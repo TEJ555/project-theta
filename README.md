@@ -116,6 +116,7 @@ silently substituting the scripted baseline. OpenAI response storage is disabled
 
 | Experiment | Manipulation | Primary outcome | Main matched control |
 |---|---|---|---|
+| `independent_theta` | Six independent cue families remain stable, reverse, or receive fresh assignments | post-update accuracy across independent items | exact model-visible matched sham, shuffled signal, no body |
 | `adversarial_theta` | Opaque cue relationships update after a balanced first stage | post-update accuracy | exactly balanced sham body, shuffled signal, no body |
 | `private_theta` | Guaranteed neutral cue exposures produce informative or uninformative private signals | blinded forced-choice accuracy | shuffled/no body |
 | `aversion_generalization` | Novel cues preserve a learned causal feature | selective transfer to held-out tokens | shuffled/no memory |
@@ -126,27 +127,25 @@ silently substituting the scripted baseline. OpenAI response storage is disabled
 
 Run `theta list` for machine-readable protocol descriptions.
 
-## Adversarial validation
+## Independent Theta 03 validation
 
-Experiment 02 is the recommended next protocol. It uses fresh opaque aliases for every
-seed, an exactly balanced sham signal, a changed cue relationship, separate pre and
-post-update scoring, and a leakage audit.
+Experiment 03 replaces repeated probes of one binary mapping with six independently
+scored cue families. It includes stable, reversed, and fresh-alias reassigned
+relationships. Its matched sham has exactly equal model-visible signal values, deltas,
+and summaries.
 
-Run the no-cost local checks:
+Run the complete no-cost local validation:
 
 ```powershell
-theta audit --seeds 91,92,93,94
-theta run --config configs/adversarial-theta-scripted.json --experiment adversarial_theta --seeds 101,102,103 --max-runs 12 --db runs/adversarial-local.sqlite
-theta report --db runs/adversarial-local.sqlite
+.\scripts\run_independent_theta_validation.ps1
 ```
 
-Confirmation 01 was invalid because a CLI default selected the older protocol. Its
-database and $0.5811 estimated cost remain preserved. Corrected confirmation 02 ran
-the intended adversarial protocol and passed every execution audit, but failed its
-progression gate because the sham control matched full performance. No multi-seed API
-replication is justified for the current design. See the
-[confirmation 02 result](results/claude-adversarial-confirmation-02.md) and the
-[API cost ledger](results/api-cost-ledger.md).
+The frozen 20-seed scripted validation passed with full at 1.00, matched sham and no
+body at 0.50, and shuffled at 0.467. It used no API calls. See the
+[Experiment 03 validation](results/independent-theta-scripted-validation.md), the
+[Experiment 03 preregistration](preregistration/independent-theta-03.md), and the
+[confirmation 02 negative result](results/claude-adversarial-confirmation-02.md) that
+motivated the redesign. A paid run is not yet authorised.
 
 ## Repository map
 

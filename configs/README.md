@@ -11,6 +11,9 @@ rough range while breaking its causal relation to body state. `no_body` removes 
 dynamics as well as the signal. These answer different questions and should not be pooled.
 `sham_body` preserves a plausible signal field and range while using a schedule that is
 exactly balanced within every cue and learning stage.
+`matched_sham` is the stricter Experiment 03 control. It resets the measurement
+baseline and exposes exactly identical signal values and deltas for both cues in each
+independent family.
 
 Scientific protocols use deterministic acquisition and blinded forced-choice trials;
 `navigation_demo` is a plumbing demonstration and is excluded from the study battery.
@@ -26,3 +29,7 @@ configuration for audit. `claude-adversarial-confirmation-02.json` is the replac
 one-seed compact diagnostic using three conditions and a $0.18 per-run guard. Launch it only
 through the bounded PowerShell script after committing every tracked and untracked
 change. Model preflight fails on a dirty working tree.
+
+`independent-theta-scripted.json` is a no-cost local validation configuration. It does
+not enable provider access and can be launched with
+`scripts\run_independent_theta_validation.ps1`.
