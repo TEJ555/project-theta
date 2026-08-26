@@ -41,7 +41,6 @@ class AnthropicAdapter(ModelAdapter):
                 model=self.model,
                 system=AGENT_INSTRUCTIONS,
                 messages=[{"role": "user", "content": json.dumps(context, sort_keys=True)}],
-                temperature=self.temperature,
                 max_tokens=self.max_output_tokens,
                 output_config={
                     "effort": self.reasoning_effort,
@@ -72,6 +71,11 @@ class AnthropicAdapter(ModelAdapter):
                 "total_tokens": priced_input + output_tokens,
                 "model": response.model,
                 "reasoning_effort": self.reasoning_effort,
+                # Anthropic SDK 1.x no longer exposes a temperature parameter on
+                # Messages.create. Keep the requested value in provenance while
+                # accurately recording that the provider default was used.
+                "temperature_requested": self.temperature,
+                "temperature_applied": None,
                 "estimated_cost_usd": round(call_cost, 8),
                 "estimated_run_cost_usd": round(self.estimated_cost_usd, 8),
             }

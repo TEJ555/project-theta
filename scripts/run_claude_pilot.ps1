@@ -22,7 +22,15 @@ if (-not (Test-Path -LiteralPath $theta)) {
 }
 
 if (Test-Path -LiteralPath $databasePath) {
-    throw "Pilot database already exists at $databasePath. Nothing was charged. Move it or pass -Database with a new filename."
+    if ($PSBoundParameters.ContainsKey("Database")) {
+        throw "Pilot database already exists at $databasePath. Nothing was charged. Pass -Database with a new filename."
+    }
+    $suffix = 2
+    do {
+        $databasePath = Join-Path $projectRoot "runs/claude-pilot-$suffix.sqlite"
+        $suffix += 1
+    } while (Test-Path -LiteralPath $databasePath)
+    Write-Host "Previous pilot database preserved. New results will use $databasePath"
 }
 
 try {
@@ -36,6 +44,8 @@ try {
     Set-Location -LiteralPath $projectRoot
     $env:ANTHROPIC_API_KEY = $plainKey
     $env:THETA_ENABLE_MODEL_RUNS = "YES"
+
+    Write-Host "Pilot database: $databasePath"
 
     & $theta doctor --adapter anthropic --db "runs/claude-live-doctor.sqlite"
     if ($LASTEXITCODE -ne 0) {

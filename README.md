@@ -64,7 +64,8 @@ python -m pip install -e ".[anthropic]"
 
 The launcher prompts privately for the Console API key, runs preflight plus exactly
 three matched conditions, prints the report and removes the key from its process. The
-key is never written to the repository or database.
+key is never written to the repository or database. If a prior default pilot database
+exists, the launcher preserves it and automatically selects the next numbered filename.
 
 The Claude pilot uses pinned `claude-sonnet-4-6`, at most 30 calls and an estimated
 $1.25 USD guard per run. Three runs therefore have a planned guard of $3.75 USD, with

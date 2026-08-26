@@ -85,8 +85,11 @@ class AdapterTests(unittest.TestCase):
             with self.assertRaises(AdapterError):
                 adapter.decide({"permitted_actions": ["observe"]})
         self.assertEqual(decision.action, "observe")
+        self.assertNotIn("temperature", captured)
         self.assertEqual(captured["output_config"]["effort"], "low")
         self.assertEqual(captured["output_config"]["format"]["type"], "json_schema")
+        self.assertEqual(adapter.last_metadata["temperature_requested"], 0.0)
+        self.assertIsNone(adapter.last_metadata["temperature_applied"])
         self.assertGreater(adapter.estimated_cost_usd, 1.25)
 
 
