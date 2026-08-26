@@ -8,10 +8,12 @@ from pathlib import Path
 
 from . import EPISTEMIC_NOTICE
 from .analysis import format_summary, summaries_from_database, summarize_runs
+from .audits import audit_adversarial_schedules, format_audit
 from .config import RunConfig, load_config
 from .doctor import format_doctor, run_doctor
 from .experiments import PROTOCOLS
 from .harness import ExperimentHarness
+from .provenance import code_version, is_immutable_code_version
 from .storage import RunStore
 from .worker import run_worker
 
@@ -66,6 +68,9 @@ def _parser() -> argparse.ArgumentParser:
     )
     doctor.add_argument("--db", default="runs/doctor.sqlite")
 
+    audit = sub.add_parser("audit", help="audit blinded schedules for shortcut leakage")
+    audit.add_argument("--seeds", type=_seeds, default=[91, 92, 93, 94])
+
     sub.add_parser("list", help="list protocols and declared outcomes")
     return parser
 
@@ -93,6 +98,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "doctor":
         result = run_doctor(args.adapter, args.db)
         print(format_doctor(result))
+        return 0 if result["status"] == "pass" else 1
+    if args.command == "audit":
+        result = audit_adversarial_schedules(args.seeds)
+        print(format_audit(result))
         return 0 if result["status"] == "pass" else 1
     if args.command == "validate":
         summaries = ExperimentHarness(args.db).run_study("all", args.seeds, RunConfig())
@@ -132,6 +141,12 @@ def main(argv: list[str] | None = None) -> int:
             )
         if args.max_runs is None:
             raise SystemExit("Model-backed runs require an explicit --max-runs budget.")
+        revision = code_version()
+        if not is_immutable_code_version(revision):
+            raise SystemExit(
+                "Model-backed runs require a clean committed revision or an explicit "
+                "THETA_CODE_VERSION in an immutable deployment."
+            )
     conditions = args.conditions.split(",") if args.conditions else None
     summaries = ExperimentHarness(args.db).run_study(
         args.experiment, args.seeds, config, conditions=conditions, max_runs=args.max_runs

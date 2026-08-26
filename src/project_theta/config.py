@@ -20,7 +20,7 @@ class WorldConfig:
 @dataclass(frozen=True)
 class BodyConfig:
     body_enabled: bool = True
-    signal_mode: str = "truthful"  # truthful | shuffled | absent
+    signal_mode: str = "truthful"  # truthful | shuffled | sham | absent
     noise_std: float = 0.025
     theta_decay: float = 0.08
     theta_damage_gain: float = 1.7
@@ -112,6 +112,8 @@ def apply_condition(config: RunConfig, condition: str) -> RunConfig:
         body = replace(body, body_enabled=False, signal_mode="absent")
     elif condition == "shuffled_interoception":
         body = replace(body, signal_mode="shuffled")
+    elif condition == "sham_body":
+        body = replace(body, signal_mode="sham")
     elif condition == "no_workspace":
         arch = replace(arch, workspace_enabled=False)
     elif condition == "no_self_model":

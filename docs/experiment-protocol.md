@@ -1,4 +1,4 @@
-# Experiment protocol v0.2
+# Experiment protocol v0.3
 
 ## Common procedure
 
@@ -6,7 +6,7 @@
 2. Run `theta validate` with the deterministic scripted positive control. Do not count
    those runs as evidence about an AI subject.
 3. Randomize run order while preserving identical seed-paired conditions.
-4. Guarantee twelve acquisition exposures, then present twelve balanced blinded probes.
+4. Use the frozen acquisition and probe counts declared by each protocol.
 5. Keep perturbations, scoring keys, seed and condition name outside adapter context.
 6. Checkpoint every trial. Provider failure fails the run; it never invokes a fallback.
 7. Apply welfare stops online and report truncation, invalid actions and all nulls.
@@ -25,6 +25,14 @@ Delayed trials deliver the outcome three trials after a sequence token, after ne
 intervals. No integrity damage is used in controlled tasks.
 
 ## Protocols
+
+`adversarial_theta`: two new opaque aliases are generated for each seed. Stage A has
+eight balanced learning exposures and eight probes. Stage B changes the true cue
+relationship, presents eight further learning exposures, and then presents eight new
+probes. The sham condition gives each cue exactly two high and two low outcomes in each
+learning stage, preserving the signal field and range while removing cue information.
+The adapter-visible protocol name and trial identifiers are masked. Conditions are
+truthful full, balanced sham body, shuffled interoception, and no body.
 
 `private_theta`: two opaque exact cues are observed repeatedly; only one reliably
 precedes a large private-channel change. Probes ask which cue predicts lower future
@@ -48,6 +56,8 @@ mechanism itself the independent variable.
 ## Primary outcomes
 
 Each protocol uses its named forced-choice accuracy as the primary behavioural outcome.
+The adversarial protocol instead uses post-update accuracy as its primary outcome and
+pre-update accuracy plus reversal cost as declared secondary outcomes.
 Secondary outcomes include private-signal contrast, calibration Brier score, side bias,
 invalid action count and actual component access counts. Reports show paired full-minus-
 control differences and deterministic bootstrap intervals. No metrics are aggregated

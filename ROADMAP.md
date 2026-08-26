@@ -23,12 +23,14 @@
 
 ## v0.3 mechanistic and external validation
 
-- matched token/context padding under architecture ablation;
-- alias/mapping/delay reversal and adversarial shortcut suites;
+- completed: matched sham-body signal field and numerical range;
+- completed: fresh aliases, mapping update, leakage audit, and simple baselines;
+- remaining: matched token and context padding under architecture ablation;
+- remaining: delay reversal and broader adversarial shortcut suites;
 - open-weight activation and causal mediation hooks;
 - non-language and simpler associative baselines;
 - cross-model measurement invariance, power simulations and external replication;
-- blinded export/analysis package with a frozen public protocol.
+- blinded export/analysis package with a frozen public protocol;
 - independent literature screening and protocol review.
 
 No milestone converts functional indicators into proof of phenomenal consciousness.

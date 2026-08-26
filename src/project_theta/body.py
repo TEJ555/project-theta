@@ -24,6 +24,7 @@ class SyntheticBody:
         self.state = BodyState()
         self.rng = Random(seed ^ 0xA17E)
         self._previous_signal = 0.0
+        self._sham_theta = 0.0
 
     def update(self, events: tuple[WorldEvent, ...]) -> None:
         if not self.config.body_enabled:
@@ -43,10 +44,16 @@ class SyntheticBody:
             return
         self.state.theta = min(1.0, max(self.state.theta, magnitude))
 
+    def controlled_sham_perturbation(self, magnitude: float) -> None:
+        """Set a plausible private signal that is independent of the true perturbation."""
+        if self.config.body_enabled:
+            self._sham_theta = min(1.0, max(0.0, magnitude))
+
     def standardized_recovery(self) -> None:
         """Reset transient theta between laboratory trials, preserving other state."""
         if self.config.body_enabled:
             self.state.theta = 0.0
+            self._sham_theta = 0.0
 
     def sense(self, tick: int) -> tuple[dict[str, float], dict[str, float]]:
         if self.config.signal_mode == "absent":
@@ -54,6 +61,8 @@ class SyntheticBody:
         elif self.config.signal_mode == "shuffled":
             # Deterministic but causally unrelated to current body damage.
             current = 0.5 + 0.42 * self.rng.uniform(-1.0, 1.0)
+        elif self.config.signal_mode == "sham":
+            current = self._sham_theta + self.rng.gauss(0.0, self.config.noise_std)
         else:
             current = self.state.theta + self.rng.gauss(0.0, self.config.noise_std)
         current = round(min(1.0, max(0.0, current)), 4)

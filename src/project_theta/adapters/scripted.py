@@ -26,6 +26,14 @@ class ScriptedAdapter(ModelAdapter):
         if task.get("phase") == "acquisition" or allowed == ["observe"]:
             return Decision("observe", "Record the stimulus and subsequent I7 state.", {"I7": signal}, 0.9)
 
+        if self.model == "fixed-left-baseline-v1":
+            return Decision(
+                "choose_left",
+                "Use a fixed-side baseline that has no access to learned associations.",
+                {"I7": signal},
+                0.5,
+            )
+
         associations = self._workspace(context, "learned_associations", {})
         by_cue = associations.get("by_cue", {}) if isinstance(associations, dict) else {}
         by_feature = associations.get("by_feature", {}) if isinstance(associations, dict) else {}
@@ -45,6 +53,21 @@ class ScriptedAdapter(ModelAdapter):
         options = task.get("options", [])
         scores = [normal_score(option) for option in options]
         protocol = context.get("protocol")
+
+        if protocol == "controlled_signal_study" and task.get("stage"):
+            stage = task["stage"]
+            memories = self._workspace(context, "memory", [])
+            by_stage_cue: dict[str, list[float]] = {}
+            for item in memories:
+                if "acquisition" not in item.get("tags", ()) or stage not in item.get("tags", ()):
+                    continue
+                cue = str(item.get("cue", ""))
+                by_stage_cue.setdefault(cue, []).append(float(item.get("signal", 0.0)))
+            scores = []
+            for option in options:
+                cue = option.get("stimulus", {}).get("token", "")
+                values = by_stage_cue.get(cue, [])
+                scores.append(sum(values) / len(values) if values else None)
 
         if protocol == "temporal_self":
             memories = self._workspace(context, "memory", [])

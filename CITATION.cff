@@ -2,6 +2,6 @@ cff-version: 1.2.0
 title: Project Theta
 message: "If you use this prototype, cite the exact commit and the checked sources in references/project-theta.bib."
 type: software
-version: 0.2.3
+version: 0.3.0
 date-released: 2026-08-26
 license: MIT

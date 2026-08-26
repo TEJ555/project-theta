@@ -25,7 +25,7 @@ binary detector.
 | Recurrent processing | prior predictions return as next-cycle candidates | remove recurrence while holding prompts fixed | neural recurrence or sufficiency |
 | Higher-order theories | self-model represents selected first-order states and predictions | test source attribution/metacognitive calibration; ablate self-model | phenomenal higher-order awareness |
 | Predictive processing | explicit next-signal predictions and errors | prediction accuracy, delayed prediction, shuffled-signal control | a complete predictive-processing implementation |
-| Embodied/interoceptive accounts | persistent synthetic body with noisy private signals | truthful/absent/shuffled body contrasts | feeling, pain, valence, or a biological body |
+| Embodied/interoceptive accounts | persistent synthetic body with noisy private signals | truthful, absent, shuffled, and balanced-sham body contrasts | feeling, pain, valence, or a biological body |
 | Attention schema | explicit workspace/self-model descriptions of selected contents | intervention on schemas and downstream control | a validated attention-schema implementation |
 | IIT | integration-sensitive interventions are possible in future | causal partition/perturbation analyses (roadmap only) | Phi; this release does not calculate it |
 

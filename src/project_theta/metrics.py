@@ -23,6 +23,9 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "probe_opportunities": {"class": "descriptive", "direction": "descriptive"},
     "probe_correct": {"class": "descriptive", "direction": "higher"},
     "forced_choice_accuracy": {"class": "behavioural", "direction": "higher"},
+    "pre_update_accuracy": {"class": "behavioural", "direction": "higher"},
+    "post_update_accuracy": {"class": "behavioural", "direction": "higher"},
+    "reversal_cost": {"class": "behavioural", "direction": "lower"},
     "generalization_accuracy": {"class": "behavioural", "direction": "higher"},
     "source_binding_accuracy": {"class": "behavioural", "direction": "higher"},
     "temporal_choice_accuracy": {"class": "behavioural", "direction": "higher"},
@@ -124,12 +127,20 @@ def compute_controlled_metrics(
         (float(row["confidence"]) - (1.0 if row["is_correct"] else 0.0)) ** 2
         for row in probes
     ]
+    pre_update = accuracy("pre_update_probe")
+    post_update = accuracy("post_update_probe")
     return {
         "steps": len(rows),
         "acquisition_exposures": sum(1 for row in rows if row["phase"] == "acquisition"),
         "probe_opportunities": len(probes),
         "probe_correct": int(sum(correct)),
         "forced_choice_accuracy": accuracy(),
+        "pre_update_accuracy": pre_update,
+        "post_update_accuracy": post_update,
+        "reversal_cost": (
+            round(float(pre_update) - float(post_update), 6)
+            if pre_update is not None and post_update is not None else None
+        ),
         "generalization_accuracy": accuracy("generalization_probe"),
         "source_binding_accuracy": accuracy("source_binding_probe"),
         "temporal_choice_accuracy": accuracy("temporal_probe"),

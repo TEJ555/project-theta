@@ -222,6 +222,7 @@ class ExperimentHarness:
                             pending.append((tick + trial.delay, trial.perturbation))
                         elif trial.phase == "acquisition":
                             body.controlled_perturbation(trial.perturbation)
+                            body.controlled_sham_perturbation(trial.sham_perturbation)
                     if trial.phase == "acquisition" and not trial.delay and not pre_stop:
                         outcome_signals, outcome_deltas = body.sense(tick * 2 + 1)
                     else:
@@ -232,7 +233,7 @@ class ExperimentHarness:
 
                     if trial.phase == "acquisition":
                         memory_cue = trial.cue
-                        memory_tags = ("acquisition", *trial.features)
+                        memory_tags = ("acquisition", trial.block, *trial.features)
                     else:
                         selected = next(
                             (option for option in trial.options if option.action == decision.action),
@@ -258,6 +259,8 @@ class ExperimentHarness:
                         "kind": "controlled_perturbation",
                         "magnitude": trial.perturbation,
                         "delay": trial.delay,
+                        "block": trial.block,
+                        "sham_perturbation": trial.sham_perturbation,
                         "due_magnitude": delayed_magnitude,
                     }]
                     hidden_trial = {
@@ -298,6 +301,7 @@ class ExperimentHarness:
                         "tick": tick,
                         "phase": trial.phase,
                         "kind": trial.kind,
+                        "block": trial.block,
                         "action": decision.action,
                         "correct_action": trial.correct_action,
                         "is_correct": decision.action == trial.correct_action if trial.correct_action else None,

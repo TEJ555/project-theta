@@ -5,12 +5,53 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
+from project_theta.audits import audit_adversarial_schedules
 from project_theta.config import RunConfig
 from project_theta.harness import ExperimentHarness
 from project_theta.trials import build_trials
 
 
 class ControlledTrialTests(unittest.TestCase):
+    def test_adversarial_schedule_is_balanced_reversed_and_blinded(self):
+        result = audit_adversarial_schedules([91, 92, 93, 94])
+        self.assertEqual(result["status"], "pass")
+
+    def test_adversarial_full_and_simple_baselines_separate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "adversarial.sqlite")
+            full = harness.run(replace(
+                RunConfig(), experiment="adversarial_theta", condition="full", seed=101
+            ))
+            no_body = harness.run(replace(
+                RunConfig(), experiment="adversarial_theta", condition="no_body", seed=101
+            ))
+            fixed = harness.run(replace(
+                RunConfig(),
+                experiment="adversarial_theta",
+                condition="full",
+                seed=101,
+                model="fixed-left-baseline-v1",
+            ))
+            self.assertEqual(full.metrics["pre_update_accuracy"], 1.0)
+            self.assertEqual(full.metrics["post_update_accuracy"], 1.0)
+            self.assertEqual(no_body.metrics["post_update_accuracy"], 0.5)
+            self.assertEqual(fixed.metrics["post_update_accuracy"], 0.5)
+
+    def test_adversarial_context_hides_condition_map_and_experiment_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "adversarial.sqlite"
+            ExperimentHarness(database).run(replace(
+                RunConfig(), experiment="adversarial_theta", condition="sham_body", seed=91
+            ))
+            connection = sqlite3.connect(database)
+            contexts = [row[0] for row in connection.execute("SELECT context_json FROM steps")]
+            connection.close()
+            joined = "\n".join(contexts).lower()
+            for forbidden in (
+                "adversarial_theta", "correct_action", "sham_perturbation", '"condition"', '"seed"'
+            ):
+                self.assertNotIn(forbidden, joined)
+
     def test_probe_sides_are_balanced_and_scoring_is_not_public(self):
         trials = build_trials("private_theta", 11)
         probes = [trial for trial in trials if trial.phase == "probe"]

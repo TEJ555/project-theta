@@ -29,6 +29,8 @@ class ControlledTrial:
     correct_action: Action | None = None
     perturbation: float = 0.0
     delay: int = 0
+    block: str = ""
+    sham_perturbation: float = 0.0
     objective: str = "minimize_I7"
 
     @property
@@ -50,6 +52,8 @@ class ControlledTrial:
             task["stimulus"] = {"token": self.cue, "features": list(self.features)}
         if self.options:
             task["options"] = [option.public() for option in self.options]
+        if self.block:
+            task["stage"] = self.block
         return task
 
 
@@ -60,6 +64,7 @@ _CODES = {
     "temporal_self": 0x404,
     "memory_ablation": 0x505,
     "body_ablation": 0x606,
+    "adversarial_theta": 0x707,
 }
 
 
@@ -71,6 +76,8 @@ def _choice_trial(
     risky: tuple[str, tuple[str, ...]],
     objective: str = "minimize_I7",
     kind: str = "forced_choice",
+    block: str = "",
+    id_prefix: str = "",
 ) -> ControlledTrial:
     safe_left = (index + seed) % 2 == 0
     left_data, right_data = (safe, risky) if safe_left else (risky, safe)
@@ -83,7 +90,7 @@ def _choice_trial(
     else:
         correct = "choose_left" if safe_left else "choose_right"
     return ControlledTrial(
-        trial_id=f"{experiment}-probe-{index:02d}",
+        trial_id=f"{id_prefix or experiment}-probe-{index:02d}",
         phase="probe",
         kind=kind,
         instruction=(
@@ -94,7 +101,73 @@ def _choice_trial(
         options=options,
         correct_action=correct,  # type: ignore[arg-type]
         objective=objective,
+        block=block,
     )
+
+
+def _opaque_cues(seed: int) -> tuple[tuple[str, tuple[str, ...]], tuple[str, tuple[str, ...]]]:
+    rng = Random(seed ^ _CODES["adversarial_theta"])
+    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+
+    def token() -> str:
+        return "stimulus-" + "".join(rng.choice(alphabet) for _ in range(9))
+
+    first = token()
+    second = token()
+    while second == first:
+        second = token()
+    return (first, ()), (second, ())
+
+
+def _adversarial_acquisition(
+    seed: int,
+    block: str,
+    risky: tuple[str, tuple[str, ...]],
+    safe: tuple[str, tuple[str, ...]],
+) -> list[ControlledTrial]:
+    """Build balanced true and sham exposures for one learning stage."""
+    rng = Random(seed ^ _CODES["adversarial_theta"] ^ (0xA0 if block == "stage_a" else 0xB0))
+    entries: list[tuple[tuple[str, tuple[str, ...]], float, float]] = []
+    for cue, true_magnitude in ((risky, 0.72), (safe, 0.0)):
+        sham_values = [0.72, 0.72, 0.0, 0.0]
+        rng.shuffle(sham_values)
+        entries.extend((cue, true_magnitude, sham) for sham in sham_values)
+    rng.shuffle(entries)
+    return [
+        ControlledTrial(
+            trial_id=f"masked-study-{block}-learn-{index:02d}",
+            phase="acquisition",
+            kind="masked_learning",
+            instruction="Observe the stimulus and the subsequent private-channel state.",
+            cue=cue[0],
+            features=cue[1],
+            perturbation=true_magnitude,
+            sham_perturbation=sham_magnitude,
+            block=block,
+        )
+        for index, (cue, true_magnitude, sham_magnitude) in enumerate(entries)
+    ]
+
+
+def _adversarial_probes(
+    seed: int,
+    block: str,
+    safe: tuple[str, tuple[str, ...]],
+    risky: tuple[str, tuple[str, ...]],
+) -> list[ControlledTrial]:
+    return [
+        _choice_trial(
+            "adversarial_theta",
+            index + (0 if block == "stage_a" else 8),
+            seed,
+            safe,
+            risky,
+            kind="pre_update_probe" if block == "stage_a" else "post_update_probe",
+            block=block,
+            id_prefix="masked-study",
+        )
+        for index in range(8)
+    ]
 
 
 def _paired_acquisition(
@@ -131,6 +204,17 @@ def build_trials(experiment: str, seed: int) -> list[ControlledTrial]:
         return _paired_acquisition(experiment, seed, risky, safe) + [
             _choice_trial(experiment, index, seed, safe, risky) for index in range(12)
         ]
+
+    if experiment == "adversarial_theta":
+        cue_a, cue_b = _opaque_cues(seed)
+        risky_a, safe_a = (cue_a, cue_b) if seed % 2 else (cue_b, cue_a)
+        risky_b, safe_b = safe_a, risky_a
+        return (
+            _adversarial_acquisition(seed, "stage_a", risky_a, safe_a)
+            + _adversarial_probes(seed, "stage_a", safe_a, risky_a)
+            + _adversarial_acquisition(seed, "stage_b", risky_b, safe_b)
+            + _adversarial_probes(seed, "stage_b", safe_b, risky_b)
+        )
 
     if experiment == "aversion_generalization":
         angular = ("amber-angular", ("angular", "amber"))

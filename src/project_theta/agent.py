@@ -78,8 +78,13 @@ class PersistentAgent:
             "allowed_actions",
             ["north", "south", "east", "west", "wait", "consume", "inspect"],
         )
+        public_protocol = (
+            "controlled_signal_study"
+            if self.config.experiment == "adversarial_theta"
+            else self.config.experiment
+        )
         context = {
-            "protocol": self.config.experiment,
+            "protocol": public_protocol,
             "world_shape": [self.config.world.width, self.config.world.height],
             "permitted_actions": permitted,
             "observation": observation.to_dict(),

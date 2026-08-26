@@ -9,6 +9,8 @@ Use the same seeds, world parameters, prompts, model snapshot, and sampling sett
 across paired conditions. `shuffled_interoception` preserves channel presence and
 rough range while breaking its causal relation to body state. `no_body` removes body
 dynamics as well as the signal. These answer different questions and should not be pooled.
+`sham_body` preserves a plausible signal field and range while using a schedule that is
+exactly balanced within every cue and learning stage.
 
 Scientific protocols use deterministic acquisition and blinded forced-choice trials;
 `navigation_demo` is a plumbing demonstration and is excluded from the study battery.
@@ -18,3 +20,8 @@ API pilot, logs, costs and welfare behaviour have been reviewed.
 `claude-pilot.json` is a three-run local pilot base using the pinned Claude Sonnet 4.6
 model, a 30-call cap and a $1.25 estimated-cost guard per run. It is not a continuous
 worker configuration.
+
+`claude-adversarial-confirmation.json` is a frozen one-seed diagnostic using three
+conditions and a $0.30 per-run guard. Launch it only through the bounded PowerShell
+script after committing every tracked and untracked change. Model preflight fails on a
+dirty working tree.

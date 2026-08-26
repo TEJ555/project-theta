@@ -1,0 +1,1 @@
+{"experiment":"adversarial_theta","condition":"sham_body","seed":11,"adapter":"scripted","model":"scripted-baseline-v1","body":{"signal_mode":"sham"}}

@@ -1,4 +1,4 @@
-# Technical specification v0.2
+# Technical specification v0.3
 
 ## Objective
 
@@ -26,7 +26,9 @@ module products while leaving those modules inspectable.
 
 - All simulated randomness derives from declared integer seeds and stable constants.
 - Cue-risk mapping and left/right answer placement are independently counterbalanced.
-- Each 12-probe schedule contains exactly six correct-left and six correct-right trials.
+- Every probe block contains equal numbers of correct-left and correct-right trials.
+- Adversarial schedules use seed-specific aliases and balanced sham outcomes within
+  every cue and learning stage.
 - Run order is deterministically randomized to reduce provider drift confounds.
 - Python's process-randomized `hash()` is never used for experimental state.
 - Configuration, prompt, code revision, Python/platform, provider ID, latency and token
@@ -42,8 +44,8 @@ the run and never switch adapters.
 
 Each run has a frozen reasoning effort plus hard request-timeout, retry, output-token and
 model-call limits. Supported Claude models also have a usage-derived estimated-cost
-guard. Non-scripted runs require both an environment safety gate and an explicit
-run-count budget.
+guard. Non-scripted runs require an environment safety gate, an explicit run-count
+budget, and a clean committed revision or immutable deployment version.
 
 ## Storage and recovery
 

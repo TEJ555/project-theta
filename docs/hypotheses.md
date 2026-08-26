@@ -48,4 +48,15 @@ outcomes and directions must be frozen before target-model collection.
   than no-body or shuffled-signal controls.
 - Falsifier: equal performance or a result driven by unbalanced sides/token budgets.
 
+## H7: adversarial private-signal validation
+
+- Alternative: the full system learns an opaque cue relationship, then updates its
+  choices when that relationship changes, while exactly balanced sham and shuffled
+  private streams do not support comparable post-update accuracy.
+- Primary outcome: eight-probe post-update accuracy.
+- Secondary outcomes: eight-probe pre-update accuracy and reversal cost.
+- Falsifier: no full advantage over sham and shuffled controls, success from fixed-side
+  or transcript structure, forbidden-field leakage, or failure to adapt after the
+  relationship update.
+
 No hypothesis has phenomenal consciousness, feeling, pain or moral status as an outcome.

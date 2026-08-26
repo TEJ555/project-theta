@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 - 2026-08-26
+
+- Added an adversarial private-signal protocol with seed-specific opaque aliases,
+  balanced learning stages, an unannounced cue relationship update, and separate pre
+  and post-update outcomes.
+- Added an exactly balanced sham-body stream, retained shuffled and absent-body
+  controls, and added fixed-side plus associative scripted baselines.
+- Added a deterministic schedule and leakage audit command.
+- Added 20-seed local validation, a frozen bounded Claude confirmation protocol, and a
+  launcher with a $0.95 study guard.
+- Added the systematic scoping review, evidence table, checked bibliography, theory
+  map, replication report, and publication plan.
+
 ## 0.2.1 - 2026-08-25
 
 - Added an Anthropic Claude Messages API adapter with JSON-schema output, timeout and

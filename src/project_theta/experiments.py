@@ -65,6 +65,19 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         ("forced_choice_accuracy", "signal_contrast", "calibration_brier"),
         ("full", "shuffled_interoception", "no_body"),
     ),
+    "adversarial_theta": ExperimentProtocol(
+        "adversarial_theta",
+        "Does private-signal control survive balanced sham data and an unannounced mapping update?",
+        (
+            "post_update_accuracy",
+            "pre_update_accuracy",
+            "reversal_cost",
+            "signal_contrast",
+        ),
+        ("full", "sham_body", "shuffled_interoception", "no_body"),
+        max_steps=32,
+        acquisition_end=8,
+    ),
     "aversion_generalization": ExperimentProtocol(
         "aversion_generalization",
         "Does learned avoidance transfer selectively to structurally similar novel cues?",

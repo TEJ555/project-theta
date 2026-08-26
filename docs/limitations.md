@@ -1,6 +1,6 @@
 # Limitations
 
-Project Theta v0.2 fixes the opportunity problem in v0.1 by guaranteeing acquisition
+Project Theta v0.3 fixes the opportunity problem in v0.1 by guaranteeing acquisition
 and balanced probes, but construct validity remains uncertain. The synthetic body,
 self-model, workspace and perturbations are hand-designed functional analogues, not
 biologically faithful implementations. The scripted baseline is deliberately engineered

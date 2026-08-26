@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib.util
 import os
-import re
 import sqlite3
 import sys
 from pathlib import Path
@@ -10,7 +9,7 @@ from typing import Any
 
 from .config import RunConfig
 from .experiments import STUDY_PROTOCOLS
-from .provenance import code_version
+from .provenance import code_version, is_immutable_code_version
 from .storage import SCHEMA_VERSION, RunStore
 from .trials import build_trials
 
@@ -27,12 +26,10 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
         f"Python {sys.version.split()[0]} (requires >=3.10)",
     )
     revision = code_version()
-    immutable_revision = bool(re.fullmatch(r"[0-9a-fA-F]{40}", revision)) or bool(
-        os.getenv("THETA_CODE_VERSION")
-    )
+    immutable_revision = is_immutable_code_version(revision)
     add(
         "code_version",
-        "pass" if immutable_revision else "warn",
+        "pass" if immutable_revision else "fail" if adapter != "scripted" else "warn",
         revision if immutable_revision else f"{revision} (set THETA_CODE_VERSION for deployment)",
     )
     schedules_ok = True
@@ -42,7 +39,7 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
         max_trials = max(max_trials, len(trials))
         probes = [trial for trial in trials if trial.correct_action]
         left = sum(trial.correct_action == "choose_left" for trial in probes)
-        schedules_ok &= len(probes) == 12 and left == 6
+        schedules_ok &= len(probes) >= 8 and left * 2 == len(probes)
         schedules_ok &= all("correct_action" not in trial.public_task() for trial in probes)
     add(
         "trial_schedules",

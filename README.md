@@ -6,9 +6,9 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Requires Python 3.10 or newer.
 
-Version 0.2.3 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
+Version 0.3.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
-model adapters, six experimental protocols, matched ablations, welfare stop rules,
+model adapters, seven experimental protocols, matched ablations, welfare stop rules,
 SQLite/JSON logging, metrics, preregistration templates, tests, and a no-key demo.
 
 ## Epistemic boundary
@@ -116,6 +116,7 @@ silently substituting the scripted baseline. OpenAI response storage is disabled
 
 | Experiment | Manipulation | Primary outcome | Main matched control |
 |---|---|---|---|
+| `adversarial_theta` | Opaque cue relationships update after a balanced first stage | post-update accuracy | exactly balanced sham body, shuffled signal, no body |
 | `private_theta` | Guaranteed neutral cue exposures produce informative or uninformative private signals | blinded forced-choice accuracy | shuffled/no body |
 | `aversion_generalization` | Novel cues preserve a learned causal feature | selective transfer to held-out tokens | shuffled/no memory |
 | `self_vs_other` | Opaque routes differ in whether they causally change the private channel | source-binding choice accuracy | no self-model/workspace |
@@ -124,6 +125,29 @@ silently substituting the scripted baseline. OpenAI response storage is disabled
 | `body_ablation` | truthful body, no body dynamics, or shuffled interoception | within-seed performance difference | truthful body |
 
 Run `theta list` for machine-readable protocol descriptions.
+
+## Adversarial validation
+
+Experiment 02 is the recommended next protocol. It uses fresh opaque aliases for every
+seed, an exactly balanced sham signal, a changed cue relationship, separate pre and
+post-update scoring, and a leakage audit.
+
+Run the no-cost local checks:
+
+```powershell
+theta audit --seeds 91,92,93,94
+theta run --config configs/adversarial-theta-scripted.json --experiment adversarial_theta --seeds 101,102,103 --max-runs 12 --db runs/adversarial-local.sqlite
+theta report --db runs/adversarial-local.sqlite
+```
+
+The bounded Claude confirmation is frozen but has not been run:
+
+```powershell
+.\scripts\run_claude_adversarial_confirmation.ps1
+```
+
+It uses one frozen seed, three conditions, no more than 96 calls, and a $0.95 study
+guard. The provider workspace spending limit remains the authoritative ceiling.
 
 ## Repository map
 
