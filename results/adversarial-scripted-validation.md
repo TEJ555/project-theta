@@ -36,3 +36,20 @@ stream also averaged near chance. The fixed-side baseline remained exactly at ch
 
 This validates discrimination, balance, and implementation behaviour. Scripted agents
 are engineering controls and provide no evidence about artificial consciousness.
+
+## Compact confirmation profile
+
+The 16-trial confirmation profile was separately validated across seeds 301 through
+320 before any model run. It produced 80 matched runs with no API calls.
+
+| Condition | Runs | Mean post-update accuracy | Range |
+|---|---:|---:|---:|
+| Full | 20 | 1.000 | 1.000 to 1.000 |
+| No body | 20 | 0.500 | 0.500 to 0.500 |
+| Sham body | 20 | 0.500 | 0.000 to 1.000 |
+| Shuffled interoception | 20 | 0.350 | 0.000 to 1.000 |
+
+The compact profile preserves the intended full-versus-control separation while
+halving the model-call requirement. Individual noncausal runs can still score 0 or 1,
+so confirmation 02 remains a diagnostic progression gate rather than an inferential
+study.

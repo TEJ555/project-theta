@@ -29,6 +29,8 @@ module products while leaving those modules inspectable.
 - Every probe block contains equal numbers of correct-left and correct-right trials.
 - Adversarial schedules use seed-specific aliases and balanced sham outcomes within
   every cue and learning stage.
+- Trial profiles are stored in run configuration. The compact profile is accepted only
+  for `adversarial_theta` and retains balanced sides and sham outcomes.
 - Run order is deterministically randomized to reduce provider drift confounds.
 - Python's process-randomized `hash()` is never used for experimental state.
 - Configuration, prompt, code revision, Python/platform, provider ID, latency and token

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import re
+import sqlite3
 from collections import defaultdict
+from pathlib import Path
 from typing import Any
 
 from .trials import ControlledTrial, build_trials
@@ -20,33 +22,40 @@ def _stage_mapping(trials: list[ControlledTrial], stage: str) -> dict[str, float
     return {cue: sum(samples) / len(samples) for cue, samples in values.items()}
 
 
-def audit_adversarial_schedules(seeds: list[int]) -> dict[str, Any]:
+def audit_adversarial_schedules(
+    seeds: list[int], profile: str = "standard"
+) -> dict[str, Any]:
     checks: list[dict[str, str]] = []
     all_alias_sets: list[set[str]] = []
     for seed in seeds:
-        trials = build_trials("adversarial_theta", seed)
+        trials = build_trials("adversarial_theta", seed, profile)
         public_text = json.dumps([trial.public_task() for trial in trials], sort_keys=True)
         probes = [trial for trial in trials if trial.phase == "probe"]
         acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
         aliases = {trial.cue for trial in acquisitions}
         all_alias_sets.append(aliases)
 
+        expected_per_phase = 8 if profile == "standard" else 4
         checks.append(_check(
             f"seed_{seed}_schedule",
-            len(trials) == 32 and len(acquisitions) == 16 and len(probes) == 16,
+            len(acquisitions) == expected_per_phase * 2
+            and len(probes) == expected_per_phase * 2,
             f"{len(acquisitions)} learning trials and {len(probes)} probes",
         ))
         stage_balance = all(
             sum(
                 trial.correct_action == "choose_left"
                 for trial in probes if trial.block == stage
-            ) == 4
+            ) == expected_per_phase // 2
             for stage in ("stage_a", "stage_b")
         )
         checks.append(_check(
             f"seed_{seed}_side_balance",
             stage_balance,
-            "four correct-left and four correct-right probes in each stage",
+            (
+                f"{expected_per_phase // 2} correct-left and "
+                f"{expected_per_phase // 2} correct-right probes in each stage"
+            ),
         ))
 
         mapping_a = _stage_mapping(trials, "stage_a")
@@ -64,14 +73,12 @@ def audit_adversarial_schedules(seeds: list[int]) -> dict[str, Any]:
         sham_groups: dict[tuple[str, str], list[float]] = defaultdict(list)
         for trial in acquisitions:
             sham_groups[(trial.block, trial.cue)].append(trial.sham_perturbation)
-        sham_balanced = all(
-            sorted(values) == [0.0, 0.0, 0.72, 0.72]
-            for values in sham_groups.values()
-        )
+        expected_sham = [0.0, 0.72] * (expected_per_phase // 4)
+        sham_balanced = all(sorted(values) == sorted(expected_sham) for values in sham_groups.values())
         checks.append(_check(
             f"seed_{seed}_sham_balance",
             sham_balanced,
-            "each cue receives two high and two low sham outcomes per stage",
+            f"each cue receives the same {len(expected_sham)}-outcome sham distribution per stage",
         ))
 
         opaque = len(aliases) == 2 and all(
@@ -113,10 +120,54 @@ def audit_adversarial_schedules(seeds: list[int]) -> dict[str, Any]:
     ))
     return {
         "experiment": "adversarial_theta",
+        "profile": profile,
         "seeds": seeds,
         "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
         "checks": checks,
     }
+
+
+def add_execution_audit(
+    result: dict[str, Any], database: str | Path, expected_seed: int, expected_steps: int = 32
+) -> dict[str, Any]:
+    """Add protocol identity and trial-count checks for a partial or complete study."""
+    connection = sqlite3.connect(database)
+    rows = connection.execute(
+        """
+        SELECT r.run_id, r.experiment, r.condition_name, r.seed, r.status,
+               (SELECT COUNT(*) FROM steps s WHERE s.run_id=r.run_id),
+               (SELECT COUNT(*) FROM metrics m
+                WHERE m.run_id=r.run_id AND m.name='post_update_accuracy')
+        FROM runs r
+        ORDER BY r.created_at
+        """
+    ).fetchall()
+    connection.close()
+    checks = result["checks"]
+    checks.append(_check(
+        "execution_has_runs",
+        bool(rows),
+        f"{len(rows)} recorded run(s)",
+    ))
+    for run_id, experiment, condition, seed, status, step_count, metric_count in rows:
+        true_steps = int(step_count or 0)
+        identity_ok = (
+            experiment == "adversarial_theta"
+            and int(seed) == expected_seed
+            and status == "completed"
+            and true_steps == expected_steps
+            and int(metric_count or 0) > 0
+        )
+        checks.append(_check(
+            f"execution_{condition}_{run_id[-8:]}",
+            identity_ok,
+            (
+                f"experiment={experiment}, seed={seed}, status={status}, "
+                f"steps={true_steps}, post-update metric rows={metric_count}"
+            ),
+        ))
+    result["status"] = "fail" if any(check["status"] == "fail" for check in checks) else "pass"
+    return result
 
 
 def format_audit(result: dict[str, Any]) -> str:

@@ -6,7 +6,7 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Requires Python 3.10 or newer.
 
-Version 0.3.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
+Version 0.3.1 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
 model adapters, seven experimental protocols, matched ablations, welfare stop rules,
 SQLite/JSON logging, metrics, preregistration templates, tests, and a no-key demo.
@@ -140,14 +140,19 @@ theta run --config configs/adversarial-theta-scripted.json --experiment adversar
 theta report --db runs/adversarial-local.sqlite
 ```
 
-The bounded Claude confirmation is frozen but has not been run:
+Confirmation 01 was invalid because a CLI default selected the older protocol. Its
+database and $0.5811 estimated cost are preserved. The corrected confirmation 02 is
+frozen but has not been run:
 
 ```powershell
 .\scripts\run_claude_adversarial_confirmation.ps1
 ```
 
-It uses one frozen seed, three conditions, no more than 96 calls, and a $0.95 study
+It uses one frozen seed, three conditions, no more than 48 calls, and a $0.55 study
 guard. The provider workspace spending limit remains the authoritative ceiling.
+The current estimated project total is $4.5596. The replacement is projected to bring
+that to about $4.95, so review the [API cost ledger](results/api-cost-ledger.md) before
+launching it.
 
 ## Repository map
 

@@ -63,6 +63,7 @@ class ExecutionConfig:
 class RunConfig:
     experiment: str = "private_theta"
     condition: str = "full"
+    trial_profile: str = "standard"
     seed: int = 11
     adapter: str = "scripted"
     model: str = "scripted-baseline-v1"
@@ -84,6 +85,7 @@ def _construct(data: dict[str, Any]) -> RunConfig:
     return RunConfig(
         experiment=data.get("experiment", "private_theta"),
         condition=data.get("condition", "full"),
+        trial_profile=data.get("trial_profile", "standard"),
         seed=int(data.get("seed", 11)),
         adapter=data.get("adapter", "scripted"),
         model=data.get("model", "scripted-baseline-v1"),

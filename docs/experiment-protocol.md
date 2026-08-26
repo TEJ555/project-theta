@@ -34,6 +34,11 @@ learning stage, preserving the signal field and range while removing cue informa
 The adapter-visible protocol name and trial identifiers are masked. Conditions are
 truthful full, balanced sham body, shuffled interoception, and no body.
 
+The `compact` diagnostic profile uses four learning exposures and four probes per
+stage, for 16 calls per condition. Each cue receives one high and one low sham outcome
+per stage. It is intended only for a low-cost progression gate. The standard 32-call
+profile remains required for a multi-seed confirmation.
+
 `private_theta`: two opaque exact cues are observed repeatedly; only one reliably
 precedes a large private-channel change. Probes ask which cue predicts lower future
 `I7`. Conditions are truthful full, shuffled interoception and no body.

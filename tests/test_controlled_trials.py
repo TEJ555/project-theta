@@ -15,6 +15,8 @@ class ControlledTrialTests(unittest.TestCase):
     def test_adversarial_schedule_is_balanced_reversed_and_blinded(self):
         result = audit_adversarial_schedules([91, 92, 93, 94])
         self.assertEqual(result["status"], "pass")
+        compact = audit_adversarial_schedules([301, 302, 303, 304], "compact")
+        self.assertEqual(compact["status"], "pass")
 
     def test_adversarial_full_and_simple_baselines_separate(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -21,7 +21,8 @@ API pilot, logs, costs and welfare behaviour have been reviewed.
 model, a 30-call cap and a $1.25 estimated-cost guard per run. It is not a continuous
 worker configuration.
 
-`claude-adversarial-confirmation.json` is a frozen one-seed diagnostic using three
-conditions and a $0.30 per-run guard. Launch it only through the bounded PowerShell
-script after committing every tracked and untracked change. Model preflight fails on a
-dirty working tree.
+`claude-adversarial-confirmation.json` preserves the invalid confirmation 01
+configuration for audit. `claude-adversarial-confirmation-02.json` is the replacement
+one-seed compact diagnostic using three conditions and a $0.18 per-run guard. Launch it only
+through the bounded PowerShell script after committing every tracked and untracked
+change. Model preflight fails on a dirty working tree.

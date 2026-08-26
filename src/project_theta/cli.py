@@ -8,7 +8,7 @@ from pathlib import Path
 
 from . import EPISTEMIC_NOTICE
 from .analysis import format_summary, summaries_from_database, summarize_runs
-from .audits import audit_adversarial_schedules, format_audit
+from .audits import add_execution_audit, audit_adversarial_schedules, format_audit
 from .config import RunConfig, load_config
 from .doctor import format_doctor, run_doctor
 from .experiments import PROTOCOLS
@@ -35,7 +35,7 @@ def _parser() -> argparse.ArgumentParser:
     demo.add_argument("--db", default="runs/demo.sqlite")
 
     run = sub.add_parser("run", help="run a matched experiment study")
-    run.add_argument("--experiment", choices=[*PROTOCOLS, "all"], default="private_theta")
+    run.add_argument("--experiment", choices=[*PROTOCOLS, "all"])
     run.add_argument("--seeds", type=_seeds, default=[11, 22, 33])
     run.add_argument("--conditions", help="comma-separated override")
     run.add_argument("--adapter", choices=["scripted", "openai", "anthropic", "ollama"])
@@ -70,6 +70,8 @@ def _parser() -> argparse.ArgumentParser:
 
     audit = sub.add_parser("audit", help="audit blinded schedules for shortcut leakage")
     audit.add_argument("--seeds", type=_seeds, default=[91, 92, 93, 94])
+    audit.add_argument("--db", help="also verify completed runs use the adversarial protocol")
+    audit.add_argument("--profile", choices=["standard", "compact"], default="standard")
 
     sub.add_parser("list", help="list protocols and declared outcomes")
     return parser
@@ -100,7 +102,12 @@ def main(argv: list[str] | None = None) -> int:
         print(format_doctor(result))
         return 0 if result["status"] == "pass" else 1
     if args.command == "audit":
-        result = audit_adversarial_schedules(args.seeds)
+        result = audit_adversarial_schedules(args.seeds, args.profile)
+        if args.db:
+            if len(args.seeds) != 1:
+                raise SystemExit("Execution audit requires exactly one expected seed.")
+            expected_steps = 16 if args.profile == "compact" else 32
+            result = add_execution_audit(result, args.db, args.seeds[0], expected_steps)
         print(format_audit(result))
         return 0 if result["status"] == "pass" else 1
     if args.command == "validate":
@@ -148,8 +155,9 @@ def main(argv: list[str] | None = None) -> int:
                 "THETA_CODE_VERSION in an immutable deployment."
             )
     conditions = args.conditions.split(",") if args.conditions else None
+    experiment_name = args.experiment or config.experiment
     summaries = ExperimentHarness(args.db).run_study(
-        args.experiment, args.seeds, config, conditions=conditions, max_runs=args.max_runs
+        experiment_name, args.seeds, config, conditions=conditions, max_runs=args.max_runs
     )
     payload = {"epistemic_notice": EPISTEMIC_NOTICE, "runs": [item.to_dict() for item in summaries]}
     rendered = json.dumps(payload, indent=2)

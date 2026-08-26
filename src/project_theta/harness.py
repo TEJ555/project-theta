@@ -173,7 +173,7 @@ class ExperimentHarness:
 
     def _run_controlled(self, config: RunConfig, protocol: ExperimentProtocol) -> RunSummary:
         run_id = f"theta-{uuid4()}"
-        trials = build_trials(protocol.name, config.seed)
+        trials = build_trials(protocol.name, config.seed, config.trial_profile)
         body = SyntheticBody(config.body, config.world, config.seed)
         adapter = make_adapter(config)
         agent = PersistentAgent(config, adapter, (0, 0))

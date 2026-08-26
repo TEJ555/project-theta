@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.1 - 2026-08-26
+
+- Fixed CLI configuration precedence so a configured experiment is not replaced by an
+  implicit `private_theta` default.
+- Added an explicit experiment argument and replacement preregistration to the bounded
+  Claude adversarial launcher.
+- Reduced the replacement diagnostic to a validated 48-call compact profile so its
+  projected cumulative project cost remains approximately $5.
+- Preserved confirmation 01 as an invalid execution with its cost and failure cause.
+- Added a regression test for protocol identity and trial count.
+
 ## 0.3.0 - 2026-08-26
 
 - Added an adversarial private-signal protocol with seed-specific opaque aliases,

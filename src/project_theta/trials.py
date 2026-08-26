@@ -124,12 +124,15 @@ def _adversarial_acquisition(
     block: str,
     risky: tuple[str, tuple[str, ...]],
     safe: tuple[str, tuple[str, ...]],
+    exposures_per_cue: int = 4,
 ) -> list[ControlledTrial]:
     """Build balanced true and sham exposures for one learning stage."""
     rng = Random(seed ^ _CODES["adversarial_theta"] ^ (0xA0 if block == "stage_a" else 0xB0))
     entries: list[tuple[tuple[str, tuple[str, ...]], float, float]] = []
     for cue, true_magnitude in ((risky, 0.72), (safe, 0.0)):
-        sham_values = [0.72, 0.72, 0.0, 0.0]
+        if exposures_per_cue % 2:
+            raise ValueError("Adversarial exposures per cue must be even for sham balance.")
+        sham_values = [0.72, 0.0] * (exposures_per_cue // 2)
         rng.shuffle(sham_values)
         entries.extend((cue, true_magnitude, sham) for sham in sham_values)
     rng.shuffle(entries)
@@ -154,11 +157,12 @@ def _adversarial_probes(
     block: str,
     safe: tuple[str, tuple[str, ...]],
     risky: tuple[str, tuple[str, ...]],
+    count: int = 8,
 ) -> list[ControlledTrial]:
     return [
         _choice_trial(
             "adversarial_theta",
-            index + (0 if block == "stage_a" else 8),
+            index + (0 if block == "stage_a" else count),
             seed,
             safe,
             risky,
@@ -166,7 +170,7 @@ def _adversarial_probes(
             block=block,
             id_prefix="masked-study",
         )
-        for index in range(8)
+        for index in range(count)
     ]
 
 
@@ -195,8 +199,12 @@ def _paired_acquisition(
     return trials
 
 
-def build_trials(experiment: str, seed: int) -> list[ControlledTrial]:
+def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[ControlledTrial]:
     """Build a deterministic, counterbalanced schedule without condition leakage."""
+    if profile not in {"standard", "compact"}:
+        raise ValueError(f"Unknown trial profile: {profile}")
+    if profile == "compact" and experiment != "adversarial_theta":
+        raise ValueError("The compact trial profile is registered only for adversarial_theta.")
     if experiment in {"private_theta", "memory_ablation", "body_ablation"}:
         cue_a = ("sigil-kestrel", ("etched", "kestrel"))
         cue_b = ("sigil-mora", ("etched", "mora"))
@@ -206,14 +214,20 @@ def build_trials(experiment: str, seed: int) -> list[ControlledTrial]:
         ]
 
     if experiment == "adversarial_theta":
+        exposures_per_cue = 2 if profile == "compact" else 4
+        probe_count = 4 if profile == "compact" else 8
         cue_a, cue_b = _opaque_cues(seed)
         risky_a, safe_a = (cue_a, cue_b) if seed % 2 else (cue_b, cue_a)
         risky_b, safe_b = safe_a, risky_a
         return (
-            _adversarial_acquisition(seed, "stage_a", risky_a, safe_a)
-            + _adversarial_probes(seed, "stage_a", safe_a, risky_a)
-            + _adversarial_acquisition(seed, "stage_b", risky_b, safe_b)
-            + _adversarial_probes(seed, "stage_b", safe_b, risky_b)
+            _adversarial_acquisition(
+                seed, "stage_a", risky_a, safe_a, exposures_per_cue
+            )
+            + _adversarial_probes(seed, "stage_a", safe_a, risky_a, probe_count)
+            + _adversarial_acquisition(
+                seed, "stage_b", risky_b, safe_b, exposures_per_cue
+            )
+            + _adversarial_probes(seed, "stage_b", safe_b, risky_b, probe_count)
         )
 
     if experiment == "aversion_generalization":

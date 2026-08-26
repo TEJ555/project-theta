@@ -76,4 +76,8 @@ show feeling, suffering, awareness, sentience, or phenomenal consciousness.
 
 ## Amendments
 
-None at registration.
+26 August 2026, post-execution classification: the launcher ran `private_theta` because
+the CLI default overrode the configured experiment. The run is invalid and all three
+conditions are excluded. No adversarial-schedule data were collected. See
+`results/claude-adversarial-confirmation-01-invalid.md`. A separately preregistered
+confirmation 02 uses a new seed and database.

@@ -1,6 +1,6 @@
 param(
-    [string]$Database = "runs/claude-adversarial-confirmation.sqlite",
-    [double]$StudyBudgetUsd = 0.95
+    [string]$Database = "runs/claude-adversarial-confirmation-02.sqlite",
+    [double]$StudyBudgetUsd = 0.55
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,9 +12,9 @@ $databasePath = if ([System.IO.Path]::IsPathRooted($Database)) {
 } else {
     Join-Path $projectRoot $Database
 }
-$seed = 209
-$conditions = @("sham_body", "full", "shuffled_interoception")
-$conditionReserveUsd = 0.32
+$seed = 307
+$conditions = @("shuffled_interoception", "sham_body", "full")
+$conditionReserveUsd = 0.19
 $previousApiKey = $env:ANTHROPIC_API_KEY
 $previousModelGate = $env:THETA_ENABLE_MODEL_RUNS
 $secureKey = $null
@@ -24,8 +24,8 @@ $plainKey = $null
 if (-not (Test-Path -LiteralPath $theta)) {
     throw "Project Theta virtual environment was not found at $theta"
 }
-if ($StudyBudgetUsd -le 0 -or $StudyBudgetUsd -gt 0.95) {
-    throw "StudyBudgetUsd must be greater than zero and no more than 0.95. Nothing was charged."
+if ($StudyBudgetUsd -le 0 -or $StudyBudgetUsd -gt 0.55) {
+    throw "StudyBudgetUsd must be greater than zero and no more than 0.55. Nothing was charged."
 }
 if (Test-Path -LiteralPath $databasePath) {
     if ($PSBoundParameters.ContainsKey("Database")) {
@@ -33,7 +33,7 @@ if (Test-Path -LiteralPath $databasePath) {
     }
     $suffix = 2
     do {
-        $databasePath = Join-Path $projectRoot "runs/claude-adversarial-confirmation-$suffix.sqlite"
+        $databasePath = Join-Path $projectRoot "runs/claude-adversarial-confirmation-02-$suffix.sqlite"
         $suffix += 1
     } while (Test-Path -LiteralPath $databasePath)
     Write-Host "Previous confirmation database preserved. New results will use $databasePath"
@@ -56,7 +56,7 @@ try {
     Write-Host "Frozen condition order: $($conditions -join ', ')"
     Write-Host "Confirmation API budget: `$$($StudyBudgetUsd.ToString('0.00')) USD"
 
-    & $theta audit --seeds $seed
+    & $theta audit --seeds $seed --profile compact
     if ($LASTEXITCODE -ne 0) {
         throw "Schedule audit failed. No model run was started."
     }
@@ -81,13 +81,18 @@ try {
 
         Write-Host "Starting $condition ($($completed + 1) of $($conditions.Count))"
         & $theta run `
-            --config "configs/claude-adversarial-confirmation.json" `
+            --config "configs/claude-adversarial-confirmation-02.json" `
+            --experiment adversarial_theta `
             --conditions $condition `
             --seeds $seed `
             --max-runs 1 `
             --db $databasePath
         if ($LASTEXITCODE -ne 0) {
             throw "Confirmation failed in $condition. Preserved data will not be retried automatically."
+        }
+        & $theta audit --seeds $seed --profile compact --db $databasePath
+        if ($LASTEXITCODE -ne 0) {
+            throw "Protocol identity audit failed after $condition. Confirmation stopped."
         }
         $completed += 1
     }
