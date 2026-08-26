@@ -59,13 +59,12 @@ Anthropic Claude (recommended first bounded pilot):
 
 ```powershell
 python -m pip install -e ".[anthropic]"
-$secureKey = Read-Host "Anthropic API key" -AsSecureString
-$env:ANTHROPIC_API_KEY = [System.Net.NetworkCredential]::new("", $secureKey).Password
-$env:THETA_ENABLE_MODEL_RUNS = "YES"
-theta doctor --adapter anthropic --db runs/claude-doctor.sqlite
-theta run --config configs/claude-pilot.json --seeds 11 --max-runs 3 --db runs/claude-pilot.sqlite
-theta report --db runs/claude-pilot.sqlite
+.\scripts\run_claude_pilot.ps1
 ```
+
+The launcher prompts privately for the Console API key, runs preflight plus exactly
+three matched conditions, prints the report and removes the key from its process. The
+key is never written to the repository or database.
 
 The Claude pilot uses pinned `claude-sonnet-4-6`, at most 30 calls and an estimated
 $1.25 USD guard per run. Three runs therefore have a planned guard of $3.75 USD, with
