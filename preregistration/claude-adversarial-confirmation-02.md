@@ -3,7 +3,7 @@
 ## Administrative record
 
 - Frozen: 26 August 2026, before any valid Claude data from `adversarial_theta`
-- Status: registered locally, not yet run
+- Status: completed 27 August 2026, progression gate failed
 - Predecessor: confirmation 01 was invalid because the CLI ran `private_theta`
 - Experiment: `adversarial_theta`
 - Model: `claude-sonnet-4-6`
@@ -69,3 +69,12 @@ sentience, suffering, or phenomenal consciousness.
 ## Amendments
 
 None at registration.
+
+## Recorded result
+
+The study ran from the frozen code commit and database named above. All execution and
+protocol identity audits passed. Full post-update accuracy was 1.00, sham post-update
+accuracy was 1.00, and shuffled post-update accuracy was 0.25. H1, H3, and H4 passed.
+H2 failed because full minus sham was 0.00. The required all-criteria progression gate
+therefore failed. The full result and trace analysis are preserved in
+`results/claude-adversarial-confirmation-02.md`.

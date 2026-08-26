@@ -141,18 +141,12 @@ theta report --db runs/adversarial-local.sqlite
 ```
 
 Confirmation 01 was invalid because a CLI default selected the older protocol. Its
-database and $0.5811 estimated cost are preserved. The corrected confirmation 02 is
-frozen but has not been run:
-
-```powershell
-.\scripts\run_claude_adversarial_confirmation.ps1
-```
-
-It uses one frozen seed, three conditions, no more than 48 calls, and a $0.55 study
-guard. The provider workspace spending limit remains the authoritative ceiling.
-The current estimated project total is $4.5596. The replacement is projected to bring
-that to about $4.95, so review the [API cost ledger](results/api-cost-ledger.md) before
-launching it.
+database and $0.5811 estimated cost remain preserved. Corrected confirmation 02 ran
+the intended adversarial protocol and passed every execution audit, but failed its
+progression gate because the sham control matched full performance. No multi-seed API
+replication is justified for the current design. See the
+[confirmation 02 result](results/claude-adversarial-confirmation-02.md) and the
+[API cost ledger](results/api-cost-ledger.md).
 
 ## Repository map
 

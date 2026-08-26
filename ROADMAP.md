@@ -18,6 +18,8 @@
 - exploratory three-condition Claude pilot completed;
 - six-seed matched replication completed under the frozen API budget;
 - databases preserved for blinded analysis and audit;
+- corrected adversarial confirmation completed and failed its progression gate because
+  the sham control matched the full condition;
 - continuous execution remains blocked pending the controls below and independent
   welfare and methods review.
 
@@ -25,6 +27,8 @@
 
 - completed: matched sham-body signal field and numerical range;
 - completed: fresh aliases, mapping update, leakage audit, and simple baselines;
+- next: independent cue families, model-visible exact sham matching, and stable versus
+  changed relationship controls;
 - remaining: matched token and context padding under architecture ablation;
 - remaining: delay reversal and broader adversarial shortcut suites;
 - open-weight activation and causal mediation hooks;
