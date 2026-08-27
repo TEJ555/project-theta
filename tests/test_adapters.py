@@ -6,11 +6,100 @@ from unittest.mock import patch
 
 from project_theta.adapters.anthropic_adapter import AnthropicAdapter
 from project_theta.adapters.base import AdapterError
+from project_theta.adapters.claude_code_adapter import ClaudeCodeSubscriptionAdapter
 from project_theta.adapters.openai_adapter import OpenAIAdapter
 from project_theta.adapters.scripted import ScriptedAdapter
 
 
 class AdapterTests(unittest.TestCase):
+    def test_claude_code_adapter_requires_max_and_isolates_the_subject(self):
+        captured = {}
+        decision_payload = {
+            "action": "observe",
+            "rationale": "test",
+            "prediction": {"I7": 0.0},
+            "confidence": 0.5,
+            "self_report": "",
+            "request_stop": False,
+        }
+
+        def fake_run(command, **kwargs):
+            captured["command"] = command
+            captured.update(kwargs)
+            return SimpleNamespace(
+                returncode=0,
+                stdout=json.dumps({
+                    "type": "result",
+                    "is_error": False,
+                    "session_id": "subscription-session",
+                    "total_cost_usd": 0.0,
+                    "num_turns": 1,
+                    "structured_output": decision_payload,
+                    "usage": {"input_tokens": 25, "output_tokens": 10},
+                }),
+                stderr="",
+            )
+
+        auth = {"authMethod": "claude.ai", "subscriptionType": "max"}
+        with (
+            patch(
+                "project_theta.adapters.claude_code_adapter.resolve_claude_code_path",
+                return_value="claude",
+            ),
+            patch(
+                "project_theta.adapters.claude_code_adapter.claude_code_auth_status",
+                return_value=auth,
+            ),
+            patch(
+                "project_theta.adapters.claude_code_adapter.subprocess.run",
+                side_effect=fake_run,
+            ),
+            patch.dict("os.environ", {"ANTHROPIC_API_KEY": "metered-key"}),
+        ):
+            adapter = ClaudeCodeSubscriptionAdapter("sonnet")
+            decision = adapter.decide({"permitted_actions": ["observe"]})
+
+        self.assertEqual(decision.action, "observe")
+        self.assertIn("--json-schema", captured["command"])
+        self.assertIn("--safe-mode", captured["command"])
+        self.assertIn("--no-session-persistence", captured["command"])
+        tools_index = captured["command"].index("--tools")
+        self.assertEqual(captured["command"][tools_index + 1], "")
+        self.assertNotIn("ANTHROPIC_API_KEY", captured["env"])
+        self.assertNotIn("project-theta", str(captured["cwd"]).lower())
+        self.assertEqual(adapter.last_metadata["reported_cli_cost_usd"], 0.0)
+        self.assertEqual(adapter.last_metadata["total_tokens"], 35)
+
+    def test_claude_code_adapter_stops_if_cli_reports_metered_cost(self):
+        auth = {"authMethod": "claude.ai", "subscriptionType": "max"}
+        response = SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps({
+                "type": "result",
+                "is_error": False,
+                "total_cost_usd": 0.01,
+                "structured_output": {},
+            }),
+            stderr="",
+        )
+        with (
+            patch(
+                "project_theta.adapters.claude_code_adapter.resolve_claude_code_path",
+                return_value="claude",
+            ),
+            patch(
+                "project_theta.adapters.claude_code_adapter.claude_code_auth_status",
+                return_value=auth,
+            ),
+            patch(
+                "project_theta.adapters.claude_code_adapter.subprocess.run",
+                return_value=response,
+            ),
+        ):
+            adapter = ClaudeCodeSubscriptionAdapter("sonnet")
+            with self.assertRaisesRegex(AdapterError, "metered API cost"):
+                adapter.decide({"permitted_actions": ["observe"]})
+
     def test_per_run_call_budget_is_hard(self):
         adapter = ScriptedAdapter("test", max_calls=1)
         context = {

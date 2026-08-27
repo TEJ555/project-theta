@@ -1,0 +1,17 @@
+{
+  "experiment": "independent_theta",
+  "condition": "full",
+  "trial_profile": "standard",
+  "seed": 509,
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "execution": {
+    "request_timeout_seconds": 120.0,
+    "max_retries": 0,
+    "max_output_tokens": 1000,
+    "max_model_calls": 64,
+    "reasoning_effort": "low",
+    "max_estimated_cost_usd": 0.01
+  }
+}

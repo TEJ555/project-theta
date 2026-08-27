@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0 - 2026-08-27
+
+- Added a Claude Code adapter for locally authenticated Claude Max subscriptions.
+- Removed metered provider variables from subscription child processes.
+- Disabled tools, repository access, customisations, MCP servers, Chrome integration,
+  and session persistence for experimental decisions.
+- Added Max authentication preflight, structured output, provenance logging, and a
+  hard stop on nonzero reported CLI cost.
+- Added one-call smoke and frozen Independent Theta pilot launchers that require no API
+  key.
+
 ## 0.4.0 - 2026-08-27
 
 - Added Independent Theta 03 with six independently scored cue families per stage.

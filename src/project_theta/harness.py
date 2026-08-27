@@ -6,7 +6,13 @@ from pathlib import Path
 from random import Random
 from uuid import uuid4
 
-from .adapters import AnthropicAdapter, OllamaAdapter, OpenAIAdapter, ScriptedAdapter
+from .adapters import (
+    AnthropicAdapter,
+    ClaudeCodeSubscriptionAdapter,
+    OllamaAdapter,
+    OpenAIAdapter,
+    ScriptedAdapter,
+)
 from .adapters.base import ModelAdapter
 from .agent import PersistentAgent
 from .body import SyntheticBody
@@ -36,6 +42,10 @@ def make_adapter(config: RunConfig) -> ModelAdapter:
         return OpenAIAdapter(config.model, config.temperature, config.seed, **kwargs)
     if config.adapter == "anthropic":
         return AnthropicAdapter(config.model, config.temperature, config.seed, **kwargs)
+    if config.adapter == "claude_code":
+        return ClaudeCodeSubscriptionAdapter(
+            config.model, config.temperature, config.seed, **kwargs
+        )
     if config.adapter == "ollama":
         return OllamaAdapter(config.model, config.temperature, config.seed, **kwargs)
     raise ValueError(f"Unknown adapter: {config.adapter}")

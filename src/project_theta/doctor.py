@@ -7,6 +7,12 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .adapters.base import AdapterError
+from .adapters.claude_code_adapter import (
+    claude_code_auth_status,
+    resolve_claude_code_path,
+    subscription_environment,
+)
 from .config import RunConfig
 from .experiments import STUDY_PROTOCOLS
 from .provenance import code_version, is_immutable_code_version
@@ -123,6 +129,43 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
             "pass" if os.getenv("ANTHROPIC_API_KEY") else "fail",
             "ANTHROPIC_API_KEY is set"
             if os.getenv("ANTHROPIC_API_KEY") else "ANTHROPIC_API_KEY is missing",
+        )
+    if adapter == "claude_code":
+        executable = resolve_claude_code_path()
+        add(
+            "claude_code_cli",
+            "pass" if executable else "fail",
+            executable or "install @anthropic-ai/claude-code",
+        )
+        if executable:
+            try:
+                status = claude_code_auth_status(executable)
+                subscription_ok = (
+                    status.get("authMethod") == "claude.ai"
+                    and str(status.get("subscriptionType", "")).lower() == "max"
+                )
+                add(
+                    "claude_max_subscription",
+                    "pass" if subscription_ok else "fail",
+                    (
+                        "Claude.ai Max subscription authenticated"
+                        if subscription_ok
+                        else (
+                            f"authMethod={status.get('authMethod')}, "
+                            f"subscriptionType={status.get('subscriptionType')}"
+                        )
+                    ),
+                )
+            except AdapterError as exc:
+                add("claude_max_subscription", "fail", str(exc))
+        _, removed = subscription_environment()
+        add(
+            "subscription_isolation",
+            "pass",
+            (
+                "metered provider variables will be removed from child calls"
+                + (f": {', '.join(sorted(removed))}" if removed else "")
+            ),
         )
     if adapter != "scripted":
         add(

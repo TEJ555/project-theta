@@ -33,3 +33,8 @@ change. Model preflight fails on a dirty working tree.
 `independent-theta-scripted.json` is a no-cost local validation configuration. It does
 not enable provider access and can be launched with
 `scripts\run_independent_theta_validation.ps1`.
+
+`claude-max-smoke.json` makes one logged non-scientific call through the locally
+authenticated Claude Code Max subscription. `claude-max-independent-03.json` is the
+registered 60-call-per-condition Experiment 03 configuration. Neither configuration
+accepts or requires an Anthropic Console API key.

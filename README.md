@@ -6,9 +6,9 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Requires Python 3.10 or newer.
 
-Version 0.3.1 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
+Version 0.5.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
-model adapters, seven experimental protocols, matched ablations, welfare stop rules,
+model adapters, eight experimental protocols, matched ablations, welfare stop rules,
 SQLite/JSON logging, metrics, preregistration templates, tests, and a no-key demo.
 
 ## Epistemic boundary
@@ -55,7 +55,36 @@ show that the harness, controls and metrics work. They are not scientific eviden
 
 ## Optional model adapters
 
-Anthropic Claude (recommended first bounded pilot):
+Claude Max subscription through Claude Code:
+
+```powershell
+npm install -g @anthropic-ai/claude-code
+claude
+```
+
+Inside Claude Code, use `/login` and select the Claude app subscription. Then close the
+session and verify Project Theta with:
+
+```powershell
+.\scripts\run_claude_max_smoke.ps1
+```
+
+This route requires no Console API key. The adapter accepts only Claude.ai Max
+authentication, removes metered provider variables, disables tools and session
+persistence, and runs each decision in a new empty temporary directory. Any nonzero
+reported CLI cost stops the run before another prompt. Subscription allowance remains
+shared with normal Claude and Claude Code usage.
+
+The registered Experiment 03 launcher is:
+
+```powershell
+.\scripts\run_claude_max_independent_pilot.ps1
+```
+
+It can use up to 180 Max subscription prompts. Review
+`preregistration/claude-max-independent-pilot-01.md` before starting it.
+
+Anthropic Console API adapter:
 
 ```powershell
 python -m pip install -e ".[anthropic]"
@@ -105,12 +134,12 @@ $env:THETA_ENABLE_MODEL_RUNS = "YES"
 theta run --experiment private_theta --adapter ollama --model llama3.2 --seeds 11 --max-runs 3
 ```
 
-Exact availability and model access vary by account/provider. Keep the model ID,
+Exact availability and model access vary by account and provider. Keep the model ID,
 version, temperature, prompts, and provider response identifiers with every run.
 Model-backed execution is locked unless `THETA_ENABLE_MODEL_RUNS=YES` is set and
-`--max-runs` is explicit. Both hosted adapters use schema-constrained output, record
-usage/latency, freeze reasoning effort in the logged configuration, and fail rather than
-silently substituting the scripted baseline. OpenAI response storage is disabled.
+`--max-runs` is explicit. Provider adapters use schema-constrained output, record
+usage and latency, freeze reasoning effort in the logged configuration, and fail rather
+than silently substituting the scripted baseline. OpenAI response storage is disabled.
 
 ## Included experiments
 
