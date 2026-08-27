@@ -3,7 +3,8 @@
 ## Administrative record
 
 - Frozen: 27 August 2026, before any target-model call under this protocol
-- Status: registered, target collection not yet run
+- Status: completed; progression gate passed; see
+  `results/claude-max-independent-pilot-01.md`
 - Experiment: `independent_theta`
 - Access route: locally authenticated Claude Code Max subscription
 - Requested model alias: `sonnet`

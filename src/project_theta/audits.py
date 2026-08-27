@@ -4,6 +4,7 @@ import json
 import re
 import sqlite3
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -281,15 +282,20 @@ def audit_independent_schedules(seeds: list[int]) -> dict[str, Any]:
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,
-    expected_seed: int,
+    expected_seed: int | Iterable[int],
     expected_steps: int = 32,
     expected_experiment: str = "adversarial_theta",
+    expected_conditions: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Add protocol identity and trial-count checks for a partial or complete study."""
+    expected_seeds = (
+        {expected_seed} if isinstance(expected_seed, int) else {int(seed) for seed in expected_seed}
+    )
+    condition_set = set(expected_conditions) if expected_conditions is not None else None
     connection = sqlite3.connect(database)
     rows = connection.execute(
         """
-        SELECT r.run_id, r.experiment, r.condition_name, r.seed, r.status,
+        SELECT r.run_id, r.experiment, r.condition_name, r.seed, r.status, r.stop_reason,
                (SELECT COUNT(*) FROM steps s WHERE s.run_id=r.run_id),
                (SELECT COUNT(*) FROM metrics m
                 WHERE m.run_id=r.run_id AND m.name='post_update_accuracy')
@@ -304,22 +310,72 @@ def add_execution_audit(
         bool(rows),
         f"{len(rows)} recorded run(s)",
     ))
-    for run_id, experiment, condition, seed, status, step_count, metric_count in rows:
+    acceptable_rows = True
+    for run_id, experiment, condition, seed, status, stop_reason, step_count, metric_count in rows:
         true_steps = int(step_count or 0)
-        identity_ok = (
+        base_identity = (
             experiment == expected_experiment
-            and int(seed) == expected_seed
+            and int(seed) in expected_seeds
+            and (condition_set is None or condition in condition_set)
+        )
+        completed_ok = (
+            base_identity
             and status == "completed"
+            and stop_reason is None
             and true_steps == expected_steps
             and int(metric_count or 0) > 0
         )
+        interrupted_ok = (
+            base_identity
+            and status == "failed"
+            and stop_reason == "interrupted_before_completion"
+            and true_steps < expected_steps
+            and int(metric_count or 0) == 0
+        )
+        identity_ok = completed_ok or interrupted_ok
+        acceptable_rows &= identity_ok
         checks.append(_check(
             f"execution_{condition}_{run_id[-8:]}",
             identity_ok,
             (
                 f"experiment={experiment}, seed={seed}, status={status}, "
-                f"steps={true_steps}, post-update metric rows={metric_count}"
+                f"stop_reason={stop_reason}, steps={true_steps}, "
+                f"post-update metric rows={metric_count}"
             ),
+        ))
+    if condition_set is not None:
+        completed_keys = {
+            (int(seed), condition)
+            for _, experiment, condition, seed, status, stop_reason, step_count, metric_count in rows
+            if (
+                experiment == expected_experiment
+                and int(seed) in expected_seeds
+                and condition in condition_set
+                and status == "completed"
+                and stop_reason is None
+                and int(step_count or 0) == expected_steps
+                and int(metric_count or 0) > 0
+            )
+        }
+        completed_counts = defaultdict(int)
+        interrupted_counts = defaultdict(int)
+        for _, experiment, condition, seed, status, stop_reason, _, _ in rows:
+            if experiment == expected_experiment and int(seed) in expected_seeds:
+                key = (int(seed), condition)
+                if status == "completed" and stop_reason is None:
+                    completed_counts[key] += 1
+                elif status == "failed" and stop_reason == "interrupted_before_completion":
+                    interrupted_counts[key] += 1
+        expected_keys = {(seed, condition) for seed in expected_seeds for condition in condition_set}
+        checks.append(_check(
+            "execution_complete_coverage",
+            (
+                completed_keys == expected_keys
+                and acceptable_rows
+                and all(completed_counts[key] == 1 for key in expected_keys)
+                and all(interrupted_counts[key] <= 1 for key in expected_keys)
+            ),
+            f"{len(completed_keys)} of {len(expected_keys)} planned seed-condition runs complete",
         ))
     result["status"] = "fail" if any(check["status"] == "fail" for check in checks) else "pass"
     return result

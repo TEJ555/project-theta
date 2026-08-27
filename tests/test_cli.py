@@ -4,13 +4,50 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
-from project_theta.audits import add_execution_audit, audit_adversarial_schedules
+from project_theta.audits import (
+    add_execution_audit,
+    audit_adversarial_schedules,
+    audit_independent_schedules,
+)
 from project_theta.cli import main
+from project_theta.config import RunConfig
+from project_theta.harness import ExperimentHarness
+from project_theta.storage import RunStore
 
 
 class CliTests(unittest.TestCase):
+    def test_multi_seed_execution_audit_requires_exact_coverage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "multi.sqlite"
+            ExperimentHarness(database).run_study(
+                "independent_theta",
+                [401, 402],
+                RunConfig(),
+                conditions=["full", "matched_sham"],
+                max_runs=4,
+            )
+            interrupted_config = replace(
+                RunConfig(),
+                experiment="independent_theta",
+                condition="full",
+                seed=401,
+            )
+            with RunStore(database) as store:
+                store.start_run("allowed-interrupted-attempt", interrupted_config.to_dict())
+                store.mark_interrupted_runs()
+            audit = add_execution_audit(
+                audit_independent_schedules([401, 402]),
+                database,
+                [401, 402],
+                60,
+                expected_experiment="independent_theta",
+                expected_conditions=["full", "matched_sham"],
+            )
+            self.assertEqual(audit["status"], "pass")
+
     def test_config_experiment_is_used_when_cli_option_is_omitted(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

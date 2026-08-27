@@ -38,3 +38,7 @@ not enable provider access and can be launched with
 authenticated Claude Code Max subscription. `claude-max-independent-03.json` is the
 registered 60-call-per-condition Experiment 03 configuration. Neither configuration
 accepts or requires an Anthropic Console API key.
+
+`workers/claude-max-independent-replication-01.json` freezes the five fresh seeds,
+three conditions, maximum 15 runs, and two-attempt interruption policy for the Max
+replication. Launch it through `scripts/run_claude_max_independent_replication.ps1`.

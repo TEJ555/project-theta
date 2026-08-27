@@ -18,6 +18,11 @@ post-response guard and one completed the smoke test. Neither used a Console API
 so they do not change the estimated Console API total above. Claude Code's separate
 dollar-equivalent usage estimate is retained in the smoke record.
 
+The completed Independent Theta Max diagnostic added 180 subscription prompts. Every
+call recorded the Claude Max billing route and no metered provider variables. Its CLI
+dollar-equivalent estimate was $48.608463, while estimated Console API spend remained
+$0.00. It therefore does not change the Console API total above.
+
 Confirmation 02 completed below its $0.55 study guard. No further paid study is
 authorised by its result because the preregistered progression gate failed.
 

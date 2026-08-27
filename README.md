@@ -6,7 +6,7 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Requires Python 3.10 or newer.
 
-Version 0.5.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
+Version 0.6.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
 model adapters, eight experimental protocols, matched ablations, welfare stop rules,
 SQLite/JSON logging, metrics, preregistration templates, tests, and a no-key demo.
@@ -76,14 +76,27 @@ JSON result includes a dollar-equivalent usage estimate even on a subscription. 
 adapter records that estimate separately and keeps estimated Console API spend at
 $0.00. Subscription allowance remains shared with normal Claude and Claude Code usage.
 
-The registered Experiment 03 launcher is:
+The one-seed Experiment 03 diagnostic completed and passed its registered progression
+gate. Its launcher is retained for reproduction and must not be used to add new
+confirmatory data. The result is in
+`results/claude-max-independent-pilot-01.md`.
+
+The fresh five-seed replication is launched with:
 
 ```powershell
-.\scripts\run_claude_max_independent_pilot.ps1
+.\scripts\run_claude_max_independent_replication.ps1
 ```
 
-It can use up to 180 Max subscription prompts. Review
-`preregistration/claude-max-independent-pilot-01.md` before starting it.
+It can use up to 900 Max subscription prompts across 15 paired runs. It resumes the
+same database and skips completed jobs. If a process was forcibly terminated and left
+a stale lock, first confirm no replication worker is active, then use:
+
+```powershell
+.\scripts\run_claude_max_independent_replication.ps1 -Recover
+```
+
+Review `preregistration/claude-max-independent-replication-01.md` before starting it.
+The original diagnostic remains separate from the fresh replication analysis.
 
 Anthropic Console API adapter:
 

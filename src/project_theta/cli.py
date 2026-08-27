@@ -56,7 +56,12 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--max-runs", type=int, help="hard cap on run count")
 
     report = sub.add_parser("report", help="print a compact statistical study summary")
-    report.add_argument("--db", required=True)
+    report.add_argument(
+        "--db",
+        required=True,
+        action="append",
+        help="database to include; repeat to combine completed studies",
+    )
     report.add_argument("--json", action="store_true", help="print machine-readable summary")
 
     validate = sub.add_parser("validate", help="run the complete pre-deployment scripted validation")
@@ -69,6 +74,11 @@ def _parser() -> argparse.ArgumentParser:
     worker = sub.add_parser("worker", help="run a resumable bounded study worker")
     worker.add_argument("--spec", required=True)
     worker.add_argument("--once", action="store_true", help="run one cycle and exit")
+    worker.add_argument(
+        "--recover",
+        action="store_true",
+        help="remove a stale worker lock after confirming no worker is active",
+    )
 
     doctor = sub.add_parser("doctor", help="check local or model-backed deployment readiness")
     doctor.add_argument(
@@ -81,6 +91,7 @@ def _parser() -> argparse.ArgumentParser:
     audit = sub.add_parser("audit", help="audit blinded schedules for shortcut leakage")
     audit.add_argument("--seeds", type=_seeds, default=[91, 92, 93, 94])
     audit.add_argument("--db", help="also verify completed runs use the adversarial protocol")
+    audit.add_argument("--conditions", help="comma-separated expected execution conditions")
     audit.add_argument("--profile", choices=["standard", "compact"], default="standard")
     audit.add_argument(
         "--experiment",
@@ -102,7 +113,12 @@ def main(argv: list[str] | None = None) -> int:
         } for name, protocol in PROTOCOLS.items()}, indent=2))
         return 0
     if args.command == "report":
-        summary = summarize_runs(summaries_from_database(args.db))
+        summaries = [
+            summary
+            for database in args.db
+            for summary in summaries_from_database(database)
+        ]
+        summary = summarize_runs(summaries)
         print(json.dumps(summary, indent=2) if args.json else format_summary(summary))
         return 0
     if args.command == "recover":
@@ -111,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Marked {count} interrupted run(s) as failed; completed step logs were preserved.")
         return 0
     if args.command == "worker":
-        return run_worker(args.spec, once=args.once)
+        return run_worker(args.spec, once=args.once, recover=args.recover)
     if args.command == "doctor":
         result = run_doctor(args.adapter, args.db)
         print(format_doctor(result))
@@ -125,15 +141,14 @@ def main(argv: list[str] | None = None) -> int:
             else audit_adversarial_schedules(args.seeds, args.profile)
         )
         if args.db:
-            if len(args.seeds) != 1:
-                raise SystemExit("Execution audit requires exactly one expected seed.")
             expected_steps = len(build_trials(args.experiment, args.seeds[0], args.profile))
             result = add_execution_audit(
                 result,
                 args.db,
-                args.seeds[0],
+                args.seeds,
                 expected_steps,
                 expected_experiment=args.experiment,
+                expected_conditions=args.conditions.split(",") if args.conditions else None,
             )
         print(format_audit(result))
         return 0 if result["status"] == "pass" else 1

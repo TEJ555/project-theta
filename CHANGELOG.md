@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 - 2026-08-27
+
+- Recorded the completed Claude Max Independent Theta diagnostic and its passed
+  progression gate.
+- Added a preregistered five-seed fresh replication with 15 frozen paired runs.
+- Added fixed-seed workers with atomic locking, job-level resume, bounded recovery,
+  duplicate prevention, and an immutable-code gate.
+- Added multi-seed execution coverage audits and combined multi-database reports.
+- Added exact sign-test values to the human-readable statistical report.
+
 ## 0.5.0 - 2026-08-27
 
 - Added a Claude Code adapter for locally authenticated Claude Max subscriptions.

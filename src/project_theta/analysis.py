@@ -172,9 +172,12 @@ def format_summary(summary: dict[str, Any]) -> str:
     for row in summary["paired_comparisons"]:
         effect = "n/a" if row["mean_difference"] is None else f"{row['mean_difference']:+.3f}"
         ci = "n/a" if row["ci95"] is None else f"[{row['ci95'][0]:+.3f}, {row['ci95'][1]:+.3f}]"
+        sign_test = (
+            "n/a" if row["sign_test_p"] is None else f"{row['sign_test_p']:.4f}"
+        )
         lines.append(
             f"  {row['experiment']}: {row['comparison']} on {row['metric']} = {effect}, "
-            f"95% bootstrap CI {ci}, pairs={row['pairs']}"
+            f"95% bootstrap CI {ci}, pairs={row['pairs']}, two-sided sign p={sign_test}"
         )
     if summary["warnings"]:
         lines.extend(["", "Validity warnings:"])

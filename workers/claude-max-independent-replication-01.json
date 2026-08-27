@@ -1,0 +1,17 @@
+{
+  "worker_id": "claude-max-independent-replication-01",
+  "database": "runs/claude-max-independent-replication-01.sqlite",
+  "base_config": "configs/claude-max-independent-03.json",
+  "experiment": "independent_theta",
+  "conditions": [
+    "matched_sham",
+    "full",
+    "shuffled_interoception"
+  ],
+  "seeds": [607, 719, 823, 937, 1049],
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "max_total_runs": 15,
+  "max_attempts_per_job": 2
+}

@@ -66,6 +66,13 @@ restart on failure. The Docker example is non-root, read-only, capability-free a
 requires an explicit model-run gate. Provider-side spending limits and monitoring are
 still mandatory.
 
+A fixed-study worker instead declares an explicit unique seed list, condition list,
+exact total run cap, and one- or two-attempt job limit. It computes the deterministic
+condition order once per seed, acquires an atomic database lock, marks interrupted runs
+as failed, skips exactly one valid completion, and refuses duplicate completions. Model
+workers also require a clean committed revision. `--recover` removes a stale lock only
+after the operator confirms no worker is active.
+
 ## Out of scope
 
 Neural activation access, model-weight learning, validated causal emergence or Phi,
