@@ -71,9 +71,10 @@ session and verify Project Theta with:
 
 This route requires no Console API key. The adapter accepts only Claude.ai Max
 authentication, removes metered provider variables, disables tools and session
-persistence, and runs each decision in a new empty temporary directory. Any nonzero
-reported CLI cost stops the run before another prompt. Subscription allowance remains
-shared with normal Claude and Claude Code usage.
+persistence, and runs each decision in a new empty temporary directory. Claude Code's
+JSON result includes a dollar-equivalent usage estimate even on a subscription. The
+adapter records that estimate separately and keeps estimated Console API spend at
+$0.00. Subscription allowance remains shared with normal Claude and Claude Code usage.
 
 The registered Experiment 03 launcher is:
 

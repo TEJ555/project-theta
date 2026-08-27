@@ -3,7 +3,7 @@
 ## Administrative record
 
 - Frozen: 27 August 2026, before any target-model call under this protocol
-- Status: registered, smoke test and target collection not yet run
+- Status: registered, target collection not yet run
 - Experiment: `independent_theta`
 - Access route: locally authenticated Claude Code Max subscription
 - Requested model alias: `sonnet`
@@ -16,7 +16,20 @@
 
 This is a one-seed diagnostic, not an inferential replication. Actual model identifiers,
 Claude Code version, authentication route, session identifiers, token usage where
-reported, latency, and reported CLI cost must be logged for every call.
+reported, latency, and the CLI's dollar-equivalent usage estimate must be logged for
+every call.
+
+## Pre-collection amendment 01
+
+The first one-prompt engineering smoke test authenticated through Claude.ai Max and
+returned a valid model response. A local guard then incorrectly treated Claude Code's
+`total_cost_usd` JSON field as proof of a Console API charge. Claude Code emits this
+cost-equivalent field for programmatic result accounting even on a subscription route.
+No target experimental run was started.
+
+Before any target collection, the guard was amended to rely on confirmed Claude.ai Max
+authentication and the absence of API credentials or alternate provider routes. The
+cost-equivalent field remains logged but is not added to estimated Console API spend.
 
 ## Subscription isolation
 
@@ -30,7 +43,7 @@ The adapter must pass every condition below before target collection:
   session persistence are disabled;
 - every call runs in a new empty temporary directory outside the repository;
 - structured output follows the Project Theta decision schema;
-- any nonzero reported CLI cost stops the run before another prompt;
+- the CLI cost-equivalent estimate is recorded separately from Console API spend;
 - any rate limit, authentication change, tool availability, malformed output, or failed
   call remains logged and invalidates the affected run.
 
@@ -65,7 +78,8 @@ All criteria are required:
 - full scores at least 1 of 2 in every transition category;
 - every schedule, context, subscription, protocol identity, welfare, and call-count
   audit passes;
-- reported metered CLI cost remains exactly $0.00.
+- every call records `billing_route=claude_max_subscription` and estimated Console API
+  spend remains exactly $0.00.
 
 Failure blocks a multi-seed target-model replication. Passing would show only that the
 combined scaffolded system used truthful private-signal information more successfully

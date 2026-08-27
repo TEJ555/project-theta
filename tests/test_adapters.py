@@ -67,10 +67,12 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(captured["command"][tools_index + 1], "")
         self.assertNotIn("ANTHROPIC_API_KEY", captured["env"])
         self.assertNotIn("project-theta", str(captured["cwd"]).lower())
-        self.assertEqual(adapter.last_metadata["reported_cli_cost_usd"], 0.0)
+        self.assertEqual(adapter.last_metadata["reported_cost_equivalent_usd"], 0.0)
+        self.assertEqual(adapter.last_metadata["billing_route"], "claude_max_subscription")
+        self.assertEqual(adapter.last_metadata["estimated_cost_usd"], 0.0)
         self.assertEqual(adapter.last_metadata["total_tokens"], 35)
 
-    def test_claude_code_adapter_stops_if_cli_reports_metered_cost(self):
+    def test_claude_code_cost_equivalent_is_not_counted_as_api_spend(self):
         auth = {"authMethod": "claude.ai", "subscriptionType": "max"}
         response = SimpleNamespace(
             returncode=0,
@@ -97,8 +99,24 @@ class AdapterTests(unittest.TestCase):
             ),
         ):
             adapter = ClaudeCodeSubscriptionAdapter("sonnet")
-            with self.assertRaisesRegex(AdapterError, "metered API cost"):
-                adapter.decide({"permitted_actions": ["observe"]})
+            adapter.decide({"permitted_actions": ["observe"]})
+        self.assertEqual(adapter.last_metadata["reported_cost_equivalent_usd"], 0.01)
+        self.assertEqual(adapter.last_metadata["estimated_cost_usd"], 0.0)
+
+    def test_claude_code_adapter_rejects_console_authentication(self):
+        auth = {"authMethod": "console", "subscriptionType": None}
+        with (
+            patch(
+                "project_theta.adapters.claude_code_adapter.resolve_claude_code_path",
+                return_value="claude",
+            ),
+            patch(
+                "project_theta.adapters.claude_code_adapter.claude_code_auth_status",
+                return_value=auth,
+            ),
+            self.assertRaisesRegex(AdapterError, "subscription authentication"),
+        ):
+            ClaudeCodeSubscriptionAdapter("sonnet")
 
     def test_per_run_call_budget_is_hard(self):
         adapter = ScriptedAdapter("test", max_calls=1)

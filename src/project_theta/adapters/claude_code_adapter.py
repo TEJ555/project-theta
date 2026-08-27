@@ -164,11 +164,11 @@ class ClaudeCodeSubscriptionAdapter(ModelAdapter):
         if not isinstance(payload, dict) or payload.get("is_error"):
             raise AdapterError(f"Claude Code returned an unsuccessful result: {payload!r}")
 
-        reported_cost = float(payload.get("total_cost_usd", 0.0) or 0.0)
-        if reported_cost > 0.0:
-            raise AdapterError(
-                "Claude Code reported metered API cost. The run was stopped before another call."
-            )
+        # Claude Code reports a dollar-equivalent estimate for JSON-mode work even when
+        # the authenticated route is a Claude.ai subscription. It is useful provenance,
+        # but it is not evidence of a Console API charge. Billing isolation is enforced
+        # by the Max authentication check and removal of metered provider credentials.
+        reported_cost_equivalent = float(payload.get("total_cost_usd", 0.0) or 0.0)
         structured = payload.get("structured_output")
         if not isinstance(structured, dict):
             raw_result = payload.get("result", "")
@@ -195,10 +195,11 @@ class ClaudeCodeSubscriptionAdapter(ModelAdapter):
             "temperature_applied": None,
             "subscription_type": "max",
             "auth_method": "claude.ai",
+            "billing_route": "claude_max_subscription",
             "api_key_environment_removed": bool(self.removed_metered_variables),
             "tools_enabled": False,
             "session_persistence": False,
-            "reported_cli_cost_usd": reported_cost,
+            "reported_cost_equivalent_usd": reported_cost_equivalent,
             "estimated_cost_usd": 0.0,
             "estimated_run_cost_usd": 0.0,
             "num_turns": int(payload.get("num_turns", 0) or 0),

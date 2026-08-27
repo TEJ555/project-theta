@@ -6,8 +6,9 @@
 - Removed metered provider variables from subscription child processes.
 - Disabled tools, repository access, customisations, MCP servers, Chrome integration,
   and session persistence for experimental decisions.
-- Added Max authentication preflight, structured output, provenance logging, and a
-  hard stop on nonzero reported CLI cost.
+- Added Max authentication preflight, structured output, and subscription provenance
+  logging. Claude Code's dollar-equivalent estimate is recorded separately from
+  Console API spend.
 - Added one-call smoke and frozen Independent Theta pilot launchers that require no API
   key.
 
