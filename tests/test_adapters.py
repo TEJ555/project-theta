@@ -51,6 +51,10 @@ class AdapterTests(unittest.TestCase):
                 return_value=auth,
             ),
             patch(
+                "project_theta.adapters.claude_code_adapter.claude_code_version",
+                return_value="2.1.247 (Claude Code)",
+            ),
+            patch(
                 "project_theta.adapters.claude_code_adapter.subprocess.run",
                 side_effect=fake_run,
             ),
@@ -70,6 +74,8 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(adapter.last_metadata["reported_cost_equivalent_usd"], 0.0)
         self.assertEqual(adapter.last_metadata["billing_route"], "claude_max_subscription")
         self.assertEqual(adapter.last_metadata["estimated_cost_usd"], 0.0)
+        self.assertTrue(adapter.last_metadata["metered_provider_environment_absent"])
+        self.assertEqual(adapter.last_metadata["claude_code_version"], "2.1.247 (Claude Code)")
         self.assertEqual(adapter.last_metadata["total_tokens"], 35)
 
     def test_claude_code_cost_equivalent_is_not_counted_as_api_spend(self):
@@ -94,6 +100,10 @@ class AdapterTests(unittest.TestCase):
                 return_value=auth,
             ),
             patch(
+                "project_theta.adapters.claude_code_adapter.claude_code_version",
+                return_value="2.1.247 (Claude Code)",
+            ),
+            patch(
                 "project_theta.adapters.claude_code_adapter.subprocess.run",
                 return_value=response,
             ),
@@ -113,6 +123,10 @@ class AdapterTests(unittest.TestCase):
             patch(
                 "project_theta.adapters.claude_code_adapter.claude_code_auth_status",
                 return_value=auth,
+            ),
+            patch(
+                "project_theta.adapters.claude_code_adapter.claude_code_version",
+                return_value="2.1.247 (Claude Code)",
             ),
             self.assertRaisesRegex(AdapterError, "subscription authentication"),
         ):

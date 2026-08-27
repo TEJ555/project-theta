@@ -44,6 +44,8 @@ The adapter must pass every condition below before target collection:
 - every call runs in a new empty temporary directory outside the repository;
 - structured output follows the Project Theta decision schema;
 - the CLI cost-equivalent estimate is recorded separately from Console API spend;
+- the exact CLI version, routed model identifiers, provider usage, authentication
+  route, and absence of metered provider variables are recorded for every call;
 - any rate limit, authentication change, tool availability, malformed output, or failed
   call remains logged and invalidates the affected run.
 

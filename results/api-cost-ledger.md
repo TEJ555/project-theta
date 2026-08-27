@@ -12,6 +12,12 @@ authoritative.
 | Adversarial confirmation 02 | Valid, progression gate failed | 48 | $0.339075 |
 | Total spent through confirmation 02 |  | 624 | $4.898646 |
 
+Two engineering prompts were sent through an authenticated Claude Max subscription
+while developing and validating the subscription adapter. One was stopped by a local
+post-response guard and one completed the smoke test. Neither used a Console API key,
+so they do not change the estimated Console API total above. Claude Code's separate
+dollar-equivalent usage estimate is retained in the smoke record.
+
 Confirmation 02 completed below its $0.55 study guard. No further paid study is
 authorised by its result because the preregistered progression gate failed.
 

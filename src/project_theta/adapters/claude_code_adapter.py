@@ -68,6 +68,28 @@ def claude_code_auth_status(executable: str, timeout_seconds: float = 20.0) -> d
     return status
 
 
+def claude_code_version(executable: str, timeout_seconds: float = 20.0) -> str:
+    environment, _ = subscription_environment()
+    try:
+        result = subprocess.run(
+            [executable, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=timeout_seconds,
+            check=False,
+            env=environment,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise AdapterError(f"Could not inspect the Claude Code version: {exc}") from exc
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()[:1000]
+        raise AdapterError(f"Claude Code version check failed: {detail}")
+    version = result.stdout.strip()
+    if not version:
+        raise AdapterError("Claude Code returned an empty version string.")
+    return version
+
+
 class ClaudeCodeSubscriptionAdapter(ModelAdapter):
     """Use a locally authenticated Claude Code Max subscription without an API key."""
 
@@ -83,6 +105,7 @@ class ClaudeCodeSubscriptionAdapter(ModelAdapter):
             )
         self.executable = executable
         self.environment, self.removed_metered_variables = subscription_environment()
+        self.cli_version = claude_code_version(executable, self.timeout_seconds)
         self.auth_status = claude_code_auth_status(executable, self.timeout_seconds)
         if self.auth_status.get("authMethod") != "claude.ai":
             raise AdapterError(
@@ -190,18 +213,25 @@ class ClaudeCodeSubscriptionAdapter(ModelAdapter):
             "total_tokens": input_tokens + output_tokens,
             "model": self.model,
             "actual_models": actual_models,
+            "backend_characterization": "claude_code_routed_system",
+            "claude_code_version": self.cli_version,
             "reasoning_effort": self.reasoning_effort,
             "temperature_requested": self.temperature,
             "temperature_applied": None,
             "subscription_type": "max",
             "auth_method": "claude.ai",
             "billing_route": "claude_max_subscription",
-            "api_key_environment_removed": bool(self.removed_metered_variables),
+            "metered_provider_environment_absent": all(
+                name not in self.environment for name in _METERED_ENVIRONMENT_VARIABLES
+            ),
+            "metered_provider_variables_removed": sorted(self.removed_metered_variables),
             "tools_enabled": False,
             "session_persistence": False,
             "reported_cost_equivalent_usd": reported_cost_equivalent,
             "estimated_cost_usd": 0.0,
             "estimated_run_cost_usd": 0.0,
             "num_turns": int(payload.get("num_turns", 0) or 0),
+            "provider_usage": payload.get("usage", {}),
+            "provider_model_usage": model_usage,
         }
         return self.decision_from_mapping(structured)

@@ -10,6 +10,7 @@ from typing import Any
 from .adapters.base import AdapterError
 from .adapters.claude_code_adapter import (
     claude_code_auth_status,
+    claude_code_version,
     resolve_claude_code_path,
     subscription_environment,
 )
@@ -139,6 +140,8 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
         )
         if executable:
             try:
+                version = claude_code_version(executable)
+                add("claude_code_version", "pass", version)
                 status = claude_code_auth_status(executable)
                 subscription_ok = (
                     status.get("authMethod") == "claude.ai"
