@@ -4,6 +4,8 @@ Project Theta is an open-source prototype laboratory for testing **theory-inspir
 behavioural and computational indicators** in persistent artificial agents. It does
 not detect, prove, create, or rule out phenomenal consciousness.
 
+Research site: [projecttheta.org](https://projecttheta.org)
+
 Requires Python 3.10 or newer.
 
 Version 0.6.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
@@ -254,3 +256,4 @@ about AI subjects. Before a server deployment, follow the [deployment gate](depl
 Use deterministic seeds, add a matched negative control for every new positive
 condition, declare metrics before running target models, preserve raw logs, and add
 tests for any new mechanism. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
