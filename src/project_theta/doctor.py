@@ -166,8 +166,11 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
             "subscription_isolation",
             "pass",
             (
-                "metered provider variables will be removed from child calls"
-                + (f": {', '.join(sorted(removed))}" if removed else "")
+                "child calls contain no metered provider variables"
+                + (
+                    f"; removed from parent: {', '.join(sorted(removed))}"
+                    if removed else ""
+                )
             ),
         )
     if adapter != "scripted":
