@@ -54,3 +54,18 @@ Recovery does not change the progression thresholds and does not strengthen the
 permitted interpretation. Results remain behavioural and computational indicators,
 not evidence of phenomenal consciousness.
 
+## Final-job infrastructure interruption
+
+After 14 of 15 planned jobs had completed, the first attempt at seed 1049
+`shuffled_interoception` stopped after 25 of 60 trials. Windows prevented removal of
+Claude Code's isolated temporary directory because it remained in use. The error was
+an operating-system cleanup lock, not a model response, task result, subscription
+limit, or welfare stop.
+
+Before changing the operational copy, a consistent backup was preserved with SHA-256
+`9a3cc9694ccb3c90e1d4d5b7388a6b5dff4fde77578d00a8f2a80b0011e94da4`.
+The failed run `theta-564d5ae3-3c69-48b6-a5d5-37333699ba84` was classified as
+`interrupted_before_completion` in the operational copy. This was its first attempt,
+so the frozen per-job limit permits one retry. Its partial record remains preserved.
+The original thresholds, code, prompts, seed, condition, and analysis remain unchanged.
+
