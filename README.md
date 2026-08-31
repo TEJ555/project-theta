@@ -6,6 +6,12 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Research site: [projecttheta.org](https://projecttheta.org)
 
+Latest result: the fresh five-seed Independent Theta replication passed every frozen
+progression criterion. Truthful private-signal performance was 6 of 6 in all five
+seeds, compared with 3 of 6 for matched sham and a mean of 2.4 of 6 for shuffled
+interoception. Read the [formal replication report](results/claude-max-independent-replication-01.md)
+and the [registered next study](preregistration/claude-max-mechanism-ablation-01.md).
+
 Requires Python 3.10 or newer.
 
 Version 0.6.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
