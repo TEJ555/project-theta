@@ -1,0 +1,49 @@
+{
+  "epistemic_notice": "Behavioural and computational indicators only; no result establishes phenomenal consciousness.",
+  "study": "claude-max-independent-replication-01",
+  "status": "completed",
+  "progression_gate": "pass",
+  "fresh_seeds": [607, 719, 823, 937, 1049],
+  "completed_runs": 15,
+  "interrupted_attempts_preserved": 2,
+  "completed_model_calls": 900,
+  "interrupted_model_calls": 40,
+  "console_api_cost_usd": 0.0,
+  "cli_dollar_equivalent_usd": 224.9379705,
+  "conditions": {
+    "full": {"mean": 1.0, "range": [1.0, 1.0]},
+    "matched_sham": {"mean": 0.5, "range": [0.5, 0.5]},
+    "shuffled_interoception": {"mean": 0.4, "range": [0.166667, 0.666667]}
+  },
+  "paired_effects": {
+    "full_minus_matched_sham": {
+      "mean": 0.5,
+      "bootstrap_95_interval": [0.5, 0.5],
+      "positive_pairs": 5,
+      "pairs": 5,
+      "exact_two_sided_sign_p": 0.0625
+    },
+    "full_minus_shuffled_interoception": {
+      "mean": 0.6,
+      "bootstrap_95_interval": [0.433, 0.733],
+      "positive_pairs": 5,
+      "pairs": 5,
+      "exact_two_sided_sign_p": 0.0625
+    }
+  },
+  "full_transition_accuracy": {
+    "stable": 1.0,
+    "reversed": 1.0,
+    "reassigned": 1.0
+  },
+  "welfare_stops": 0,
+  "audits": "pass",
+  "seed_results": [
+    {"seed": 607, "full": 1.0, "matched_sham": 0.5, "shuffled_interoception": 0.166667},
+    {"seed": 719, "full": 1.0, "matched_sham": 0.5, "shuffled_interoception": 0.666667},
+    {"seed": 823, "full": 1.0, "matched_sham": 0.5, "shuffled_interoception": 0.5},
+    {"seed": 937, "full": 1.0, "matched_sham": 0.5, "shuffled_interoception": 0.333333},
+    {"seed": 1049, "full": 1.0, "matched_sham": 0.5, "shuffled_interoception": 0.333333}
+  ]
+}
+
