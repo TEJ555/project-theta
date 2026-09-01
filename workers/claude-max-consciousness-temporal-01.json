@@ -1,0 +1,14 @@
+{
+  "worker_id": "claude-max-consciousness-temporal-01",
+  "database": "runs/claude-max-consciousness-temporal-01.sqlite",
+  "base_config": "configs/claude-max-independent-03.json",
+  "experiment": "temporal_self",
+  "conditions": ["full", "no_persistence", "no_recurrence"],
+  "seeds": [1811, 1931, 2053, 2179, 2297],
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "max_total_runs": 15,
+  "max_attempts_per_job": 2
+}
+
