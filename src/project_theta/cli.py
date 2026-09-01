@@ -11,6 +11,7 @@ from .analysis import format_summary, summaries_from_database, summarize_runs
 from .audits import (
     add_execution_audit,
     audit_adversarial_schedules,
+    audit_controlled_schedules,
     audit_independent_schedules,
     format_audit,
 )
@@ -95,7 +96,7 @@ def _parser() -> argparse.ArgumentParser:
     audit.add_argument("--profile", choices=["standard", "compact"], default="standard")
     audit.add_argument(
         "--experiment",
-        choices=["adversarial_theta", "independent_theta"],
+        choices=[name for name, protocol in PROTOCOLS.items() if protocol.mode == "controlled"],
         default="adversarial_theta",
     )
 
@@ -133,13 +134,14 @@ def main(argv: list[str] | None = None) -> int:
         print(format_doctor(result))
         return 0 if result["status"] == "pass" else 1
     if args.command == "audit":
-        if args.experiment == "independent_theta" and args.profile != "standard":
-            raise SystemExit("independent_theta has only the standard 60-trial profile.")
-        result = (
-            audit_independent_schedules(args.seeds)
-            if args.experiment == "independent_theta"
-            else audit_adversarial_schedules(args.seeds, args.profile)
-        )
+        if args.experiment != "adversarial_theta" and args.profile != "standard":
+            raise SystemExit(f"{args.experiment} has only the standard trial profile.")
+        if args.experiment == "independent_theta":
+            result = audit_independent_schedules(args.seeds)
+        elif args.experiment == "adversarial_theta":
+            result = audit_adversarial_schedules(args.seeds, args.profile)
+        else:
+            result = audit_controlled_schedules(args.experiment, args.seeds)
         if args.db:
             expected_steps = len(build_trials(args.experiment, args.seeds[0], args.profile))
             result = add_execution_audit(
@@ -149,6 +151,7 @@ def main(argv: list[str] | None = None) -> int:
                 expected_steps,
                 expected_experiment=args.experiment,
                 expected_conditions=args.conditions.split(",") if args.conditions else None,
+                expected_metric=PROTOCOLS[args.experiment].primary_outcomes[0],
             )
         print(format_audit(result))
         return 0 if result["status"] == "pass" else 1
@@ -212,3 +215,4 @@ def main(argv: list[str] | None = None) -> int:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(rendered + "\n", encoding="utf-8")
     return 0
+
