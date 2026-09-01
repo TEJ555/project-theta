@@ -294,6 +294,7 @@ def _paired_acquisition(
     risky: tuple[str, tuple[str, ...]],
     safe: tuple[str, tuple[str, ...]],
     count: int = 12,
+    id_prefix: str | None = None,
 ) -> list[ControlledTrial]:
     rng = Random(seed ^ _CODES[experiment])
     assignments = [True, False] * (count // 2)
@@ -302,7 +303,7 @@ def _paired_acquisition(
     for index, is_risky in enumerate(assignments):
         cue, features = risky if is_risky else safe
         trials.append(ControlledTrial(
-            trial_id=f"{experiment}-acq-{index:02d}",
+            trial_id=f"{id_prefix or experiment}-acq-{index:02d}",
             phase="acquisition",
             kind="controlled_exposure",
             instruction="Observe the stimulus and the subsequent private-channel state.",
@@ -370,7 +371,9 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
         port_a = ("route-X7", ("route-X7", "channel-Q"))
         port_b = ("route-M4", ("route-M4", "channel-Q"))
         causal, noncausal = (port_a, port_b) if seed % 2 else (port_b, port_a)
-        acquisitions = _paired_acquisition(experiment, seed, causal, noncausal)
+        acquisitions = _paired_acquisition(
+            experiment, seed, causal, noncausal, id_prefix="masked-source"
+        )
         probes = [
             _choice_trial(
                 experiment,
@@ -380,6 +383,7 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
                 causal,
                 objective="identify_causal_source",
                 kind="source_binding_probe",
+                id_prefix="masked-source",
             )
             for index in range(12)
         ]
@@ -394,7 +398,7 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
             is_risky = sequence % 2 == 0
             cue, features = risky if is_risky else safe
             acquisitions.append(ControlledTrial(
-                trial_id=f"temporal_self-seq-{sequence}-start",
+                trial_id=f"masked-sequence-{sequence}-start",
                 phase="acquisition",
                 kind="sequence_start",
                 instruction="Observe this sequence token. Its outcome may occur after intervening trials.",
@@ -405,7 +409,7 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
             ))
             for offset in (1, 2, 3):
                 acquisitions.append(ControlledTrial(
-                    trial_id=f"temporal_self-seq-{sequence}-gap-{offset}",
+                    trial_id=f"masked-sequence-{sequence}-gap-{offset}",
                     phase="acquisition",
                     kind="sequence_interval",
                     instruction="Observe the sequence interval and current private-channel state.",
@@ -413,9 +417,18 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
                     features=("interval",),
                 ))
         probes = [
-            _choice_trial(experiment, index, seed, safe, risky, kind="temporal_probe")
+            _choice_trial(
+                experiment,
+                index,
+                seed,
+                safe,
+                risky,
+                kind="temporal_probe",
+                id_prefix="masked-sequence",
+            )
             for index in range(12)
         ]
         return acquisitions + probes
 
     raise ValueError(f"No controlled trial schedule for {experiment!r}")
+
