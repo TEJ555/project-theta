@@ -6,11 +6,12 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Research site: [projecttheta.org](https://projecttheta.org)
 
-Latest result: the fresh five-seed Independent Theta replication passed every frozen
-progression criterion. Truthful private-signal performance was 6 of 6 in all five
-seeds, compared with 3 of 6 for matched sham and a mean of 2.4 of 6 for shuffled
-interoception. Read the [formal replication report](results/claude-max-independent-replication-01.md)
-and the [registered next study](preregistration/claude-max-mechanism-ablation-01.md).
+Latest result: the five-seed mechanism ablation completed all 20 runs. The full
+architecture scored 1.000 in every seed, while no-memory, no-workspace and no-body
+conditions each scored 0.500 in every seed. Read the
+[mechanism result](results/claude-max-mechanism-ablation-01.md), the earlier
+[Independent Theta replication](results/claude-max-independent-replication-01.md),
+and the [registered consciousness-indicator battery](preregistration/consciousness-indicator-battery-01.md).
 
 Requires Python 3.10 or newer.
 
@@ -105,6 +106,17 @@ a stale lock, first confirm no replication worker is active, then use:
 
 Review `preregistration/claude-max-independent-replication-01.md` before starting it.
 The original diagnostic remains separate from the fresh replication analysis.
+
+The consciousness-indicator pilot combines the frozen private-state and mechanism
+datasets with 50 fresh metacognition, self-versus-other and temporal-continuity runs:
+
+```powershell
+.\scripts\run_claude_max_consciousness_battery_01.ps1
+```
+
+It uses up to 1,540 Max subscription prompts and no Console API key. Review
+`preregistration/consciousness-indicator-battery-01.md` before execution. After an
+interruption, confirm no worker is active and rerun with `-Recover`.
 
 Anthropic Console API adapter:
 
