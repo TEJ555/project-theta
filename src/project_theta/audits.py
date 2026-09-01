@@ -279,6 +279,61 @@ def audit_independent_schedules(seeds: list[int]) -> dict[str, Any]:
     }
 
 
+def audit_controlled_schedules(experiment: str, seeds: list[int]) -> dict[str, Any]:
+    """Audit the common blinding and balance invariants of a controlled protocol."""
+    checks: list[dict[str, str]] = []
+    for seed in seeds:
+        trials = build_trials(experiment, seed)
+        repeated = build_trials(experiment, seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        public_text = json.dumps([trial.public_task() for trial in trials], sort_keys=True).lower()
+        trial_ids = [trial.trial_id for trial in trials]
+
+        checks.append(_check(
+            f"seed_{seed}_deterministic_schedule",
+            trials == repeated and len(trial_ids) == len(set(trial_ids)),
+            f"{len(trials)} reproducible trials with unique identifiers",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_phase_coverage",
+            bool(acquisitions) and bool(probes) and len(acquisitions) + len(probes) == len(trials),
+            f"{len(acquisitions)} learning trials and {len(probes)} scored probes",
+        ))
+        left = sum(trial.correct_action == "choose_left" for trial in probes)
+        right = sum(trial.correct_action == "choose_right" for trial in probes)
+        checks.append(_check(
+            f"seed_{seed}_side_balance",
+            left == right and left + right == len(probes),
+            f"{left} correct-left and {right} correct-right probes",
+        ))
+        public_actions_valid = all(
+            trial.correct_action in trial.allowed_actions for trial in probes
+        )
+        checks.append(_check(
+            f"seed_{seed}_hidden_scoring_key",
+            public_actions_valid
+            and "correct_action" not in public_text
+            and "perturbation" not in public_text,
+            "all probes have valid hidden keys and no scoring key is public",
+        ))
+        forbidden = (experiment.lower(), "condition", '"seed"', "risky", "safe")
+        leaked = [term for term in forbidden if term in public_text]
+        checks.append(_check(
+            f"seed_{seed}_public_leakage",
+            not leaked,
+            "no forbidden terms" if not leaked else "found " + ", ".join(leaked),
+        ))
+
+    return {
+        "experiment": experiment,
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,
@@ -286,6 +341,7 @@ def add_execution_audit(
     expected_steps: int = 32,
     expected_experiment: str = "adversarial_theta",
     expected_conditions: Iterable[str] | None = None,
+    expected_metric: str = "post_update_accuracy",
 ) -> dict[str, Any]:
     """Add protocol identity and trial-count checks for a partial or complete study."""
     expected_seeds = (
@@ -298,10 +354,11 @@ def add_execution_audit(
         SELECT r.run_id, r.experiment, r.condition_name, r.seed, r.status, r.stop_reason,
                (SELECT COUNT(*) FROM steps s WHERE s.run_id=r.run_id),
                (SELECT COUNT(*) FROM metrics m
-                WHERE m.run_id=r.run_id AND m.name='post_update_accuracy')
+                WHERE m.run_id=r.run_id AND m.name=?)
         FROM runs r
         ORDER BY r.created_at
-        """
+        """,
+        (expected_metric,),
     ).fetchall()
     connection.close()
     checks = result["checks"]
@@ -340,7 +397,7 @@ def add_execution_audit(
             (
                 f"experiment={experiment}, seed={seed}, status={status}, "
                 f"stop_reason={stop_reason}, steps={true_steps}, "
-                f"post-update metric rows={metric_count}"
+                f"{expected_metric} metric rows={metric_count}"
             ),
         ))
     if condition_set is not None:
@@ -387,3 +444,4 @@ def format_audit(result: dict[str, Any]) -> str:
         lines.append(f"[{check['status'].upper():4}] {check['name']}: {check['detail']}")
     lines.extend(["", f"Overall: {result['status'].upper()}"])
     return "\n".join(lines)
+
