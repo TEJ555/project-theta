@@ -5,13 +5,23 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
-from project_theta.audits import audit_adversarial_schedules, audit_independent_schedules
+from project_theta.audits import (
+    audit_adversarial_schedules,
+    audit_controlled_schedules,
+    audit_independent_schedules,
+)
 from project_theta.config import RunConfig
 from project_theta.harness import ExperimentHarness
 from project_theta.trials import build_trials
 
 
 class ControlledTrialTests(unittest.TestCase):
+    def test_consciousness_indicator_schedules_are_balanced_and_blinded(self):
+        for experiment in ("self_vs_other", "temporal_self"):
+            with self.subTest(experiment=experiment):
+                result = audit_controlled_schedules(experiment, [1811, 1931, 2053])
+                self.assertEqual(result["status"], "pass")
+
     def test_independent_schedule_has_independent_balanced_items(self):
         result = audit_independent_schedules([401, 402, 403, 404])
         self.assertEqual(result["status"], "pass")
@@ -192,3 +202,4 @@ class ControlledTrialTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
