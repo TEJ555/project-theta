@@ -1,0 +1,14 @@
+{
+  "worker_id": "claude-max-consciousness-self-other-01",
+  "database": "runs/claude-max-consciousness-self-other-01.sqlite",
+  "base_config": "configs/claude-max-independent-03.json",
+  "experiment": "self_vs_other",
+  "conditions": ["full", "no_self_model", "no_workspace"],
+  "seeds": [1811, 1931, 2053, 2179, 2297],
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "max_total_runs": 15,
+  "max_attempts_per_job": 2
+}
+
