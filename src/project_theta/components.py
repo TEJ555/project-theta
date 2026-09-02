@@ -15,9 +15,16 @@ class MemoryRecord:
     reward: float
     cue: str = ""
     tags: tuple[str, ...] = ()
+    owner: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    def to_public_dict(self) -> dict[str, Any]:
+        """Return model-visible memory without private architectural annotations."""
+        data = asdict(self)
+        data.pop("owner", None)
+        return data
 
 
 class EpisodicMemory:
@@ -62,6 +69,7 @@ class SelfModelState:
     inferred_risk: float = 0.0
     update_count: int = 0
     source_beliefs: dict[str, float] = field(default_factory=lambda: {"self": 0.5, "other": 0.5})
+    source_bindings: dict[str, float] = field(default_factory=dict)
 
 
 class SelfModel:
@@ -81,6 +89,13 @@ class SelfModel:
         self.state.signal_prediction = min(1.0, self.state.signal_baseline + self.state.inferred_risk * 0.25)
         self.state.last_position = position
         self.state.update_count += 1
+        owned: dict[str, list[float]] = {}
+        for record in memories:
+            if record.cue and record.owner in {"self", "other"}:
+                owned.setdefault(record.cue, []).append(1.0 if record.owner == "self" else 0.0)
+        self.state.source_bindings = {
+            cue: sum(values) / len(values) for cue, values in sorted(owned.items())
+        }
 
     def snapshot(self) -> dict[str, Any]:
         if not self.enabled:
@@ -109,3 +124,43 @@ class GlobalWorkspace:
         self.last_broadcast = sorted(candidates, key=lambda item: item.salience, reverse=True)[: self.capacity]
         self.broadcast_count += 1
         return [asdict(item) for item in self.last_broadcast]
+
+
+class TemporalBinder:
+    """Bind delayed private-channel observations to earlier opaque cues."""
+
+    def __init__(self, enabled: bool = True):
+        self.enabled = enabled
+        self.pending: list[tuple[int, str]] = []
+        self.outcomes: dict[str, list[float]] = {}
+        self.update_count = 0
+
+    def observe(self, tick: int, task: dict[str, Any], signal: float) -> None:
+        if not self.enabled:
+            return
+        due = [(due_tick, cue) for due_tick, cue in self.pending if due_tick == tick]
+        self.pending = [(due_tick, cue) for due_tick, cue in self.pending if due_tick > tick]
+        for _, cue in due:
+            self.outcomes.setdefault(cue, []).append(float(signal))
+            self.update_count += 1
+        if task.get("kind") == "sequence_start" and task.get("binding_delay"):
+            stimulus = task.get("stimulus", {})
+            cue = str(stimulus.get("token", ""))
+            if cue:
+                self.pending.append((tick + int(task["binding_delay"]), cue))
+
+    def snapshot(self) -> dict[str, Any]:
+        if not self.enabled:
+            return {"enabled": False}
+        return {
+            "enabled": True,
+            "associations": {
+                cue: {
+                    "observations": len(values),
+                    "mean_signal": round(sum(values) / len(values), 6),
+                }
+                for cue, values in sorted(self.outcomes.items())
+            },
+            "update_count": self.update_count,
+        }
+
