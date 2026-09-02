@@ -14,6 +14,7 @@ from project_theta.adapters.scripted import ScriptedAdapter
 class AdapterTests(unittest.TestCase):
     def test_claude_code_adapter_requires_max_and_isolates_the_subject(self):
         captured = {}
+        captured_temp = {}
         decision_payload = {
             "action": "observe",
             "rationale": "test",
@@ -40,6 +41,16 @@ class AdapterTests(unittest.TestCase):
                 stderr="",
             )
 
+        class FakeTemporaryDirectory:
+            def __init__(self, **kwargs):
+                captured_temp.update(kwargs)
+
+            def __enter__(self):
+                return "C:/Temp/theta-subject-test"
+
+            def __exit__(self, exc_type, exc_value, traceback):
+                return False
+
         auth = {"authMethod": "claude.ai", "subscriptionType": "max"}
         with (
             patch(
@@ -58,6 +69,10 @@ class AdapterTests(unittest.TestCase):
                 "project_theta.adapters.claude_code_adapter.subprocess.run",
                 side_effect=fake_run,
             ),
+            patch(
+                "project_theta.adapters.claude_code_adapter.tempfile.TemporaryDirectory",
+                FakeTemporaryDirectory,
+            ),
             patch.dict("os.environ", {"ANTHROPIC_API_KEY": "metered-key"}),
         ):
             adapter = ClaudeCodeSubscriptionAdapter("sonnet")
@@ -71,6 +86,8 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(captured["command"][tools_index + 1], "")
         self.assertNotIn("ANTHROPIC_API_KEY", captured["env"])
         self.assertNotIn("project-theta", str(captured["cwd"]).lower())
+        self.assertEqual(captured_temp["prefix"], "theta-subject-")
+        self.assertTrue(captured_temp["ignore_cleanup_errors"])
         self.assertEqual(adapter.last_metadata["reported_cost_equivalent_usd"], 0.0)
         self.assertEqual(adapter.last_metadata["billing_route"], "claude_max_subscription")
         self.assertEqual(adapter.last_metadata["estimated_cost_usd"], 0.0)
@@ -230,3 +247,4 @@ class AdapterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
