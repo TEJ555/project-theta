@@ -115,6 +115,24 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         max_steps=28,
         acquisition_end=12,
     ),
+    "self_model_binding_v2": ExperimentProtocol(
+        "self_model_binding_v2",
+        "Does an explicit self-model causally retain opaque source ownership?",
+        ("source_binding_accuracy", "calibration_brier"),
+        ("full", "no_self_model", "no_workspace"),
+        max_steps=24,
+        acquisition_end=12,
+        include_in_battery=False,
+    ),
+    "temporal_binding_v2": ExperimentProtocol(
+        "temporal_binding_v2",
+        "Does an explicit recurrent binder connect delayed body outcomes to earlier cues?",
+        ("temporal_choice_accuracy", "delayed_signal_contrast", "calibration_brier"),
+        ("full", "no_persistence", "no_recurrence"),
+        max_steps=36,
+        acquisition_end=24,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",
@@ -139,3 +157,4 @@ def get_protocol(name: str) -> ExperimentProtocol:
         return PROTOCOLS[name]
     except KeyError as exc:
         raise ValueError(f"Unknown experiment {name!r}; choose from {', '.join(PROTOCOLS)}") from exc
+
