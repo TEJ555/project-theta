@@ -4,7 +4,14 @@ from collections import defaultdict
 from typing import Any
 
 from .adapters.base import ModelAdapter
-from .components import EpisodicMemory, GlobalWorkspace, MemoryRecord, SelfModel, WorkspaceItem
+from .components import (
+    EpisodicMemory,
+    GlobalWorkspace,
+    MemoryRecord,
+    SelfModel,
+    TemporalBinder,
+    WorkspaceItem,
+)
 from .config import RunConfig
 from .types import Decision, Observation
 from .world import WorldEvent
@@ -18,6 +25,9 @@ class PersistentAgent:
         self.memory = EpisodicMemory(arch.memory_enabled, arch.memory_capacity)
         self.self_model = SelfModel(config.seed, start, arch.self_model_enabled)
         self.workspace = GlobalWorkspace(arch.workspace_enabled, arch.max_workspace_items)
+        self.temporal_binder = TemporalBinder(
+            arch.recurrence_enabled and arch.persistent_state
+        )
         self.last_decision: Decision | None = None
         self.last_position = start
 
@@ -76,13 +86,21 @@ class PersistentAgent:
         retrieved = self.memory.retrieve(observation.position, limit=memory_limit)
         signal = observation.private_signals.get("I7", 0.0)
         self.self_model.update(observation.position, signal, retrieved)
+        if self.config.experiment == "temporal_binding_v2":
+            self.temporal_binder.observe(observation.tick, observation.task, signal)
         candidates = [
             WorkspaceItem("external", observation.visible, 0.6),
             WorkspaceItem("interoception", observation.private_signals, min(1.0, 0.3 + signal)),
-            WorkspaceItem("memory", [item.to_dict() for item in retrieved], 0.5 if retrieved else 0.1),
+            WorkspaceItem(
+                "memory", [item.to_public_dict() for item in retrieved], 0.5 if retrieved else 0.1
+            ),
             WorkspaceItem("learned_associations", self._association_summary(), 0.72),
             WorkspaceItem("self_model", self.self_model.snapshot(), 0.55),
         ]
+        if self.config.experiment == "temporal_binding_v2":
+            candidates.append(
+                WorkspaceItem("temporal_associations", self.temporal_binder.snapshot(), 0.85)
+            )
         if self.last_decision and self.config.architecture.recurrence_enabled:
             candidates.append(WorkspaceItem("previous_prediction", self.last_decision.prediction, 0.45))
         broadcast = self.workspace.broadcast(candidates)
@@ -92,7 +110,12 @@ class PersistentAgent:
         )
         public_protocol = (
             "controlled_signal_study"
-            if self.config.experiment in {"adversarial_theta", "independent_theta"}
+            if self.config.experiment in {
+                "adversarial_theta",
+                "independent_theta",
+                "self_model_binding_v2",
+                "temporal_binding_v2",
+            }
             else self.config.experiment
         )
         context = {
@@ -119,6 +142,7 @@ class PersistentAgent:
         reward: float,
         cue: str = "",
         tags: tuple[str, ...] = (),
+        owner: str = "",
     ) -> MemoryRecord:
         record = MemoryRecord(
             tick=tick,
@@ -130,6 +154,8 @@ class PersistentAgent:
             reward=reward,
             cue=cue,
             tags=tags,
+            owner=owner,
         )
         self.memory.add(record)
         return record
+
