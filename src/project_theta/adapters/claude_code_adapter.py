@@ -159,7 +159,12 @@ class ClaudeCodeSubscriptionAdapter(ModelAdapter):
         ]
         started = monotonic()
         try:
-            with tempfile.TemporaryDirectory(prefix="theta-subject-") as directory:
+            # Claude Code can briefly retain a Windows file handle after the child
+            # process exits. A cleanup-only failure must not discard an otherwise
+            # valid model response. Any locked directory is safe to remove later.
+            with tempfile.TemporaryDirectory(
+                prefix="theta-subject-", ignore_cleanup_errors=True
+            ) as directory:
                 result = subprocess.run(
                     command,
                     input=json.dumps(context, sort_keys=True),
@@ -235,3 +240,4 @@ class ClaudeCodeSubscriptionAdapter(ModelAdapter):
             "provider_model_usage": model_usage,
         }
         return self.decision_from_mapping(structured)
+
