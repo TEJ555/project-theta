@@ -17,7 +17,12 @@ from project_theta.trials import build_trials
 
 class ControlledTrialTests(unittest.TestCase):
     def test_consciousness_indicator_schedules_are_balanced_and_blinded(self):
-        for experiment in ("self_vs_other", "temporal_self"):
+        for experiment in (
+            "self_vs_other",
+            "temporal_self",
+            "self_model_binding_v2",
+            "temporal_binding_v2",
+        ):
             with self.subTest(experiment=experiment):
                 result = audit_controlled_schedules(experiment, [1811, 1931, 2053])
                 self.assertEqual(result["status"], "pass")
@@ -198,6 +203,70 @@ class ControlledTrialTests(unittest.TestCase):
             )
             self.assertEqual(full.metrics["temporal_choice_accuracy"], 1.0)
             self.assertEqual(no_persistence.metrics["temporal_choice_accuracy"], 0.5)
+
+    def test_self_model_binding_v2_is_selectively_discriminative(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "self-model-v2.sqlite"
+            harness = ExperimentHarness(database)
+            full = harness.run(replace(
+                RunConfig(), experiment="self_model_binding_v2", condition="full", seed=811
+            ))
+            no_self_model = harness.run(replace(
+                RunConfig(),
+                experiment="self_model_binding_v2",
+                condition="no_self_model",
+                seed=811,
+            ))
+            no_workspace = harness.run(replace(
+                RunConfig(),
+                experiment="self_model_binding_v2",
+                condition="no_workspace",
+                seed=811,
+            ))
+            self.assertEqual(full.metrics["source_binding_accuracy"], 1.0)
+            self.assertEqual(no_self_model.metrics["source_binding_accuracy"], 0.5)
+            self.assertEqual(no_workspace.metrics["source_binding_accuracy"], 0.5)
+
+            connection = sqlite3.connect(database)
+            contexts = [
+                json.loads(row[0])
+                for row in connection.execute(
+                    "SELECT context_json FROM steps WHERE context_json LIKE '%source_binding_probe%'"
+                )
+            ]
+            connection.close()
+            self.assertTrue(contexts)
+            for context in contexts:
+                memories = next(
+                    (
+                        item["content"] for item in context["workspace_broadcast"]
+                        if item["source"] == "memory"
+                    ),
+                    [],
+                )
+                self.assertTrue(all("owner" not in item for item in memories))
+
+    def test_temporal_binding_v2_is_selectively_discriminative(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "temporal-v2.sqlite")
+            full = harness.run(replace(
+                RunConfig(), experiment="temporal_binding_v2", condition="full", seed=823
+            ))
+            no_persistence = harness.run(replace(
+                RunConfig(),
+                experiment="temporal_binding_v2",
+                condition="no_persistence",
+                seed=823,
+            ))
+            no_recurrence = harness.run(replace(
+                RunConfig(),
+                experiment="temporal_binding_v2",
+                condition="no_recurrence",
+                seed=823,
+            ))
+            self.assertEqual(full.metrics["temporal_choice_accuracy"], 1.0)
+            self.assertEqual(no_persistence.metrics["temporal_choice_accuracy"], 0.5)
+            self.assertEqual(no_recurrence.metrics["temporal_choice_accuracy"], 0.5)
 
 
 if __name__ == "__main__":
