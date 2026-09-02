@@ -266,6 +266,7 @@ class ExperimentHarness:
                         0.0,
                         memory_cue,
                         memory_tags,
+                        trial.owner,
                     )
                     hidden_events = [{
                         "kind": "controlled_perturbation",

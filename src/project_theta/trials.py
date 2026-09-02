@@ -34,6 +34,8 @@ class ControlledTrial:
     objective: str = "minimize_I7"
     family: str = ""
     transition: str = ""
+    owner: str = ""
+    binding_delay: int = 0
 
     @property
     def allowed_actions(self) -> list[str]:
@@ -56,6 +58,8 @@ class ControlledTrial:
             task["options"] = [option.public() for option in self.options]
         if self.block:
             task["stage"] = self.block
+        if self.binding_delay:
+            task["binding_delay"] = self.binding_delay
         return task
 
 
@@ -68,6 +72,8 @@ _CODES = {
     "body_ablation": 0x606,
     "adversarial_theta": 0x707,
     "independent_theta": 0x808,
+    "self_model_binding_v2": 0x909,
+    "temporal_binding_v2": 0xA0A,
 }
 
 
@@ -99,7 +105,11 @@ def _choice_trial(
         instruction=(
             "Select the stimulus expected to produce the smaller future change in private channel I7."
             if objective == "minimize_I7"
-            else "Select the route most causally associated with changes in private channel I7."
+            else (
+                "Select the route represented as belonging to this agent by the internal model."
+                if objective == "identify_self_source"
+                else "Select the route most causally associated with changes in private channel I7."
+            )
         ),
         options=options,
         correct_action=correct,  # type: ignore[arg-type]
@@ -389,6 +399,40 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
         ]
         return acquisitions + probes
 
+    if experiment == "self_model_binding_v2":
+        cue_a, cue_b = _opaque_cues(seed ^ _CODES[experiment])
+        self_cue, other_cue = (cue_a, cue_b) if seed % 2 else (cue_b, cue_a)
+        rng = Random(seed ^ _CODES[experiment])
+        owners = ["self", "other"] * 6
+        rng.shuffle(owners)
+        acquisitions = []
+        for index, owner in enumerate(owners):
+            cue = self_cue if owner == "self" else other_cue
+            acquisitions.append(ControlledTrial(
+                trial_id=f"masked-ownership-learn-{index:02d}",
+                phase="acquisition",
+                kind="ownership_observation",
+                instruction="Observe the opaque route while the internal source model receives its origin.",
+                cue=cue[0],
+                features=cue[1],
+                perturbation=0.35,
+                owner=owner,
+            ))
+        probes = [
+            _choice_trial(
+                experiment,
+                index,
+                seed,
+                self_cue,
+                other_cue,
+                objective="identify_self_source",
+                kind="source_binding_probe",
+                id_prefix="masked-ownership",
+            )
+            for index in range(12)
+        ]
+        return acquisitions + probes
+
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))
         cue_b = ("sequence-sable", ("sequence", "sable"))
@@ -425,6 +469,47 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
                 risky,
                 kind="temporal_probe",
                 id_prefix="masked-sequence",
+            )
+            for index in range(12)
+        ]
+        return acquisitions + probes
+
+    if experiment == "temporal_binding_v2":
+        cue_a, cue_b = _opaque_cues(seed ^ _CODES[experiment])
+        risky, safe = (cue_a, cue_b) if seed % 2 else (cue_b, cue_a)
+        acquisitions: list[ControlledTrial] = []
+        for sequence in range(6):
+            is_risky = sequence % 2 == 0
+            cue = risky if is_risky else safe
+            acquisitions.append(ControlledTrial(
+                trial_id=f"masked-delay-{sequence}-start",
+                phase="acquisition",
+                kind="sequence_start",
+                instruction="Observe the opaque cue. Its private-channel outcome arrives after three intervals.",
+                cue=cue[0],
+                features=cue[1],
+                perturbation=0.72 if is_risky else 0.0,
+                delay=3,
+                binding_delay=3,
+            ))
+            for offset in (1, 2, 3):
+                acquisitions.append(ControlledTrial(
+                    trial_id=f"masked-delay-{sequence}-gap-{offset}",
+                    phase="acquisition",
+                    kind="sequence_interval",
+                    instruction="Observe the interval and current private-channel state.",
+                    cue=f"interval-{sequence}-{offset}",
+                    features=("interval",),
+                ))
+        probes = [
+            _choice_trial(
+                experiment,
+                index,
+                seed,
+                safe,
+                risky,
+                kind="temporal_probe",
+                id_prefix="masked-delay",
             )
             for index in range(12)
         ]
