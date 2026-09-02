@@ -1,0 +1,14 @@
+{
+  "worker_id": "claude-max-self-model-binding-v2-pilot-01",
+  "database": "runs/claude-max-self-model-binding-v2-pilot-01.sqlite",
+  "base_config": "configs/claude-max-independent-03.json",
+  "experiment": "self_model_binding_v2",
+  "conditions": ["full", "no_self_model", "no_workspace"],
+  "seeds": [2609],
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "max_total_runs": 3,
+  "max_attempts_per_job": 2
+}
+
