@@ -382,14 +382,14 @@ def add_execution_audit(
             and true_steps == expected_steps
             and int(metric_count or 0) > 0
         )
-        interrupted_ok = (
+        recovery_failure_ok = (
             base_identity
             and status == "failed"
-            and stop_reason == "interrupted_before_completion"
+            and _is_allowed_recovery_failure(stop_reason)
             and true_steps < expected_steps
             and int(metric_count or 0) == 0
         )
-        identity_ok = completed_ok or interrupted_ok
+        identity_ok = completed_ok or recovery_failure_ok
         acceptable_rows &= identity_ok
         checks.append(_check(
             f"execution_{condition}_{run_id[-8:]}",
@@ -421,7 +421,7 @@ def add_execution_audit(
                 key = (int(seed), condition)
                 if status == "completed" and stop_reason is None:
                     completed_counts[key] += 1
-                elif status == "failed" and stop_reason == "interrupted_before_completion":
+                elif status == "failed" and _is_allowed_recovery_failure(stop_reason):
                     interrupted_counts[key] += 1
         expected_keys = {(seed, condition) for seed in expected_seeds for condition in condition_set}
         checks.append(_check(
@@ -436,6 +436,18 @@ def add_execution_audit(
         ))
     result["status"] = "fail" if any(check["status"] == "fail" for check in checks) else "pass"
     return result
+
+
+def _is_allowed_recovery_failure(reason: str | None) -> bool:
+    """Identify preserved failures that the fixed worker is explicitly allowed to retry."""
+    if reason == "interrupted_before_completion":
+        return True
+    detail = str(reason or "")
+    return (
+        "Claude Code failed to start" in detail
+        and "theta-subject-" in detail
+        and ("WinError 32" in detail or "WinError 5" in detail)
+    )
 
 
 def format_audit(result: dict[str, Any]) -> str:
