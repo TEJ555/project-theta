@@ -1,0 +1,14 @@
+{
+  "worker_id": "claude-max-temporal-binding-v2-pilot-01",
+  "database": "runs/claude-max-temporal-binding-v2-pilot-01.sqlite",
+  "base_config": "configs/claude-max-independent-03.json",
+  "experiment": "temporal_binding_v2",
+  "conditions": ["full", "no_persistence", "no_recurrence"],
+  "seeds": [2741],
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "max_total_runs": 3,
+  "max_attempts_per_job": 2
+}
+
