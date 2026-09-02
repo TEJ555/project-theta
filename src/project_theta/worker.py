@@ -92,9 +92,23 @@ def _attempt_state(
         str(reason or status)
         for status, reason in rows
         if not (status == "completed" and reason is None)
-        and not (status == "failed" and reason == "interrupted_before_completion")
+        and not _is_retryable_interruption(status, reason)
     ]
     return completed, len(rows), blocking
+
+
+def _is_retryable_interruption(status: str, reason: str | None) -> bool:
+    """Allow recovery only for known interruptions that did not produce a result."""
+    if status != "failed":
+        return False
+    if reason == "interrupted_before_completion":
+        return True
+    detail = str(reason or "")
+    return (
+        "Claude Code failed to start" in detail
+        and "theta-subject-" in detail
+        and ("WinError 32" in detail or "WinError 5" in detail)
+    )
 
 
 def _run_fixed_worker(spec: dict[str, Any], database: Path, base: RunConfig, recover: bool) -> int:
@@ -190,3 +204,4 @@ def run_worker(spec_path: str | Path, once: bool = False, recover: bool = False)
         if once:
             return 0
         time.sleep(max(1.0, float(spec.get("interval_seconds", 300))))
+
