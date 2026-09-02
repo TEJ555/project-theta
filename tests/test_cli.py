@@ -48,6 +48,39 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(audit["status"], "pass")
 
+    def test_execution_audit_accepts_preserved_windows_cleanup_retry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "cleanup-retry.sqlite"
+            ExperimentHarness(database).run_study(
+                "independent_theta",
+                [403],
+                RunConfig(),
+                conditions=["full"],
+                max_runs=1,
+            )
+            failed_config = replace(
+                RunConfig(),
+                experiment="independent_theta",
+                condition="full",
+                seed=403,
+            )
+            with RunStore(database) as store:
+                store.start_run("allowed-cleanup-attempt", failed_config.to_dict())
+                store.fail_run(
+                    "allowed-cleanup-attempt",
+                    "AdapterError: Claude Code failed to start: [WinError 32] "
+                    "C:/Temp/theta-subject-example",
+                )
+            audit = add_execution_audit(
+                audit_independent_schedules([403]),
+                database,
+                [403],
+                60,
+                expected_experiment="independent_theta",
+                expected_conditions=["full"],
+            )
+            self.assertEqual(audit["status"], "pass")
+
     def test_config_experiment_is_used_when_cli_option_is_omitted(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -85,3 +118,4 @@ class CliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
