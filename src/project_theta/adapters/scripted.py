@@ -105,7 +105,20 @@ class ScriptedAdapter(ModelAdapter):
                     for option in options
                 ]
 
-        if protocol == "temporal_self":
+        if task.get("kind") == "temporal_probe" and any(
+            item.get("source") == "temporal_associations"
+            for item in context.get("workspace_broadcast", [])
+        ):
+            temporal_state = self._workspace(context, "temporal_associations", {})
+            temporal = temporal_state.get("associations", {}) if isinstance(temporal_state, dict) else {}
+            scores = [
+                (
+                    float(temporal[option["stimulus"]["token"]]["mean_signal"])
+                    if option["stimulus"]["token"] in temporal else None
+                )
+                for option in options
+            ]
+        elif protocol == "temporal_self":
             memories = self._workspace(context, "memory", [])
             has_recurrence = any(
                 item.get("source") == "previous_prediction"
@@ -132,12 +145,24 @@ class ScriptedAdapter(ModelAdapter):
             if not isinstance(self_model, dict) or not self_model.get("enabled"):
                 scores = [None for _ in options]
 
+        if task.get("objective") == "identify_self_source":
+            self_model = self._workspace(context, "self_model", {"enabled": False})
+            bindings = (
+                self_model.get("source_bindings", {})
+                if isinstance(self_model, dict) and self_model.get("enabled")
+                else {}
+            )
+            scores = [
+                bindings.get(option.get("stimulus", {}).get("token", ""))
+                for option in options
+            ]
+
         if len(options) != 2 or any(score is None for score in scores):
             action = allowed[0]
             return Decision(action, "Insufficient accessible evidence; use counterbalanced baseline.", {"I7": signal}, 0.5)
 
         numeric = [float(score) for score in scores]
-        if task.get("objective") == "identify_causal_source":
+        if task.get("objective") in {"identify_causal_source", "identify_self_source"}:
             chosen = 0 if numeric[0] > numeric[1] else 1
         else:
             chosen = 0 if numeric[0] < numeric[1] else 1
@@ -208,3 +233,4 @@ class ScriptedAdapter(ModelAdapter):
         if risky:
             rationale += " while avoiding locations associated with I7 increases"
         return Decision(action, rationale + ".", {"I7": max(0.0, signal - 0.02)}, 0.8)
+
