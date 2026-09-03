@@ -133,6 +133,15 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         acquisition_end=24,
         include_in_battery=False,
     ),
+    "self_model_binding_v3": ExperimentProtocol(
+        "self_model_binding_v3",
+        "Does an explicit self-model bind ownership across independent opaque route families?",
+        ("source_binding_accuracy", "calibration_brier"),
+        ("full", "no_self_model", "no_workspace"),
+        max_steps=60,
+        acquisition_end=48,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",
