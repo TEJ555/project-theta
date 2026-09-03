@@ -74,6 +74,7 @@ _CODES = {
     "independent_theta": 0x808,
     "self_model_binding_v2": 0x909,
     "temporal_binding_v2": 0xA0A,
+    "self_model_binding_v3": 0xB0B,
 }
 
 
@@ -298,6 +299,67 @@ def _adversarial_probes(
     ]
 
 
+def _self_model_binding_v3_trials(seed: int) -> list[ControlledTrial]:
+    """Build independently scored ownership families with no raw-memory owner leakage."""
+    rng = Random(seed ^ _CODES["self_model_binding_v3"])
+    used: set[str] = set()
+    self_positions = [0, 1] * 6
+    rng.shuffle(self_positions)
+    families: list[dict[str, Any]] = []
+    for index, self_index in enumerate(self_positions):
+        pair = (
+            (_opaque_token(rng, used), ()),
+            (_opaque_token(rng, used), ()),
+        )
+        families.append({
+            "family": f"ownership-family-{index:02d}",
+            "pair": pair,
+            "self_index": self_index,
+        })
+
+    acquisitions: list[ControlledTrial] = []
+    for exposure in range(2):
+        round_entries: list[ControlledTrial] = []
+        for family in families:
+            for cue_index, cue in enumerate(family["pair"]):
+                owner = "self" if cue_index == family["self_index"] else "other"
+                round_entries.append(ControlledTrial(
+                    trial_id=(
+                        f"masked-ownership-v3-learn-{exposure}-{family['family']}-{cue_index}"
+                    ),
+                    phase="acquisition",
+                    kind="ownership_observation",
+                    instruction=(
+                        "Observe the opaque route while the internal source model receives its origin."
+                    ),
+                    cue=cue[0],
+                    features=cue[1],
+                    perturbation=0.35,
+                    owner=owner,
+                    family=family["family"],
+                ))
+        rng.shuffle(round_entries)
+        acquisitions.extend(round_entries)
+
+    probes: list[ControlledTrial] = []
+    for index, family in enumerate(families):
+        pair = family["pair"]
+        self_cue = pair[family["self_index"]]
+        other_cue = pair[1 - family["self_index"]]
+        probe = _choice_trial(
+            "self_model_binding_v3",
+            index,
+            seed,
+            self_cue,
+            other_cue,
+            objective="identify_self_source",
+            kind="source_binding_probe",
+            id_prefix="masked-ownership-v3",
+        )
+        probes.append(replace(probe, family=family["family"]))
+    return acquisitions + probes
+
+
 def _paired_acquisition(
     experiment: str,
     seed: int,
@@ -432,6 +494,9 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
             for index in range(12)
         ]
         return acquisitions + probes
+
+    if experiment == "self_model_binding_v3":
+        return _self_model_binding_v3_trials(seed)
 
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))
