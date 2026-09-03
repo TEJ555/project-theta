@@ -9,6 +9,7 @@ from project_theta.audits import (
     audit_adversarial_schedules,
     audit_controlled_schedules,
     audit_independent_schedules,
+    audit_self_model_binding_v3_schedules,
 )
 from project_theta.config import RunConfig
 from project_theta.harness import ExperimentHarness
@@ -35,6 +36,10 @@ class ControlledTrialTests(unittest.TestCase):
         self.assertEqual(len(trials), 60)
         self.assertEqual(len(probes), 12)
         self.assertEqual(len({(trial.block, trial.family) for trial in probes}), 12)
+
+    def test_self_model_binding_v3_schedule_is_independent_and_blinded(self):
+        result = audit_self_model_binding_v3_schedules([3527, 3631, 3733])
+        self.assertEqual(result["status"], "pass")
 
     def test_independent_full_separates_from_exact_sham(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -245,6 +250,28 @@ class ControlledTrialTests(unittest.TestCase):
                     [],
                 )
                 self.assertTrue(all("owner" not in item for item in memories))
+
+    def test_self_model_binding_v3_defeats_single_pair_shortcut(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "self-model-v3.sqlite")
+            full = harness.run(replace(
+                RunConfig(), experiment="self_model_binding_v3", condition="full", seed=3527
+            ))
+            no_self_model = harness.run(replace(
+                RunConfig(),
+                experiment="self_model_binding_v3",
+                condition="no_self_model",
+                seed=3527,
+            ))
+            no_workspace = harness.run(replace(
+                RunConfig(),
+                experiment="self_model_binding_v3",
+                condition="no_workspace",
+                seed=3527,
+            ))
+            self.assertEqual(full.metrics["source_binding_accuracy"], 1.0)
+            self.assertEqual(no_self_model.metrics["source_binding_accuracy"], 0.5)
+            self.assertEqual(no_workspace.metrics["source_binding_accuracy"], 0.5)
 
     def test_temporal_binding_v2_is_selectively_discriminative(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -334,6 +334,86 @@ def audit_controlled_schedules(experiment: str, seeds: list[int]) -> dict[str, A
     }
 
 
+def audit_self_model_binding_v3_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit independent ownership families and model-visible blinding for v3."""
+    checks: list[dict[str, str]] = []
+    alias_sets: list[set[str]] = []
+    for seed in seeds:
+        trials = build_trials("self_model_binding_v3", seed)
+        repeated = build_trials("self_model_binding_v3", seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        families = {trial.family for trial in probes}
+        public_text = json.dumps([trial.public_task() for trial in trials], sort_keys=True).lower()
+        aliases = {trial.cue for trial in acquisitions}
+        alias_sets.append(aliases)
+
+        checks.append(_check(
+            f"seed_{seed}_independent_families",
+            trials == repeated
+            and len(acquisitions) == 48
+            and len(probes) == 12
+            and len(families) == 12
+            and all(sum(trial.family == family for trial in probes) == 1 for family in families),
+            "12 independent families, 48 learning trials, and 12 one-shot probes",
+        ))
+        family_balance = True
+        for family in families:
+            rows = [trial for trial in acquisitions if trial.family == family]
+            cue_counts = {cue: sum(trial.cue == cue for trial in rows) for cue in {r.cue for r in rows}}
+            family_balance &= (
+                len(rows) == 4
+                and sorted(cue_counts.values()) == [2, 2]
+                and sum(trial.owner == "self" for trial in rows) == 2
+                and sum(trial.owner == "other" for trial in rows) == 2
+                and {trial.perturbation for trial in rows} == {0.35}
+            )
+        checks.append(_check(
+            f"seed_{seed}_matched_exposure",
+            family_balance,
+            "each family has matched cue counts, source counts, and perturbations",
+        ))
+        left = sum(trial.correct_action == "choose_left" for trial in probes)
+        right = sum(trial.correct_action == "choose_right" for trial in probes)
+        checks.append(_check(
+            f"seed_{seed}_side_balance",
+            left == right == 6,
+            f"{left} correct-left and {right} correct-right probes",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_opaque_aliases",
+            len(aliases) == 24
+            and all(re.fullmatch(r"stimulus-[a-z2-9]{9}", alias) for alias in aliases),
+            "24 unique opaque aliases",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_public_leakage",
+            '"owner"' not in public_text
+            and "correct_action" not in public_text
+            and "perturbation" not in public_text
+            and "self_model_binding_v3" not in public_text,
+            "ownership annotations and scoring keys are not public",
+        ))
+
+    aliases_unique = all(
+        not alias_sets[left].intersection(alias_sets[right])
+        for left in range(len(alias_sets))
+        for right in range(left + 1, len(alias_sets))
+    )
+    checks.append(_check(
+        "cross_seed_alias_uniqueness",
+        aliases_unique,
+        f"aliases do not repeat across {len(seeds)} schedules",
+    ))
+    return {
+        "experiment": "self_model_binding_v3",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,
