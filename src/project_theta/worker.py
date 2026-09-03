@@ -108,7 +108,7 @@ def _is_retryable_interruption(status: str, reason: str | None) -> bool:
         "Claude Code failed to start" in detail
         and "theta-subject-" in detail
         and ("WinError 32" in detail or "WinError 5" in detail)
-    )
+    ) or "Claude Code exceeded the" in detail and "second timeout" in detail
 
 
 def _run_fixed_worker(spec: dict[str, Any], database: Path, base: RunConfig, recover: bool) -> int:

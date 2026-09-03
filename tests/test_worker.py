@@ -68,6 +68,36 @@ class WorkerTests(unittest.TestCase):
                 ).fetchall()
             self.assertEqual(statuses, [("failed",), ("completed",)])
 
+    def test_fixed_worker_retries_claude_code_timeout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            database = root / "timeout-failure.sqlite"
+            spec = root / "timeout-failure.json"
+            spec.write_text(json.dumps({
+                "worker_id": "timeout-failure-test",
+                "database": str(database),
+                "experiment": "memory_ablation",
+                "conditions": ["full"],
+                "seeds": [704],
+                "adapter": "scripted",
+                "model": "scripted-baseline-v1",
+                "max_total_runs": 1,
+                "max_attempts_per_job": 2,
+            }), encoding="utf-8")
+            config = RunConfig(experiment="memory_ablation", condition="full", seed=704)
+            with RunStore(database) as store:
+                store.start_run("timeout-failure-run", config.to_dict())
+                store.fail_run(
+                    "timeout-failure-run",
+                    "AdapterError: Claude Code exceeded the 120-second timeout.",
+                )
+            self.assertEqual(run_worker(spec), 0)
+            with RunStore(database) as store:
+                statuses = store.connection.execute(
+                    "SELECT status FROM runs ORDER BY created_at"
+                ).fetchall()
+            self.assertEqual(statuses, [("failed",), ("completed",)])
+
     def test_fixed_worker_runs_each_job_once_and_resumes_without_duplicates(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
