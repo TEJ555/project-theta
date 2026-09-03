@@ -7,7 +7,7 @@
   "model": "sonnet",
   "temperature": 0.0,
   "execution": {
-    "request_timeout_seconds": 120.0,
+    "request_timeout_seconds": 300.0,
     "max_retries": 0,
     "max_output_tokens": 1000,
     "max_model_calls": 64,
