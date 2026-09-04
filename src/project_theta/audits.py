@@ -527,7 +527,7 @@ def _is_allowed_recovery_failure(reason: str | None) -> bool:
         "Claude Code failed to start" in detail
         and "theta-subject-" in detail
         and ("WinError 32" in detail or "WinError 5" in detail)
-    )
+    ) or "Claude Code exceeded the" in detail and "second timeout" in detail
 
 
 def format_audit(result: dict[str, Any]) -> str:

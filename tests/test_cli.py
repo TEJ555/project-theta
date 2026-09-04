@@ -81,6 +81,38 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(audit["status"], "pass")
 
+    def test_execution_audit_accepts_preserved_timeout_retry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "timeout-retry.sqlite"
+            ExperimentHarness(database).run_study(
+                "independent_theta",
+                [404],
+                RunConfig(),
+                conditions=["full"],
+                max_runs=1,
+            )
+            failed_config = replace(
+                RunConfig(),
+                experiment="independent_theta",
+                condition="full",
+                seed=404,
+            )
+            with RunStore(database) as store:
+                store.start_run("allowed-timeout-attempt", failed_config.to_dict())
+                store.fail_run(
+                    "allowed-timeout-attempt",
+                    "AdapterError: Claude Code exceeded the 120-second timeout.",
+                )
+            audit = add_execution_audit(
+                audit_independent_schedules([404]),
+                database,
+                [404],
+                60,
+                expected_experiment="independent_theta",
+                expected_conditions=["full"],
+            )
+            self.assertEqual(audit["status"], "pass")
+
     def test_config_experiment_is_used_when_cli_option_is_omitted(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
