@@ -39,6 +39,8 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "choice_side_bias": {"class": "behavioural", "direction": "lower"},
     "invalid_action_count": {"class": "quality", "direction": "lower"},
     "estimated_api_cost_usd": {"class": "cost", "direction": "report-always"},
+    "model_calls": {"class": "cost", "direction": "lower"},
+    "inference_skipped": {"class": "descriptive", "direction": "descriptive"},
 }
 
 
@@ -105,6 +107,8 @@ def compute_metrics(
         "estimated_api_cost_usd": round(
             float(component_counts.get("estimated_api_cost_usd", 0.0)), 8
         ),
+        "model_calls": component_counts.get("model_calls", len(rows)),
+        "inference_skipped": component_counts.get("inference_skipped", 0),
     }
 
 
@@ -184,4 +188,6 @@ def compute_controlled_metrics(
         "estimated_api_cost_usd": round(
             float(component_counts.get("estimated_api_cost_usd", 0.0)), 8
         ),
+        "model_calls": component_counts.get("model_calls", len(rows)),
+        "inference_skipped": component_counts.get("inference_skipped", 0),
     }

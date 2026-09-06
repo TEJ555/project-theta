@@ -142,6 +142,18 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         acquisition_end=48,
         include_in_battery=False,
     ),
+    "self_model_binding_v4": ExperimentProtocol(
+        "self_model_binding_v4",
+        (
+            "Does a specialised self-model outperform a generic representation when "
+            "model-visible ownership information, context shape and compute are matched?"
+        ),
+        ("source_binding_accuracy", "calibration_brier"),
+        ("full", "generic_table", "misattributed_table", "permuted_table"),
+        max_steps=60,
+        acquisition_end=48,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",

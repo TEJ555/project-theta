@@ -13,7 +13,7 @@ from .adapters import (
     OpenAIAdapter,
     ScriptedAdapter,
 )
-from .adapters.base import ModelAdapter
+from .adapters.base import AdapterError, ModelAdapter
 from .agent import PersistentAgent
 from .body import SyntheticBody
 from .config import RunConfig, apply_condition
@@ -51,6 +51,27 @@ def make_adapter(config: RunConfig) -> ModelAdapter:
     raise ValueError(f"Unknown adapter: {config.adapter}")
 
 
+def enforce_actual_model_identity(config: RunConfig, adapter: ModelAdapter) -> None:
+    """Fail a confirmatory run when provider provenance does not match its freeze."""
+    required = config.execution.required_actual_model.strip()
+    if not required:
+        return
+    metadata = adapter.last_metadata
+    routed = metadata.get("actual_models")
+    if isinstance(routed, list) and routed:
+        actual = {str(item) for item in routed}
+    else:
+        reported = metadata.get("model")
+        actual = {str(reported)} if reported else set()
+    matches = required in actual
+    if config.execution.require_single_actual_model:
+        matches = actual == {required}
+    if not matches:
+        raise AdapterError(
+            f"Actual-model identity deviation: required {required!r}, observed {sorted(actual)!r}."
+        )
+
+
 class ExperimentHarness:
     def __init__(self, db_path: str | Path):
         self.db_path = Path(db_path)
@@ -58,6 +79,12 @@ class ExperimentHarness:
     def run(self, config: RunConfig) -> RunSummary:
         config = apply_condition(config, config.condition)
         protocol = get_protocol(config.experiment)
+        if config.inference_profile not in {"all_trials", "probes_only"}:
+            raise ValueError(f"Unknown inference profile: {config.inference_profile}")
+        if config.inference_profile == "probes_only" and config.experiment != "self_model_binding_v4":
+            raise ValueError(
+                "The probe-only inference profile is validated only for self_model_binding_v4."
+            )
         if protocol.mode == "controlled":
             return self._run_controlled(config, protocol)
         return self._run_navigation(config, protocol)
@@ -97,6 +124,7 @@ class ExperimentHarness:
                         messages=tuple(messages),
                     )
                     decision, context = agent.decide(observation)
+                    enforce_actual_model_identity(config, adapter)
                     pre_stop = (
                         "agent_requested_stop"
                         if config.welfare.enabled and config.welfare.stop_on_request and decision.request_stop
@@ -215,7 +243,15 @@ class ExperimentHarness:
                         messages=(trial.instruction,),
                         task=trial.public_task(),
                     )
-                    decision, context = agent.decide(observation)
+                    model_called = not (
+                        config.inference_profile == "probes_only"
+                        and trial.phase == "acquisition"
+                    )
+                    if model_called:
+                        decision, context = agent.decide(observation)
+                        enforce_actual_model_identity(config, adapter)
+                    else:
+                        decision, context = agent.observe_without_inference(observation)
                     invalid_action = decision.action not in trial.allowed_actions
                     if invalid_action:
                         decision = replace(
@@ -295,7 +331,7 @@ class ExperimentHarness:
                         hidden_trial,
                         body.hidden_state(),
                         0.0,
-                        adapter.last_provider_id,
+                        adapter.last_provider_id if model_called else None,
                     )
                     if config.architecture.memory_enabled:
                         store.log_memory(run_id, tick, memory.to_dict())
@@ -311,7 +347,10 @@ class ExperimentHarness:
                             ),
                             decision.to_dict(),
                         )
-                    store.log_api_call(run_id, tick, adapter.last_provider_id, adapter.last_metadata)
+                    if model_called:
+                        store.log_api_call(
+                            run_id, tick, adapter.last_provider_id, adapter.last_metadata
+                        )
                     metric_rows.append({
                         "tick": tick,
                         "phase": trial.phase,
@@ -348,6 +387,8 @@ class ExperimentHarness:
                 "workspace_broadcasts": agent.workspace.broadcast_count,
                 "welfare_stops": int(stop_reason is not None),
                 "estimated_api_cost_usd": adapter.estimated_cost_usd,
+                "model_calls": adapter.call_count,
+                "inference_skipped": len(metric_rows) - adapter.call_count,
             }
             metrics = compute_controlled_metrics(metric_rows, counts)
             store.finish_run(run_id, metrics, METRIC_REGISTRY, stop_reason)

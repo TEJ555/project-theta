@@ -6,5 +6,6 @@ __pycache__/
 .venv*/
 .env
 runs/
+private-source-data/
 *.sqlite
 *.sqlite3

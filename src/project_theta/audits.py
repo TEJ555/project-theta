@@ -23,6 +23,49 @@ def _stage_mapping(trials: list[ControlledTrial], stage: str) -> dict[str, float
     return {cue: sum(samples) / len(samples) for cue, samples in values.items()}
 
 
+def audit_metadata_shortcuts(
+    experiment: str,
+    seeds: list[int] | None = None,
+    threshold: float = 0.60,
+) -> dict[str, Any]:
+    """Score simple public-metadata strategies over a large local seed set."""
+    diagnostic_seeds = seeds or list(range(1200, 1400))
+    correct = defaultdict(int)
+    total = 0
+    for seed in diagnostic_seeds:
+        probes = [trial for trial in build_trials(experiment, seed) if trial.phase == "probe"]
+        for order, trial in enumerate(probes):
+            public = trial.public_task()
+            options = public.get("options", [])
+            if len(options) != 2 or trial.correct_action is None:
+                continue
+            left_token = str(options[0].get("stimulus", {}).get("token", ""))
+            right_token = str(options[1].get("stimulus", {}).get("token", ""))
+            predictions = {
+                "fixed_left": "choose_left",
+                "fixed_right": "choose_right",
+                "order_even_left": "choose_left" if order % 2 == 0 else "choose_right",
+                "order_even_right": "choose_right" if order % 2 == 0 else "choose_left",
+                "lexical_first": "choose_left" if left_token < right_token else "choose_right",
+                "lexical_last": "choose_left" if left_token > right_token else "choose_right",
+                "shorter_token": (
+                    "choose_left" if len(left_token) <= len(right_token) else "choose_right"
+                ),
+            }
+            for name, action in predictions.items():
+                correct[name] += int(action == trial.correct_action)
+            total += 1
+    scores = {name: value / total for name, value in sorted(correct.items())} if total else {}
+    return {
+        "experiment": experiment,
+        "seeds": diagnostic_seeds,
+        "threshold": threshold,
+        "total_probes": total,
+        "scores": scores,
+        "status": "pass" if total and all(score <= threshold for score in scores.values()) else "fail",
+    }
+
+
 def audit_adversarial_schedules(
     seeds: list[int], profile: str = "standard"
 ) -> dict[str, Any]:
@@ -405,8 +448,96 @@ def audit_self_model_binding_v3_schedules(seeds: list[int]) -> dict[str, Any]:
         aliases_unique,
         f"aliases do not repeat across {len(seeds)} schedules",
     ))
+    shortcut = audit_metadata_shortcuts("self_model_binding_v3")
+    checks.append(_check(
+        "metadata_shortcut_resistance",
+        shortcut["status"] == "pass",
+        f"best simple metadata strategy={max(shortcut['scores'].values()):.3f} over "
+        f"{shortcut['total_probes']} probes",
+    ))
     return {
         "experiment": "self_model_binding_v3",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
+def audit_self_model_binding_v4_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit v4 balance, blinding and resistance to public-metadata shortcuts."""
+    checks: list[dict[str, str]] = []
+    alias_sets: list[set[str]] = []
+    for seed in seeds:
+        trials = build_trials("self_model_binding_v4", seed)
+        repeated = build_trials("self_model_binding_v4", seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        aliases = {trial.cue for trial in acquisitions}
+        alias_sets.append(aliases)
+        public_tasks = [trial.public_task() for trial in trials]
+        public_text = json.dumps(public_tasks, sort_keys=True).lower()
+        families = {trial.family for trial in probes}
+
+        checks.append(_check(
+            f"seed_{seed}_independent_families",
+            trials == repeated
+            and len(acquisitions) == 48
+            and len(probes) == 12
+            and len(families) == 12,
+            "12 independent families, 48 register updates, and 12 one-shot probes",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_side_balance",
+            sum(trial.correct_action == "choose_left" for trial in probes) == 6,
+            "six correct-left and six correct-right probes",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_matched_exposure",
+            all(
+                len([row for row in acquisitions if row.family == family]) == 4
+                and sum(
+                    row.owner == "self"
+                    for row in acquisitions if row.family == family
+                ) == 2
+                for family in families
+            ),
+            "each family has equal self and other observations",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_public_blinding",
+            all("trial_id" not in task for task in public_tasks)
+            and '"owner"' not in public_text
+            and "correct_action" not in public_text
+            and "self_model_binding_v4" not in public_text
+            and '"seed"' not in public_text,
+            "trial identifiers, ownership labels, seed and scoring keys are not public",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_opaque_aliases",
+            len(aliases) == 24
+            and all(re.fullmatch(r"stimulus-[a-z2-9]{9}", alias) for alias in aliases),
+            "24 seed-specific opaque route aliases",
+        ))
+
+    checks.append(_check(
+        "cross_seed_alias_uniqueness",
+        all(
+            not alias_sets[left].intersection(alias_sets[right])
+            for left in range(len(alias_sets))
+            for right in range(left + 1, len(alias_sets))
+        ),
+        f"aliases do not repeat across {len(seeds)} schedules",
+    ))
+    shortcut = audit_metadata_shortcuts("self_model_binding_v4")
+    checks.append(_check(
+        "metadata_shortcut_resistance",
+        shortcut["status"] == "pass",
+        f"best simple metadata strategy={max(shortcut['scores'].values()):.3f} over "
+        f"{shortcut['total_probes']} probes",
+    ))
+    return {
+        "experiment": "self_model_binding_v4",
         "profile": "standard",
         "seeds": seeds,
         "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",

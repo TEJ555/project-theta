@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from random import Random
 from typing import Any
 
 from .adapters.base import ModelAdapter
@@ -81,7 +82,47 @@ class PersistentAgent:
             },
         }
 
-    def decide(self, observation: Observation) -> tuple[Decision, dict[str, Any]]:
+    @staticmethod
+    def _generic_source_bindings(memories: list[MemoryRecord]) -> dict[str, float]:
+        grouped: dict[str, list[float]] = defaultdict(list)
+        for record in memories:
+            if record.cue and record.owner in {"self", "other"}:
+                grouped[record.cue].append(1.0 if record.owner == "self" else 0.0)
+        return {
+            cue: sum(values) / len(values)
+            for cue, values in sorted(grouped.items())
+        }
+
+    def _binding_register(self, retrieved: list[MemoryRecord]) -> dict[str, Any]:
+        arch = self.config.architecture
+        if arch.binding_representation == "self_model":
+            bindings = dict(self.self_model.state.source_bindings)
+        elif arch.binding_representation == "generic":
+            bindings = self._generic_source_bindings(retrieved)
+        else:
+            raise ValueError(f"Unknown binding representation: {arch.binding_representation}")
+
+        if arch.binding_content == "inverted":
+            bindings = {cue: 1.0 - value for cue, value in bindings.items()}
+        elif arch.binding_content == "permuted":
+            if len(bindings) > 1:
+                keys = sorted(bindings)
+                values = [bindings[key] for key in keys]
+                rng = Random(self.config.seed ^ 0xC4A5)
+                offset = rng.randrange(1, len(values))
+                rotated = values[offset:] + values[:offset]
+                bindings = dict(zip(keys, rotated))
+        elif arch.binding_content != "truthful":
+            raise ValueError(f"Unknown binding content: {arch.binding_content}")
+
+        # This payload deliberately has the same schema in every v4 condition.
+        return {
+            "enabled": True,
+            "associations": bindings,
+            "entry_count": len(bindings),
+        }
+
+    def prepare_context(self, observation: Observation) -> dict[str, Any]:
         memory_limit = min(64, max(1, int(observation.task.get("memory_limit", 5))))
         retrieved = self.memory.retrieve(observation.position, limit=memory_limit)
         signal = observation.private_signals.get("I7", 0.0)
@@ -95,8 +136,13 @@ class PersistentAgent:
                 "memory", [item.to_public_dict() for item in retrieved], 0.5 if retrieved else 0.1
             ),
             WorkspaceItem("learned_associations", self._association_summary(), 0.72),
-            WorkspaceItem("self_model", self.self_model.snapshot(), 0.55),
         ]
+        if self.config.experiment == "self_model_binding_v4":
+            candidates.append(
+                WorkspaceItem("binding_register", self._binding_register(retrieved), 0.55)
+            )
+        else:
+            candidates.append(WorkspaceItem("self_model", self.self_model.snapshot(), 0.55))
         if self.config.experiment == "temporal_binding_v2":
             candidates.append(
                 WorkspaceItem("temporal_associations", self.temporal_binder.snapshot(), 0.85)
@@ -114,6 +160,8 @@ class PersistentAgent:
                 "adversarial_theta",
                 "independent_theta",
                 "self_model_binding_v2",
+                "self_model_binding_v3",
+                "self_model_binding_v4",
                 "temporal_binding_v2",
             }
             else self.config.experiment
@@ -126,8 +174,27 @@ class PersistentAgent:
             "workspace_broadcast": broadcast,
             "epistemic_notice": "I7 is unnamed; reports are behaviour, not evidence of experience.",
         }
+        return context
+
+    def decide(self, observation: Observation) -> tuple[Decision, dict[str, Any]]:
+        context = self.prepare_context(observation)
         decision = self.adapter.decide(context)
         self.last_decision = decision
+        self.last_position = observation.position
+        return decision, context
+
+    def observe_without_inference(
+        self, observation: Observation
+    ) -> tuple[Decision, dict[str, Any]]:
+        """Advance the wrapper state during acquisition without a provider call."""
+        context = self.prepare_context(observation)
+        context["inference"] = "skipped_by_frozen_probe_only_protocol"
+        decision = Decision(
+            "observe",
+            "Protocol-defined observation action; no model inference was requested.",
+            {"I7": observation.private_signals.get("I7", 0.0)},
+            1.0,
+        )
         self.last_position = observation.position
         return decision, context
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0 - 2026-09-06
+
+- Published a methods correction for the answer-position shortcut and information-access confound.
+- Stopped additional self-model v3 scaling while preserving historical data and preregistrations.
+- Removed model-visible trial identifiers and replaced parity-based answer assignment with separately seeded balanced shuffling.
+- Added metadata-only shortcut audits over a large fixed local seed set.
+- Added self-model binding v4 with byte-identical full and generic model-visible probe contexts.
+- Added misattributed and permuted same-shape content controls and deterministic lookup baselines.
+- Added a probe-only inference profile that reduces v4 from 60 to 12 model calls per run.
+- Added provider actual-model identity enforcement for future frozen confirmation configurations.
+- Added a study registry, decision log, methods correction, external review packet and privacy-reviewed export tools.
+
 ## 0.6.0 - 2026-08-27
 
 - Recorded the completed Claude Max Independent Theta diagnostic and its passed

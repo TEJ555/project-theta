@@ -20,3 +20,16 @@ or probability mapping to phenomenal consciousness exists.
 
 Use this version for bounded model pilots and method development, not consciousness
 classification, rights decisions or claims that a system feels the synthetic signal.
+
+## Methods correction, 6 September 2026
+
+A later methods review demonstrated a perfect public answer-position shortcut in the
+registered self-model v3 and temporal-binding v2 schedules. It also showed that the
+major self-model separation can be reproduced by reading a simulator-supplied source
+table, while the ablated conditions lack that information. These results are now
+classified as development evidence. See `methods-correction-2026-09-06.md`.
+
+The repaired v4 task removes public identifiers, independently randomises answer
+sides, audits simple metadata strategies, and information-matches its full and generic
+conditions. It still does not test phenomenal consciousness or prove that ownership
+is inferred rather than supplied by the wrapper.

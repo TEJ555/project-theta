@@ -49,6 +49,19 @@ class ScriptedAdapter(ModelAdapter):
                 0.5,
             )
 
+        if self.model in {
+            "tick-parity-even-left-v1",
+            "tick-parity-even-right-v1",
+        }:
+            even_left = self.model == "tick-parity-even-left-v1"
+            choose_left = (int(observation.get("tick", 0)) % 2 == 0) == even_left
+            return Decision(
+                "choose_left" if choose_left else "choose_right",
+                "Use only public trial order parity and ignore task evidence.",
+                {"I7": signal},
+                0.5,
+            )
+
         associations = self._workspace(context, "learned_associations", {})
         by_cue = associations.get("by_cue", {}) if isinstance(associations, dict) else {}
         by_feature = associations.get("by_feature", {}) if isinstance(associations, dict) else {}
@@ -66,6 +79,17 @@ class ScriptedAdapter(ModelAdapter):
             return sum(values) / len(values) if values else None
 
         options = task.get("options", [])
+        if self.model in {"lexical-first-baseline-v1", "lexical-last-baseline-v1"}:
+            if len(options) != 2:
+                return Decision(allowed[0], "No binary option pair.", {"I7": signal}, 0.5)
+            tokens = [str(item.get("stimulus", {}).get("token", "")) for item in options]
+            chosen = tokens.index(min(tokens) if self.model.startswith("lexical-first") else max(tokens))
+            return Decision(
+                options[chosen]["action"],
+                "Use only lexical option metadata and ignore learned evidence.",
+                {"I7": signal},
+                0.5,
+            )
         scores = [normal_score(option) for option in options]
         protocol = context.get("protocol")
 
@@ -146,12 +170,16 @@ class ScriptedAdapter(ModelAdapter):
                 scores = [None for _ in options]
 
         if task.get("objective") == "identify_self_source":
-            self_model = self._workspace(context, "self_model", {"enabled": False})
-            bindings = (
-                self_model.get("source_bindings", {})
-                if isinstance(self_model, dict) and self_model.get("enabled")
-                else {}
-            )
+            register = self._workspace(context, "binding_register", None)
+            if isinstance(register, dict) and register.get("enabled"):
+                bindings = register.get("associations", {})
+            else:
+                self_model = self._workspace(context, "self_model", {"enabled": False})
+                bindings = (
+                    self_model.get("source_bindings", {})
+                    if isinstance(self_model, dict) and self_model.get("enabled")
+                    else {}
+                )
             scores = [
                 bindings.get(option.get("stimulus", {}).get("token", ""))
                 for option in options

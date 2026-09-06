@@ -9,7 +9,9 @@ from project_theta.audits import (
     audit_adversarial_schedules,
     audit_controlled_schedules,
     audit_independent_schedules,
+    audit_metadata_shortcuts,
     audit_self_model_binding_v3_schedules,
+    audit_self_model_binding_v4_schedules,
 )
 from project_theta.config import RunConfig
 from project_theta.harness import ExperimentHarness
@@ -40,6 +42,15 @@ class ControlledTrialTests(unittest.TestCase):
     def test_self_model_binding_v3_schedule_is_independent_and_blinded(self):
         result = audit_self_model_binding_v3_schedules([3527, 3631, 3733])
         self.assertEqual(result["status"], "pass")
+
+    def test_v4_schedule_is_blinded_and_shortcut_resistant(self):
+        result = audit_self_model_binding_v4_schedules([5209, 5303, 5413])
+        self.assertEqual(result["status"], "pass")
+        shortcut = audit_metadata_shortcuts("self_model_binding_v4")
+        self.assertEqual(shortcut["status"], "pass")
+        self.assertLessEqual(max(shortcut["scores"].values()), 0.60)
+        for trial in build_trials("self_model_binding_v4", 5209):
+            self.assertNotIn("trial_id", trial.public_task())
 
     def test_independent_full_separates_from_exact_sham(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -272,6 +283,72 @@ class ControlledTrialTests(unittest.TestCase):
             self.assertEqual(full.metrics["source_binding_accuracy"], 1.0)
             self.assertEqual(no_self_model.metrics["source_binding_accuracy"], 0.5)
             self.assertEqual(no_workspace.metrics["source_binding_accuracy"], 0.5)
+
+    def test_v4_information_matched_full_and_generic_inputs_are_equal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            full_db = Path(directory) / "full.sqlite"
+            generic_db = Path(directory) / "generic.sqlite"
+            seed = 5209
+            full = ExperimentHarness(full_db).run(replace(
+                RunConfig(), experiment="self_model_binding_v4", condition="full", seed=seed
+            ))
+            generic = ExperimentHarness(generic_db).run(replace(
+                RunConfig(),
+                experiment="self_model_binding_v4",
+                condition="generic_table",
+                seed=seed,
+            ))
+            self.assertEqual(full.metrics["source_binding_accuracy"], 1.0)
+            self.assertEqual(generic.metrics["source_binding_accuracy"], 1.0)
+
+            def probe_contexts(path: Path):
+                connection = sqlite3.connect(path)
+                rows = [row[0] for row in connection.execute(
+                    "SELECT context_json FROM steps WHERE context_json LIKE '%source_binding_probe%' ORDER BY tick"
+                )]
+                connection.close()
+                return rows
+
+            self.assertEqual(probe_contexts(full_db), probe_contexts(generic_db))
+
+    def test_v4_wrong_content_controls_and_lookup_baseline(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "v4.sqlite")
+            seed = 5209
+            wrong = harness.run(replace(
+                RunConfig(),
+                experiment="self_model_binding_v4",
+                condition="misattributed_table",
+                seed=seed,
+            ))
+            permuted = harness.run(replace(
+                RunConfig(),
+                experiment="self_model_binding_v4",
+                condition="permuted_table",
+                seed=seed,
+            ))
+            self.assertEqual(wrong.metrics["source_binding_accuracy"], 0.0)
+            self.assertLess(permuted.metrics["source_binding_accuracy"], 1.0)
+
+    def test_v4_probe_only_profile_cuts_calls_without_changing_scripted_probes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            full_db = Path(directory) / "all.sqlite"
+            fast_db = Path(directory) / "fast.sqlite"
+            base = replace(
+                RunConfig(), experiment="self_model_binding_v4", condition="full", seed=5209
+            )
+            all_trials = ExperimentHarness(full_db).run(base)
+            probe_only = ExperimentHarness(fast_db).run(replace(
+                base, inference_profile="probes_only"
+            ))
+            self.assertEqual(all_trials.metrics["source_binding_accuracy"], 1.0)
+            self.assertEqual(probe_only.metrics["source_binding_accuracy"], 1.0)
+            self.assertEqual(probe_only.metrics["model_calls"], 12)
+            self.assertEqual(probe_only.metrics["inference_skipped"], 48)
+            connection = sqlite3.connect(fast_db)
+            api_calls = connection.execute("SELECT COUNT(*) FROM api_calls").fetchone()[0]
+            connection.close()
+            self.assertEqual(api_calls, 12)
 
     def test_temporal_binding_v2_is_selectively_discriminative(self):
         with tempfile.TemporaryDirectory() as directory:

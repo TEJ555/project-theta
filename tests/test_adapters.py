@@ -1,6 +1,7 @@
 import json
 import sys
 import unittest
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -9,9 +10,27 @@ from project_theta.adapters.base import AdapterError
 from project_theta.adapters.claude_code_adapter import ClaudeCodeSubscriptionAdapter
 from project_theta.adapters.openai_adapter import OpenAIAdapter
 from project_theta.adapters.scripted import ScriptedAdapter
+from project_theta.config import RunConfig
+from project_theta.harness import enforce_actual_model_identity
 
 
 class AdapterTests(unittest.TestCase):
+    def test_exact_model_gate_rejects_routed_multi_model_result(self):
+        config = RunConfig()
+        config = replace(
+            config,
+            execution=replace(
+                config.execution,
+                required_actual_model="claude-sonnet-versioned",
+                require_single_actual_model=True,
+            ),
+        )
+        adapter = SimpleNamespace(last_metadata={
+            "actual_models": ["claude-sonnet-versioned", "claude-haiku-helper"]
+        })
+        with self.assertRaisesRegex(AdapterError, "Actual-model identity deviation"):
+            enforce_actual_model_identity(config, adapter)
+
     def test_claude_code_adapter_requires_max_and_isolates_the_subject(self):
         captured = {}
         captured_temp = {}

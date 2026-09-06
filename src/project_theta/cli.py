@@ -14,6 +14,7 @@ from .audits import (
     audit_controlled_schedules,
     audit_independent_schedules,
     audit_self_model_binding_v3_schedules,
+    audit_self_model_binding_v4_schedules,
     format_audit,
 )
 from .config import RunConfig, load_config
@@ -143,6 +144,8 @@ def main(argv: list[str] | None = None) -> int:
             result = audit_adversarial_schedules(args.seeds, args.profile)
         elif args.experiment == "self_model_binding_v3":
             result = audit_self_model_binding_v3_schedules(args.seeds)
+        elif args.experiment == "self_model_binding_v4":
+            result = audit_self_model_binding_v4_schedules(args.seeds)
         else:
             result = audit_controlled_schedules(args.experiment, args.seeds)
         if args.db:

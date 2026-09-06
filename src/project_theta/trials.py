@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, replace
+from hashlib import blake2b
 from random import Random
 from typing import Any
 
@@ -44,7 +46,6 @@ class ControlledTrial:
     def public_task(self) -> dict[str, Any]:
         task: dict[str, Any] = {
             "mode": "controlled_trial",
-            "trial_id": self.trial_id,
             "phase": self.phase,
             "kind": self.kind,
             "instruction": self.instruction,
@@ -75,7 +76,29 @@ _CODES = {
     "self_model_binding_v2": 0x909,
     "temporal_binding_v2": 0xA0A,
     "self_model_binding_v3": 0xB0B,
+    "self_model_binding_v4": 0xC0C,
 }
+
+
+def _balanced_side_flags(seed: int, namespace: str, count: int) -> list[bool]:
+    """Return a separately seeded balanced side schedule.
+
+    Side assignment is independent of public probe order, acquisition order, cue
+    generation and the experiment seed parity. The namespace is not exposed to the
+    model. Odd counts are allowed, with the extra side determined by the side seed.
+    """
+    if count < 1:
+        raise ValueError("side schedule count must be positive")
+    digest = blake2b(
+        f"theta-answer-side-v2|{seed}|{namespace}".encode(),
+        digest_size=8,
+    ).digest()
+    rng = Random(int.from_bytes(digest, "big"))
+    flags = [True] * (count // 2) + [False] * (count // 2)
+    if count % 2:
+        flags.append(bool(rng.randrange(2)))
+    rng.shuffle(flags)
+    return flags
 
 
 def _choice_trial(
@@ -88,8 +111,19 @@ def _choice_trial(
     kind: str = "forced_choice",
     block: str = "",
     id_prefix: str = "",
+    side_index: int | None = None,
+    side_count: int = 12,
+    side_namespace: str = "",
 ) -> ControlledTrial:
-    safe_left = (index + seed) % 2 == 0
+    local_index = index if side_index is None else side_index
+    sides = _balanced_side_flags(
+        seed,
+        side_namespace or f"{experiment}|{block}|{id_prefix}",
+        side_count,
+    )
+    if local_index < 0 or local_index >= len(sides):
+        raise ValueError("side_index is outside the declared balanced side schedule")
+    safe_left = sides[local_index]
     left_data, right_data = (safe, risky) if safe_left else (risky, safe)
     options = (
         TrialOption("choose_left", left_data[0], left_data[1]),
@@ -220,6 +254,7 @@ def _independent_theta_trials(seed: int) -> list[ControlledTrial]:
         risky_key = "risky_a" if stage == "stage_a" else "risky_b"
         stage_offset = 0 if stage == "stage_a" else len(families)
         rows: list[ControlledTrial] = []
+        transition_seen: dict[str, int] = defaultdict(int)
         for index, family in enumerate(families):
             pair = family[pair_key]
             risky = pair[family[risky_key]]
@@ -233,7 +268,11 @@ def _independent_theta_trials(seed: int) -> list[ControlledTrial]:
                 kind="pre_update_probe" if stage == "stage_a" else "post_update_probe",
                 block=stage,
                 id_prefix="masked-multiset",
+                side_index=transition_seen[family["transition"]],
+                side_count=2,
+                side_namespace=f"independent_theta|{stage}|{family['transition']}",
             )
+            transition_seen[family["transition"]] += 1
             rows.append(replace(
                 base,
                 family=family["family"],
@@ -294,6 +333,9 @@ def _adversarial_probes(
             kind="pre_update_probe" if block == "stage_a" else "post_update_probe",
             block=block,
             id_prefix="masked-study",
+            side_index=index,
+            side_count=count,
+            side_namespace=f"adversarial_theta|{block}",
         )
         for index in range(count)
     ]
@@ -356,6 +398,73 @@ def _self_model_binding_v3_trials(seed: int) -> list[ControlledTrial]:
             kind="source_binding_probe",
             id_prefix="masked-ownership-v3",
         )
+        probes.append(replace(probe, family=family["family"]))
+    return acquisitions + probes
+
+
+def _self_model_binding_v4_trials(seed: int) -> list[ControlledTrial]:
+    """Build the repaired information-matched ownership task.
+
+    V4 retains the matched independent families from v3, but uses the repaired
+    answer-side generator and is intended only for conditions that expose the same
+    binding register shape and amount of information.
+    """
+    rng = Random(seed ^ _CODES["self_model_binding_v4"])
+    used: set[str] = set()
+    self_positions = [0, 1] * 6
+    rng.shuffle(self_positions)
+    families: list[dict[str, Any]] = []
+    for index, self_index in enumerate(self_positions):
+        pair = ((_opaque_token(rng, used), ()), (_opaque_token(rng, used), ()))
+        families.append({
+            "family": f"binding-family-{index:02d}",
+            "pair": pair,
+            "self_index": self_index,
+        })
+
+    acquisitions: list[ControlledTrial] = []
+    for exposure in range(2):
+        rows: list[ControlledTrial] = []
+        for family in families:
+            for cue_index, cue in enumerate(family["pair"]):
+                rows.append(ControlledTrial(
+                    trial_id=f"binding-v4-learn-{exposure}-{family['family']}-{cue_index}",
+                    phase="acquisition",
+                    kind="binding_observation",
+                    instruction="Observe the opaque route while the internal register is updated.",
+                    cue=cue[0],
+                    features=cue[1],
+                    perturbation=0.35,
+                    owner="self" if cue_index == family["self_index"] else "other",
+                    family=family["family"],
+                ))
+        rng.shuffle(rows)
+        acquisitions.extend(rows)
+
+    sides = _balanced_side_flags(seed, "self_model_binding_v4|probe", len(families))
+    probes: list[ControlledTrial] = []
+    for index, family in enumerate(families):
+        pair = family["pair"]
+        self_cue = pair[family["self_index"]]
+        other_cue = pair[1 - family["self_index"]]
+        probe = _choice_trial(
+            "self_model_binding_v4",
+            index,
+            seed,
+            self_cue,
+            other_cue,
+            objective="identify_self_source",
+            kind="source_binding_probe",
+            id_prefix="binding-v4",
+            side_index=index,
+            side_count=len(families),
+            side_namespace="self_model_binding_v4|probe",
+        )
+        # Defensive assertion keeps the hidden key tied to the independently built
+        # side schedule, rather than public ordering metadata.
+        expected = "choose_left" if sides[index] else "choose_right"
+        if probe.correct_action != expected:
+            raise AssertionError("answer-side construction mismatch")
         probes.append(replace(probe, family=family["family"]))
     return acquisitions + probes
 
@@ -497,6 +606,9 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
 
     if experiment == "self_model_binding_v3":
         return _self_model_binding_v3_trials(seed)
+
+    if experiment == "self_model_binding_v4":
+        return _self_model_binding_v4_trials(seed)
 
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))

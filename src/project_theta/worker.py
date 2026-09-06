@@ -23,6 +23,11 @@ def load_worker_spec(path: str | Path) -> dict[str, Any]:
     missing = sorted(required - spec.keys())
     if missing:
         raise ValueError(f"Worker spec missing fields: {', '.join(missing)}")
+    if spec.get("retired"):
+        raise RuntimeError(
+            "This worker was retired after a methods correction: "
+            + str(spec.get("retirement_reason", "see the study registry"))
+        )
     if "seeds" in spec:
         seeds = [int(seed) for seed in spec["seeds"]]
         conditions = list(spec.get("conditions", []))

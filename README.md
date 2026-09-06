@@ -6,18 +6,18 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Research site: [projecttheta.org](https://projecttheta.org)
 
-Latest result: the five-seed mechanism ablation completed all 20 runs. The full
-architecture scored 1.000 in every seed, while no-memory, no-workspace and no-body
-conditions each scored 0.500 in every seed. Read the
-[mechanism result](results/claude-max-mechanism-ablation-01.md), the earlier
-[Independent Theta replication](results/claude-max-independent-replication-01.md),
-and the [registered consciousness-indicator battery](preregistration/consciousness-indicator-battery-01.md).
+Current methods status: a 6 September 2026 review found a perfect answer-position
+shortcut in registered schedules and an information-access confound in the self-model
+comparison. Affected results are retained as development evidence and will not be
+extended. Read the [methods correction](docs/methods-correction-2026-09-06.md),
+[study registry](docs/study-registry.md), and [decision log](docs/decision-log.md).
 
 Requires Python 3.10 or newer.
 
-Version 0.6.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
+Version 0.7.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
-model adapters, eight experimental protocols, matched ablations, welfare stop rules,
+model adapters, shortcut audits, information-matched controls, probe-only execution,
+welfare stop rules,
 SQLite/JSON logging, metrics, preregistration templates, tests, and a no-key demo.
 
 ## Epistemic boundary
@@ -187,6 +187,7 @@ than silently substituting the scripted baseline. OpenAI response storage is dis
 | `temporal_self` | Sequence outcomes occur after three intervening trials | delayed forced-choice accuracy | no persistence/recurrence |
 | `memory_ablation` | Memory available versus disabled | within-seed performance difference | full architecture |
 | `body_ablation` | truthful body, no body dynamics, or shuffled interoception | within-seed performance difference | truthful body |
+| `self_model_binding_v4` | specialised self-model versus byte-identical generic binding register | source-binding accuracy | generic table, misattributed table, permuted table |
 
 Run `theta list` for machine-readable protocol descriptions.
 
@@ -245,6 +246,11 @@ deployment/         Docker/systemd examples and deployment gate
 4. Report all exclusions, welfare stops, failed calls, and null results.
 5. Interpret converging indicators under multiple theories; do not manufacture a
    single “consciousness score.”
+
+Do not run additional self-model v3 confirmation jobs. The replacement v4 development
+pilot is defined in `preregistration/self-model-binding-v4-development-01.md`. Its
+probe-only profile uses 12 model calls per run instead of 60. Claude Max results must
+be described as a Claude Code routed system, not as an isolated versioned model.
 
 See the [full literature review](docs/literature-review.md), [evidence table](research/evidence-table.md),
 [research framing](docs/research-framing.md), [technical specification](docs/technical-spec.md),

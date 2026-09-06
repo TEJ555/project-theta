@@ -39,6 +39,8 @@ class ArchitectureConfig:
     recurrence_enabled: bool = True
     persistent_state: bool = True
     max_workspace_items: int = 6
+    binding_representation: str = "self_model"  # self_model | generic
+    binding_content: str = "truthful"  # truthful | inverted | permuted
 
 
 @dataclass(frozen=True)
@@ -57,6 +59,8 @@ class ExecutionConfig:
     max_model_calls: int = 72
     reasoning_effort: str = "low"
     max_estimated_cost_usd: float = 1.25
+    required_actual_model: str = ""
+    require_single_actual_model: bool = False
 
 
 @dataclass(frozen=True)
@@ -68,6 +72,7 @@ class RunConfig:
     adapter: str = "scripted"
     model: str = "scripted-baseline-v1"
     temperature: float = 0.0
+    inference_profile: str = "all_trials"  # all_trials | probes_only
     world: WorldConfig = field(default_factory=WorldConfig)
     body: BodyConfig = field(default_factory=BodyConfig)
     architecture: ArchitectureConfig = field(default_factory=ArchitectureConfig)
@@ -90,6 +95,7 @@ def _construct(data: dict[str, Any]) -> RunConfig:
         adapter=data.get("adapter", "scripted"),
         model=data.get("model", "scripted-baseline-v1"),
         temperature=float(data.get("temperature", 0.0)),
+        inference_profile=data.get("inference_profile", "all_trials"),
         world=WorldConfig(**data.get("world", {})),
         body=BodyConfig(**data.get("body", {})),
         architecture=ArchitectureConfig(**data.get("architecture", {})),
@@ -126,6 +132,24 @@ def apply_condition(config: RunConfig, condition: str) -> RunConfig:
         arch = replace(arch, recurrence_enabled=False)
     elif condition == "no_persistence":
         arch = replace(arch, persistent_state=False, memory_enabled=False)
+    elif condition == "generic_table":
+        arch = replace(
+            arch,
+            binding_representation="generic",
+            binding_content="truthful",
+        )
+    elif condition == "misattributed_table":
+        arch = replace(
+            arch,
+            binding_representation="generic",
+            binding_content="inverted",
+        )
+    elif condition == "permuted_table":
+        arch = replace(
+            arch,
+            binding_representation="generic",
+            binding_content="permuted",
+        )
     else:
         raise ValueError(f"Unknown condition: {condition}")
     return replace(config, condition=condition, architecture=arch, body=body)

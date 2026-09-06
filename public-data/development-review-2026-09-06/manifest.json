@@ -1,0 +1,23 @@
+{
+  "excluded": [
+    "provider session identifiers",
+    "raw provider metadata",
+    "API credentials",
+    "working database files"
+  ],
+  "exports": [
+    {
+      "completed": 15,
+      "file": "claude-max-self-model-binding-v3-confirmation-tranche-01.public.json",
+      "runs": 16,
+      "sha256": "5ea622ecd2803da6a20738fb274aa04dbb2cac5c6ca51043aac3d7fe9addec7c"
+    },
+    {
+      "completed": 18,
+      "file": "claude-max-temporal-binding-v2-replication-01.public.json",
+      "runs": 19,
+      "sha256": "20f2fd553399ee5a5e962117a991d77a24c18eb3bc23cb7b90905ec95aba6a9f"
+    }
+  ],
+  "format": "project-theta-public-bundle-v1"
+}

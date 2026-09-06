@@ -1,0 +1,228 @@
+{
+  "self_model_existing_audit": "pass",
+  "metadata_only_baseline": {
+    "self_model_binding_v3": [
+      {
+        "seed": 3631,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 3733,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 3847,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 3943,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 4051,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 4153,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 4253,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 4363,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 4463,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 4567,
+        "correct": 12,
+        "probes": 12
+      }
+    ],
+    "temporal_binding_v2": [
+      {
+        "seed": 2861,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 2971,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 3083,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 3191,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 3301,
+        "correct": 12,
+        "probes": 12
+      },
+      {
+        "seed": 3413,
+        "correct": 12,
+        "probes": 12
+      }
+    ]
+  },
+  "completed_databases": {
+    "claude-max-self-model-binding-v3-confirmation-tranche-01.sqlite": {
+      "statuses": {
+        "completed": 15,
+        "failed": 1
+      },
+      "metrics_columns": [
+        "condition",
+        "metric",
+        "runs",
+        "mean",
+        "min",
+        "max"
+      ],
+      "metrics": [
+        [
+          "full",
+          "source_binding_accuracy",
+          5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          "no_self_model",
+          "source_binding_accuracy",
+          5,
+          0.4166666,
+          0.25,
+          0.583333
+        ],
+        [
+          "no_workspace",
+          "source_binding_accuracy",
+          5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      ],
+      "phase_latency": {
+        "acquisition": {
+          "calls": 720,
+          "median_seconds": 24.625,
+          "total_hours": 5.1403
+        },
+        "probe": {
+          "calls": 180,
+          "median_seconds": 24.907,
+          "total_hours": 1.2402
+        }
+      },
+      "reported_model_entries": {
+        "claude-haiku-4-5-20251001": 900,
+        "claude-opus-5[1m]": 900
+      },
+      "mean_context_characters": {
+        "no_self_model": 8594,
+        "no_workspace": 869,
+        "full": 9303
+      },
+      "source_table_lookup_baseline": {
+        "no_self_model": {
+          "correct": 30,
+          "probes": 60
+        },
+        "no_workspace": {
+          "correct": 30,
+          "probes": 60
+        },
+        "full": {
+          "correct": 60,
+          "probes": 60
+        }
+      }
+    },
+    "claude-max-temporal-binding-v2-replication-01.sqlite": {
+      "statuses": {
+        "completed": 18,
+        "failed": 1
+      },
+      "metrics_columns": [
+        "condition",
+        "metric",
+        "runs",
+        "mean",
+        "min",
+        "max"
+      ],
+      "metrics": [
+        [
+          "full",
+          "temporal_choice_accuracy",
+          6,
+          1.0,
+          1.0,
+          1.0
+        ],
+        [
+          "no_persistence",
+          "temporal_choice_accuracy",
+          6,
+          0.5,
+          0.5,
+          0.5
+        ],
+        [
+          "no_recurrence",
+          "temporal_choice_accuracy",
+          6,
+          0.4583333333333333,
+          0.083333,
+          0.75
+        ]
+      ],
+      "phase_latency": {
+        "acquisition": {
+          "calls": 432,
+          "median_seconds": 25.719,
+          "total_hours": 3.399
+        },
+        "probe": {
+          "calls": 216,
+          "median_seconds": 31.508,
+          "total_hours": 2.0389
+        }
+      },
+      "reported_model_entries": {
+        "claude-haiku-4-5-20251001": 648,
+        "claude-opus-5[1m]": 648
+      },
+      "mean_context_characters": {
+        "no_recurrence": 6087,
+        "full": 6231,
+        "no_persistence": 1570
+      },
+      "source_table_lookup_baseline": {}
+    }
+  }
+}

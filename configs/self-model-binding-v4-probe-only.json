@@ -1,0 +1,20 @@
+{
+  "experiment": "self_model_binding_v4",
+  "condition": "full",
+  "trial_profile": "standard",
+  "seed": 6029,
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "inference_profile": "probes_only",
+  "execution": {
+    "request_timeout_seconds": 300.0,
+    "max_retries": 0,
+    "max_output_tokens": 700,
+    "max_model_calls": 16,
+    "reasoning_effort": "low",
+    "max_estimated_cost_usd": 0.01,
+    "required_actual_model": "",
+    "require_single_actual_model": false
+  }
+}

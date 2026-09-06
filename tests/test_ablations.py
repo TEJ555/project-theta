@@ -8,6 +8,14 @@ class AblationTests(unittest.TestCase):
         base = RunConfig()
         self.assertFalse(apply_condition(base, "no_memory").architecture.memory_enabled)
         self.assertFalse(apply_condition(base, "no_workspace").architecture.workspace_enabled)
+        self.assertEqual(
+            apply_condition(base, "generic_table").architecture.binding_representation,
+            "generic",
+        )
+        self.assertEqual(
+            apply_condition(base, "misattributed_table").architecture.binding_content,
+            "inverted",
+        )
         self.assertFalse(apply_condition(base, "no_self_model").architecture.self_model_enabled)
         self.assertEqual(apply_condition(base, "no_body").body.signal_mode, "absent")
         self.assertFalse(apply_condition(base, "no_body").body.body_enabled)

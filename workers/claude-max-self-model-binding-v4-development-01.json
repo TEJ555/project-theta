@@ -1,0 +1,13 @@
+{
+  "worker_id": "claude-max-self-model-binding-v4-development-01",
+  "database": "runs/claude-max-self-model-binding-v4-development-01.sqlite",
+  "base_config": "configs/self-model-binding-v4-probe-only.json",
+  "experiment": "self_model_binding_v4",
+  "conditions": ["full", "generic_table", "misattributed_table", "permuted_table"],
+  "seeds": [6029, 6131, 6247],
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "max_total_runs": 12,
+  "max_attempts_per_job": 2
+}

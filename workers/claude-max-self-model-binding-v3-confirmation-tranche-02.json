@@ -9,5 +9,7 @@
   "model": "sonnet",
   "temperature": 0.0,
   "max_total_runs": 15,
-  "max_attempts_per_job": 2
+  "max_attempts_per_job": 2,
+  "retired": true,
+  "retirement_reason": "answer-position shortcut and information-access confound; see docs/methods-correction-2026-09-06.md"
 }
