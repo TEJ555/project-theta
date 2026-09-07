@@ -4,7 +4,7 @@ Status: frozen for local validation only. Target-model execution has not started
 
 ## Research question
 
-When model-visible ownership information, context structure and inference budget are matched, does a specialised self-model produce different choices from a generic table containing the same associations?
+When model-visible ownership information, context structure and inference budget are matched, do the earlier v3 results reduce to the correct binding content supplied to the model?
 
 This is a protocol-development study. It cannot provide confirmatory evidence and it cannot support claims about phenomenal consciousness.
 
@@ -40,7 +40,10 @@ The full and generic-table conditions must have byte-identical model-visible pro
 
 ## Interpretation
 
-The decisive comparison is full versus generic table. Equality would show that the v3 separation was explained by information access rather than a specialised self-model. A difference would still require an independently reviewed explanation of how two byte-identical model inputs generated different outcomes.
+The full versus generic-table comparison is an equivalence and infrastructure check. Because
+their probe contexts are byte-identical, it is not a causal architecture comparison. Equality
+would support the information-access explanation of v3. A material difference must first be
+treated as routing noise, stochastic sampling, hidden state or an implementation fault.
 
 The misattributed and permuted conditions test dependence on correct association content. They are not architecture ablations.
 

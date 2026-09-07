@@ -251,6 +251,9 @@ Do not run additional self-model v3 confirmation jobs. The replacement v4 develo
 pilot is defined in `preregistration/self-model-binding-v4-development-01.md`. Its
 probe-only profile uses 12 model calls per run instead of 60. Claude Max results must
 be described as a Claude Code routed system, not as an isolated versioned model.
+The no-provider red-team in `scripts/red_team_v4.py` fits public-metadata rules on one
+seed set and scores them on a separate held-out set. The next causal architecture proposal
+is documented in `docs/v5-causal-architecture-design.md`.
 
 See the [full literature review](docs/literature-review.md), [evidence table](research/evidence-table.md),
 [research framing](docs/research-framing.md), [technical specification](docs/technical-spec.md),

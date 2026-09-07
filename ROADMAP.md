@@ -42,4 +42,19 @@
 - blinded export/analysis package with a frozen public protocol;
 - independent literature screening and protocol review.
 
+## v0.7 methods repair and next causal study
+
+- completed: stopped and preserved the compromised v3 confirmation;
+- completed: removed public identifiers and the answer-side shortcut;
+- completed: information-matched v4 binding registers and wrong-content controls;
+- completed: probe-only inference, reducing calls from 60 to 12 per run;
+- completed: public correction, review packet and anonymised reproduction bundle;
+- completed: held-out metadata-rule red-team script and continuous integration gate;
+- completed: Stage 1 manuscript outline and v5 causal architecture design brief;
+- next: independent human methods review of v4 and the v5 design;
+- next: implement v5 state updaters and scripted falsification tests without provider calls;
+- remaining: freeze an equivalence margin and run-level power plan;
+- remaining: exact model identity through a direct provider or reproducible open-weight runtime;
+- remaining: externally reviewed Stage 1 registration before confirmation.
+
 No milestone converts functional indicators into proof of phenomenal consciousness.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1 - 2026-09-06
+
+- Add a held-out, no-provider v4 red-team audit and a GitHub quality gate.
+- Clarify that byte-identical v4 conditions test information equivalence, not architecture.
+- Add an independent reviewer checklist, Stage 1 outline and v5 causal design brief.
+
 ## 0.7.0 - 2026-09-06
 
 - Published a methods correction for the answer-position shortcut and information-access confound.
