@@ -25,3 +25,5 @@ jobs:
         run: python -m unittest discover -s tests -q
       - name: Red-team repaired v4 schedules
         run: python scripts/red_team_v4.py --count 200 --context-seeds 3
+      - name: Audit causal role binding v5 schedules
+        run: theta audit --experiment causal_role_binding_v5 --seeds 7027,7121,7229

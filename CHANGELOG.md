@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0 - 2026-09-07
+
+- Add causal role binding v5 with matched raw evidence and separately scored exact and novel
+  transfer probes.
+- Add role-bound, unbound and state-reset mechanisms with a common public register schema.
+- Add schedule, blinding, transfer, context-matching and probe-only tests.
+- Complete a 100-seed, 300-run scripted validation with no provider calls.
+- Add register-hidden, raw-memory-hidden and pointer-permutation diagnostic controls.
+- Complete a second 100-seed, 400-run scripted control validation with no provider calls.
+- Add the V5 local protocols, results, analysis draft and external review packet.
+
 ## 0.7.1 - 2026-09-06
 
 - Add a held-out, no-provider v4 red-team audit and a GitHub quality gate.

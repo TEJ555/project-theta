@@ -81,9 +81,12 @@ class ExperimentHarness:
         protocol = get_protocol(config.experiment)
         if config.inference_profile not in {"all_trials", "probes_only"}:
             raise ValueError(f"Unknown inference profile: {config.inference_profile}")
-        if config.inference_profile == "probes_only" and config.experiment != "self_model_binding_v4":
+        if config.inference_profile == "probes_only" and config.experiment not in {
+            "self_model_binding_v4",
+            "causal_role_binding_v5",
+        }:
             raise ValueError(
-                "The probe-only inference profile is validated only for self_model_binding_v4."
+                "The probe-only inference profile is validated only for repaired binding studies."
             )
         if protocol.mode == "controlled":
             return self._run_controlled(config, protocol)

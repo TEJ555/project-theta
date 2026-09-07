@@ -545,6 +545,138 @@ def audit_self_model_binding_v4_schedules(seeds: list[int]) -> dict[str, Any]:
     }
 
 
+def audit_causal_role_binding_v5_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit v5 independence, raw-event balance, transfer and public blinding."""
+    checks: list[dict[str, str]] = []
+    label_sets: list[set[str]] = []
+    for seed in seeds:
+        trials = build_trials("causal_role_binding_v5", seed)
+        repeated = build_trials("causal_role_binding_v5", seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        families = {trial.family for trial in trials}
+        public_tasks = [trial.public_task() for trial in trials]
+        public_text = json.dumps(public_tasks, sort_keys=True).lower()
+
+        labels: set[str] = {trial.cue for trial in acquisitions}
+        for task in public_tasks:
+            stimulus = task.get("stimulus", {})
+            labels.update(
+                feature.removeprefix("u:")
+                for feature in stimulus.get("features", [])
+                if feature.startswith("u:")
+            )
+            for option in task.get("options", []):
+                labels.add(option["stimulus"]["token"])
+                labels.update(
+                    feature.removeprefix("u:")
+                    for feature in option["stimulus"].get("features", [])
+                    if feature.startswith("u:")
+                )
+        label_sets.append(labels)
+
+        checks.append(_check(
+            f"seed_{seed}_independent_families",
+            trials == repeated
+            and len(trials) == 60
+            and len(acquisitions) == 48
+            and len(probes) == 12
+            and len(families) == 6
+            and all(sum(row.family == family for row in acquisitions) == 8 for family in families)
+            and all(sum(row.family == family for row in probes) == 2 for family in families),
+            "six independent families, 48 raw events and 12 probes",
+        ))
+
+        balanced_events = True
+        for family in families:
+            rows = [trial for trial in acquisitions if trial.family == family]
+            features = [feature for row in rows for feature in row.features]
+            route_counts = {row.cue: sum(item.cue == row.cue for item in rows) for row in rows}
+            balanced_events &= (
+                features.count("v:0") == 4
+                and features.count("v:1") == 4
+                and len(route_counts) == 4
+                and set(route_counts.values()) == {2}
+            )
+        checks.append(_check(
+            f"seed_{seed}_matched_raw_events",
+            balanced_events,
+            "each family has four events per pointer value and two observations per route",
+        ))
+
+        sides_balanced = all(
+            sum(
+                trial.correct_action == "choose_left"
+                for trial in probes if trial.block == block
+            )
+            == 3
+            for block in ("calibration", "transfer")
+        )
+        checks.append(_check(
+            f"seed_{seed}_side_balance",
+            sides_balanced,
+            "three correct-left and three correct-right probes in each block",
+        ))
+
+        acquired_routes = {trial.cue for trial in acquisitions}
+        calibration_routes = {
+            option.cue for trial in probes if trial.block == "calibration" for option in trial.options
+        }
+        transfer_routes = {
+            option.cue for trial in probes if trial.block == "transfer" for option in trial.options
+        }
+        checks.append(_check(
+            f"seed_{seed}_held_out_transfer",
+            calibration_routes <= acquired_routes
+            and not transfer_routes.intersection(acquired_routes)
+            and len(transfer_routes) == 12,
+            "calibration routes were observed and all transfer routes are novel",
+        ))
+
+        forbidden = (
+            "trial_id",
+            "correct_action",
+            "causal_role_binding_v5",
+            '"owner"',
+            '"seed"',
+            '"condition"',
+            "self route",
+            "other route",
+            "continuity",
+        )
+        leaked = [term for term in forbidden if term in public_text]
+        checks.append(_check(
+            f"seed_{seed}_public_blinding",
+            not leaked,
+            "no scoring, condition or semantic role labels are public"
+            if not leaked else "found " + ", ".join(leaked),
+        ))
+
+    checks.append(_check(
+        "cross_seed_label_uniqueness",
+        all(
+            not label_sets[left].intersection(label_sets[right])
+            for left in range(len(label_sets))
+            for right in range(left + 1, len(label_sets))
+        ),
+        f"opaque labels do not repeat across {len(seeds)} schedules",
+    ))
+    shortcut = audit_metadata_shortcuts("causal_role_binding_v5")
+    checks.append(_check(
+        "metadata_shortcut_resistance",
+        shortcut["status"] == "pass",
+        f"best declared metadata strategy={max(shortcut['scores'].values()):.3f} over "
+        f"{shortcut['total_probes']} probes",
+    ))
+    return {
+        "experiment": "causal_role_binding_v5",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,

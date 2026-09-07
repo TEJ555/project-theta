@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -162,4 +163,80 @@ class TemporalBinder:
                 for cue, values in sorted(self.outcomes.items())
             },
             "update_count": self.update_count,
+        }
+
+
+class CausalRoleBinder:
+    """Capacity-bounded updater for the v5 role-transfer experiment.
+
+    Every condition receives the same public acquisition fields. The role-bound
+    mechanism can generalise through the stable actor field. The unbound control
+    retains exact route values but does not use actor identity for novel routes.
+    The reset control exposes the same register shape with neutral values.
+    """
+
+    def __init__(self, mode: str = "role_bound", capacity: int = 128):
+        if mode not in {"role_bound", "unbound", "permuted", "reset"}:
+            raise ValueError(f"Unknown continuity binding mode: {mode}")
+        self.mode = mode
+        self.capacity = capacity
+        self.actor_values: dict[str, list[float]] = defaultdict(list)
+        self.route_values: dict[str, list[float]] = defaultdict(list)
+        self.update_count = 0
+
+    @staticmethod
+    def _fields(features: list[str] | tuple[str, ...]) -> tuple[str, float | None]:
+        actor = next(
+            (feature.removeprefix("u:") for feature in features if feature.startswith("u:")),
+            "",
+        )
+        raw_pointer = next(
+            (feature.removeprefix("v:") for feature in features if feature.startswith("v:")),
+            "",
+        )
+        pointer = float(raw_pointer) if raw_pointer in {"0", "1"} else None
+        return actor, pointer
+
+    def observe(self, task: dict[str, Any]) -> None:
+        if task.get("kind") != "role_event" or task.get("phase") != "acquisition":
+            return
+        stimulus = task.get("stimulus", {})
+        route = str(stimulus.get("token", ""))
+        actor, pointer = self._fields(stimulus.get("features", []))
+        if not route or not actor or pointer is None:
+            return
+        self.actor_values[actor].append(pointer)
+        self.route_values[route].append(pointer)
+        while len(self.actor_values) > self.capacity:
+            self.actor_values.pop(next(iter(self.actor_values)))
+        while len(self.route_values) > self.capacity:
+            self.route_values.pop(next(iter(self.route_values)))
+        self.update_count += 1
+
+    @staticmethod
+    def _mean(values: list[float]) -> float:
+        return sum(values) / len(values)
+
+    def register(self, task: dict[str, Any]) -> dict[str, Any]:
+        predictions: dict[str, float] = {}
+        for option in task.get("options", []):
+            stimulus = option.get("stimulus", {})
+            route = str(stimulus.get("token", ""))
+            actor, _ = self._fields(stimulus.get("features", []))
+            score = 0.5
+            if self.mode != "reset" and route in self.route_values:
+                score = self._mean(self.route_values[route])
+            elif self.mode == "role_bound" and actor in self.actor_values:
+                score = self._mean(self.actor_values[actor])
+            elif self.mode == "permuted" and actor in self.actor_values:
+                score = 1.0 - self._mean(self.actor_values[actor])
+            predictions[route] = round(score, 6)
+        return {
+            "enabled": True,
+            "predictions": predictions,
+            "entry_count": len(predictions),
+            "update_count": self.update_count,
+            "capacity": self.capacity,
+            "actor_entry_count": len(self.actor_values),
+            "route_entry_count": len(self.route_values),
         }

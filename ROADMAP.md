@@ -52,7 +52,11 @@
 - completed: held-out metadata-rule red-team script and continuous integration gate;
 - completed: Stage 1 manuscript outline and v5 causal architecture design brief;
 - next: independent human methods review of v4 and the v5 design;
-- next: implement v5 state updaters and scripted falsification tests without provider calls;
+- completed: implement v5 state updaters and 300 scripted validation runs without provider calls;
+- completed: separate exact-route calibration from novel role-transfer probes;
+- completed: add and validate register-hidden, raw-memory-hidden and pointer-permutation controls;
+- completed: add capacity accounting and a reviewer-facing run-level analysis draft;
+- next: independent human critique before selecting fresh model-pilot seeds;
 - remaining: freeze an equivalence margin and run-level power plan;
 - remaining: exact model identity through a direct provider or reproducible open-weight runtime;
 - remaining: externally reviewed Stage 1 registration before confirmation.

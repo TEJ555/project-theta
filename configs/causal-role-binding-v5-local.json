@@ -1,0 +1,15 @@
+{
+  "experiment": "causal_role_binding_v5",
+  "adapter": "scripted",
+  "model": "scripted-baseline-v1",
+  "temperature": 0.0,
+  "inference_profile": "probes_only",
+  "execution": {
+    "request_timeout_seconds": 120.0,
+    "max_retries": 0,
+    "max_output_tokens": 1000,
+    "max_model_calls": 12,
+    "reasoning_effort": "low",
+    "max_estimated_cost_usd": 1.25
+  }
+}

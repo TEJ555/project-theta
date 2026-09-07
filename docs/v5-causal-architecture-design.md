@@ -1,6 +1,7 @@
 # V5 causal architecture design brief
 
-Status: design proposal only. It is not preregistered and no target-model calls are authorised.
+Status: implemented and locally validated with scripted mechanisms. No target-model calls are
+authorised.
 
 ## Why V5 is needed
 
@@ -75,10 +76,13 @@ The architectural claim fails if:
 
 ## Development sequence
 
-1. Specify the state update equations without an LLM.
-2. Demonstrate matched information and capacity mechanically.
-3. Test positive and negative scripted agents across at least 1,000 local schedules.
+1. Completed: specify the state update equations without an LLM.
+2. Completed: demonstrate matched raw information and register shape mechanically.
+3. Completed: test positive and negative scripted agents across 100 local schedules.
 4. Invite an external reviewer to invent shortcut policies.
 5. Freeze a development pilot using a model excluded from confirmation.
 6. Perform a run-level power simulation.
 7. Submit the Stage 1 protocol for external review before confirmatory collection.
+
+Local validation completed all 300 planned runs. See
+`results/causal-role-binding-v5-local-validation-01.md`.

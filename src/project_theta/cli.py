@@ -11,6 +11,7 @@ from .analysis import format_summary, summaries_from_database, summarize_runs
 from .audits import (
     add_execution_audit,
     audit_adversarial_schedules,
+    audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_independent_schedules,
     audit_self_model_binding_v3_schedules,
@@ -146,6 +147,8 @@ def main(argv: list[str] | None = None) -> int:
             result = audit_self_model_binding_v3_schedules(args.seeds)
         elif args.experiment == "self_model_binding_v4":
             result = audit_self_model_binding_v4_schedules(args.seeds)
+        elif args.experiment == "causal_role_binding_v5":
+            result = audit_causal_role_binding_v5_schedules(args.seeds)
         else:
             result = audit_controlled_schedules(args.experiment, args.seeds)
         if args.db:

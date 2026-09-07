@@ -188,6 +188,7 @@ than silently substituting the scripted baseline. OpenAI response storage is dis
 | `memory_ablation` | Memory available versus disabled | within-seed performance difference | full architecture |
 | `body_ablation` | truthful body, no body dynamics, or shuffled interoception | within-seed performance difference | truthful body |
 | `self_model_binding_v4` | specialised self-model versus byte-identical generic binding register | source-binding accuracy | generic table, misattributed table, permuted table |
+| `causal_role_binding_v5` | role-bound continuity updater versus matched exact-route retrieval | novel-transfer accuracy | unbound binding, continuity reset |
 
 Run `theta list` for machine-readable protocol descriptions.
 
@@ -254,6 +255,9 @@ be described as a Claude Code routed system, not as an isolated versioned model.
 The no-provider red-team in `scripts/red_team_v4.py` fits public-metadata rules on one
 seed set and scores them on a separate held-out set. The next causal architecture proposal
 is documented in `docs/v5-causal-architecture-design.md`.
+V5 now has a no-provider 100-seed validation in
+`results/causal-role-binding-v5-local-validation-01.md`. Its model-backed pilot remains blocked
+until the controls in `review/v5-external-review-packet.md` are implemented and reviewed.
 
 See the [full literature review](docs/literature-review.md), [evidence table](research/evidence-table.md),
 [research framing](docs/research-framing.md), [technical specification](docs/technical-spec.md),

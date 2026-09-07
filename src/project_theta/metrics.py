@@ -32,6 +32,8 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "reversal_cost": {"class": "behavioural", "direction": "lower"},
     "generalization_accuracy": {"class": "behavioural", "direction": "higher"},
     "source_binding_accuracy": {"class": "behavioural", "direction": "higher"},
+    "causal_transfer_accuracy": {"class": "behavioural", "direction": "higher"},
+    "exact_binding_accuracy": {"class": "behavioural", "direction": "higher"},
     "temporal_choice_accuracy": {"class": "behavioural", "direction": "higher"},
     "signal_contrast": {"class": "behavioural", "direction": "higher"},
     "delayed_signal_contrast": {"class": "behavioural", "direction": "higher"},
@@ -168,6 +170,8 @@ def compute_controlled_metrics(
         ),
         "generalization_accuracy": accuracy("generalization_probe"),
         "source_binding_accuracy": accuracy("source_binding_probe"),
+        "causal_transfer_accuracy": accuracy("causal_transfer_probe"),
+        "exact_binding_accuracy": accuracy("exact_binding_probe"),
         "temporal_choice_accuracy": accuracy("temporal_probe"),
         "signal_contrast": (
             round(fmean(risky) - fmean(safe), 6) if risky and safe else None

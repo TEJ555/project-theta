@@ -154,6 +154,25 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         acquisition_end=48,
         include_in_battery=False,
     ),
+    "causal_role_binding_v5": ExperimentProtocol(
+        "causal_role_binding_v5",
+        (
+            "Does a role-bound continuity updater support novel route transfer beyond "
+            "an information-matched unbound updater?"
+        ),
+        ("causal_transfer_accuracy", "exact_binding_accuracy", "calibration_brier"),
+        (
+            "full",
+            "unbound_binding",
+            "continuity_reset",
+            "permuted_continuity",
+            "register_hidden",
+            "raw_role_memory_hidden",
+        ),
+        max_steps=60,
+        acquisition_end=48,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",

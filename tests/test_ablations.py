@@ -16,6 +16,24 @@ class AblationTests(unittest.TestCase):
             apply_condition(base, "misattributed_table").architecture.binding_content,
             "inverted",
         )
+        self.assertEqual(
+            apply_condition(base, "unbound_binding").architecture.continuity_binding_mode,
+            "unbound",
+        )
+        self.assertEqual(
+            apply_condition(base, "continuity_reset").architecture.continuity_binding_mode,
+            "reset",
+        )
+        self.assertEqual(
+            apply_condition(base, "permuted_continuity").architecture.continuity_binding_mode,
+            "permuted",
+        )
+        self.assertFalse(
+            apply_condition(base, "register_hidden").architecture.continuity_register_visible
+        )
+        self.assertFalse(
+            apply_condition(base, "raw_role_memory_hidden").architecture.raw_role_memory_visible
+        )
         self.assertFalse(apply_condition(base, "no_self_model").architecture.self_model_enabled)
         self.assertEqual(apply_condition(base, "no_body").body.signal_mode, "absent")
         self.assertFalse(apply_condition(base, "no_body").body.body_enabled)

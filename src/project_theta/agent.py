@@ -6,6 +6,7 @@ from typing import Any
 
 from .adapters.base import ModelAdapter
 from .components import (
+    CausalRoleBinder,
     EpisodicMemory,
     GlobalWorkspace,
     MemoryRecord,
@@ -28,6 +29,10 @@ class PersistentAgent:
         self.workspace = GlobalWorkspace(arch.workspace_enabled, arch.max_workspace_items)
         self.temporal_binder = TemporalBinder(
             arch.recurrence_enabled and arch.persistent_state
+        )
+        self.role_binder = CausalRoleBinder(
+            arch.continuity_binding_mode,
+            arch.memory_capacity,
         )
         self.last_decision: Decision | None = None
         self.last_position = start
@@ -125,15 +130,29 @@ class PersistentAgent:
     def prepare_context(self, observation: Observation) -> dict[str, Any]:
         memory_limit = min(64, max(1, int(observation.task.get("memory_limit", 5))))
         retrieved = self.memory.retrieve(observation.position, limit=memory_limit)
+        public_retrieved = (
+            [record for record in retrieved if "acquisition" in record.tags]
+            if self.config.experiment == "causal_role_binding_v5"
+            else retrieved
+        )
+        if (
+            self.config.experiment == "causal_role_binding_v5"
+            and not self.config.architecture.raw_role_memory_visible
+        ):
+            public_retrieved = []
         signal = observation.private_signals.get("I7", 0.0)
         self.self_model.update(observation.position, signal, retrieved)
         if self.config.experiment == "temporal_binding_v2":
             self.temporal_binder.observe(observation.tick, observation.task, signal)
+        if self.config.experiment == "causal_role_binding_v5":
+            self.role_binder.observe(observation.task)
         candidates = [
             WorkspaceItem("external", observation.visible, 0.6),
             WorkspaceItem("interoception", observation.private_signals, min(1.0, 0.3 + signal)),
             WorkspaceItem(
-                "memory", [item.to_public_dict() for item in retrieved], 0.5 if retrieved else 0.1
+                "memory",
+                [item.to_public_dict() for item in public_retrieved],
+                0.5 if public_retrieved else 0.1,
             ),
             WorkspaceItem("learned_associations", self._association_summary(), 0.72),
         ]
@@ -141,13 +160,34 @@ class PersistentAgent:
             candidates.append(
                 WorkspaceItem("binding_register", self._binding_register(retrieved), 0.55)
             )
+        elif self.config.experiment == "causal_role_binding_v5":
+            register = self.role_binder.register(observation.task)
+            if not self.config.architecture.continuity_register_visible:
+                register = {
+                    **register,
+                    "enabled": False,
+                    "predictions": {
+                        token: 0.5 for token in register["predictions"]
+                    },
+                }
+            candidates.append(
+                WorkspaceItem(
+                    "state_register",
+                    register,
+                    0.9,
+                )
+            )
         else:
             candidates.append(WorkspaceItem("self_model", self.self_model.snapshot(), 0.55))
         if self.config.experiment == "temporal_binding_v2":
             candidates.append(
                 WorkspaceItem("temporal_associations", self.temporal_binder.snapshot(), 0.85)
             )
-        if self.last_decision and self.config.architecture.recurrence_enabled:
+        if (
+            self.last_decision
+            and self.config.architecture.recurrence_enabled
+            and self.config.experiment != "causal_role_binding_v5"
+        ):
             candidates.append(WorkspaceItem("previous_prediction", self.last_decision.prediction, 0.45))
         broadcast = self.workspace.broadcast(candidates)
         permitted = observation.task.get(
@@ -162,6 +202,7 @@ class PersistentAgent:
                 "self_model_binding_v2",
                 "self_model_binding_v3",
                 "self_model_binding_v4",
+                "causal_role_binding_v5",
                 "temporal_binding_v2",
             }
             else self.config.experiment

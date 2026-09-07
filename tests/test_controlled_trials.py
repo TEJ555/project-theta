@@ -7,6 +7,7 @@ from pathlib import Path
 
 from project_theta.audits import (
     audit_adversarial_schedules,
+    audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_independent_schedules,
     audit_metadata_shortcuts,
@@ -349,6 +350,146 @@ class ControlledTrialTests(unittest.TestCase):
             api_calls = connection.execute("SELECT COUNT(*) FROM api_calls").fetchone()[0]
             connection.close()
             self.assertEqual(api_calls, 12)
+
+    def test_v5_schedule_is_balanced_blinded_and_uses_novel_transfer_routes(self):
+        result = audit_causal_role_binding_v5_schedules([7027, 7121, 7229])
+        self.assertEqual(result["status"], "pass")
+        trials = build_trials("causal_role_binding_v5", 7027)
+        self.assertEqual(len(trials), 60)
+        public_text = json.dumps([trial.public_task() for trial in trials]).lower()
+        for forbidden in (
+            "trial_id",
+            "correct_action",
+            "causal_role_binding_v5",
+            "continuity",
+            '"owner"',
+        ):
+            self.assertNotIn(forbidden, public_text)
+
+    def test_v5_role_bound_transfers_while_unbound_only_retrieves_exact_routes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "v5.sqlite")
+            base = replace(
+                RunConfig(),
+                experiment="causal_role_binding_v5",
+                seed=7027,
+                inference_profile="probes_only",
+            )
+            full = harness.run(replace(base, condition="full"))
+            unbound = harness.run(replace(base, condition="unbound_binding"))
+            reset = harness.run(replace(base, condition="continuity_reset"))
+
+            self.assertEqual(full.metrics["exact_binding_accuracy"], 1.0)
+            self.assertEqual(full.metrics["causal_transfer_accuracy"], 1.0)
+            self.assertEqual(unbound.metrics["exact_binding_accuracy"], 1.0)
+            self.assertEqual(unbound.metrics["causal_transfer_accuracy"], 0.5)
+            self.assertEqual(reset.metrics["exact_binding_accuracy"], 0.5)
+            self.assertEqual(reset.metrics["causal_transfer_accuracy"], 0.5)
+            self.assertEqual(full.metrics["model_calls"], 12)
+            self.assertEqual(full.metrics["inference_skipped"], 48)
+
+    def test_v5_conditions_match_raw_context_except_causal_register_values(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "v5.sqlite"
+            harness = ExperimentHarness(database)
+            base = replace(
+                RunConfig(),
+                experiment="causal_role_binding_v5",
+                seed=7027,
+                inference_profile="probes_only",
+            )
+            summaries = {
+                condition: harness.run(replace(base, condition=condition))
+                for condition in ("full", "unbound_binding", "continuity_reset")
+            }
+
+            def normalized_contexts(run_id: str):
+                connection = sqlite3.connect(database)
+                contexts = [
+                    json.loads(row[0])
+                    for row in connection.execute(
+                        "SELECT context_json FROM steps WHERE run_id=? ORDER BY tick",
+                        (run_id,),
+                    )
+                ]
+                connection.close()
+                for context in contexts:
+                    for item in context["workspace_broadcast"]:
+                        if item["source"] == "state_register":
+                            item["content"]["predictions"] = "condition-specific-causal-output"
+                return contexts
+
+            reference = normalized_contexts(summaries["full"].run_id)
+            self.assertEqual(reference, normalized_contexts(summaries["unbound_binding"].run_id))
+            self.assertEqual(reference, normalized_contexts(summaries["continuity_reset"].run_id))
+
+    def test_v5_diagnostic_controls_isolate_register_memory_and_pointer_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "v5-controls.sqlite"
+            harness = ExperimentHarness(database)
+            base = replace(
+                RunConfig(),
+                experiment="causal_role_binding_v5",
+                seed=7321,
+                inference_profile="probes_only",
+            )
+            results = {
+                condition: harness.run(replace(base, condition=condition))
+                for condition in (
+                    "full",
+                    "permuted_continuity",
+                    "register_hidden",
+                    "raw_role_memory_hidden",
+                )
+            }
+
+            self.assertEqual(results["full"].metrics["causal_transfer_accuracy"], 1.0)
+            self.assertEqual(
+                results["permuted_continuity"].metrics["exact_binding_accuracy"], 1.0
+            )
+            self.assertEqual(
+                results["permuted_continuity"].metrics["causal_transfer_accuracy"], 0.0
+            )
+            self.assertEqual(results["register_hidden"].metrics["exact_binding_accuracy"], 0.5)
+            self.assertEqual(
+                results["register_hidden"].metrics["causal_transfer_accuracy"], 0.5
+            )
+            self.assertEqual(
+                results["raw_role_memory_hidden"].metrics["exact_binding_accuracy"], 1.0
+            )
+            self.assertEqual(
+                results["raw_role_memory_hidden"].metrics["causal_transfer_accuracy"], 1.0
+            )
+
+            connection = sqlite3.connect(database)
+            registers = {}
+            for condition, summary in results.items():
+                context = json.loads(connection.execute(
+                    """
+                    SELECT context_json FROM steps
+                    WHERE run_id=? AND context_json LIKE '%causal_transfer_probe%'
+                    ORDER BY tick LIMIT 1
+                    """,
+                    (summary.run_id,),
+                ).fetchone()[0])
+                registers[condition] = next(
+                    item["content"]
+                    for item in context["workspace_broadcast"]
+                    if item["source"] == "state_register"
+                )
+            connection.close()
+
+            for field in (
+                "entry_count",
+                "update_count",
+                "capacity",
+                "actor_entry_count",
+                "route_entry_count",
+            ):
+                self.assertEqual(
+                    {register[field] for register in registers.values()},
+                    {registers["full"][field]},
+                )
 
     def test_temporal_binding_v2_is_selectively_discriminative(self):
         with tempfile.TemporaryDirectory() as directory:

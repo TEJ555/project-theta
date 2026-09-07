@@ -19,5 +19,9 @@ This registry is the source of truth for public study status. A completed run co
 | Self-model binding v4 target-model pilot | Ready, not run | Development | Three seeds, four conditions, 144 maximum Claude Max prompts. Routed-system claim only. |
 | V4 external review | Not started | Methods review | Requires a human methods reviewer before confirmation. |
 | V4 exact-model confirmation | Not registered | Confirmatory | Sample size, models and analysis will be frozen only after development and external review. |
+| Causal role binding v5 local validation | Complete | Engineering validation | 100 seeds and 300 scripted runs passed. Role-bound transfer 1.000; exact-capable unbound control 0.500 on novel transfer. No provider calls. |
+| V5 diagnostic controls local validation | Complete | Engineering validation | 100 fresh seeds and 400 scripted runs passed register-hidden, raw-memory-hidden and pointer-permutation expectations. No provider calls. |
+| V5 external review | Not started | Methods review | Technical controls are present. An outside reviewer must challenge their fairness and construct validity before any model-backed pilot. |
+| V5 model-backed pilot | Draft only | Development | Technical controls are implemented. Execution remains blocked pending independent review and a frozen run-level plan. |
 
 All studies concern behavioural or computational indicators. None measures phenomenal consciousness.

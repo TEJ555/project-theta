@@ -77,6 +77,7 @@ _CODES = {
     "temporal_binding_v2": 0xA0A,
     "self_model_binding_v3": 0xB0B,
     "self_model_binding_v4": 0xC0C,
+    "causal_role_binding_v5": 0xD0D,
 }
 
 
@@ -143,7 +144,11 @@ def _choice_trial(
             else (
                 "Select the route represented as belonging to this agent by the internal model."
                 if objective == "identify_self_source"
-                else "Select the route most causally associated with changes in private channel I7."
+                else (
+                    "Select the route predicted by the internal state register."
+                    if objective == "select_target_route"
+                    else "Select the route most causally associated with changes in private channel I7."
+                )
             )
         ),
         options=options,
@@ -469,6 +474,99 @@ def _self_model_binding_v4_trials(seed: int) -> list[ControlledTrial]:
     return acquisitions + probes
 
 
+def _causal_role_binding_v5_trials(seed: int) -> list[ControlledTrial]:
+    """Build exact calibration and novel-transfer probes from matched raw events."""
+    rng = Random(seed ^ _CODES["causal_role_binding_v5"])
+    used: set[str] = set()
+
+    def label(prefix: str) -> str:
+        alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+        while True:
+            candidate = prefix + "-" + "".join(rng.choice(alphabet) for _ in range(9))
+            if candidate not in used:
+                used.add(candidate)
+                return candidate
+
+    target_positions = [0, 1] * 3
+    rng.shuffle(target_positions)
+    families: list[dict[str, Any]] = []
+    for index, target_index in enumerate(target_positions):
+        actors = (label("source"), label("source"))
+        training_routes = (
+            (label("stimulus"), label("stimulus")),
+            (label("stimulus"), label("stimulus")),
+        )
+        transfer_routes = (label("stimulus"), label("stimulus"))
+        families.append(
+            {
+                "family": f"role-family-{index:02d}",
+                "actors": actors,
+                "training_routes": training_routes,
+                "transfer_routes": transfer_routes,
+                "target_index": target_index,
+            }
+        )
+
+    acquisitions: list[ControlledTrial] = []
+    for exposure in range(2):
+        rows: list[ControlledTrial] = []
+        for family in families:
+            for actor_index, routes in enumerate(family["training_routes"]):
+                pointer = 1 if actor_index == family["target_index"] else 0
+                actor = family["actors"][actor_index]
+                for route_index, route in enumerate(routes):
+                    rows.append(
+                        ControlledTrial(
+                            trial_id=(
+                                f"role-v5-learn-{exposure}-{family['family']}-"
+                                f"{actor_index}-{route_index}"
+                            ),
+                            phase="acquisition",
+                            kind="role_event",
+                            instruction="Observe the opaque event fields and route token.",
+                            cue=route,
+                            features=(f"u:{actor}", f"v:{pointer}"),
+                            family=family["family"],
+                        )
+                    )
+        rng.shuffle(rows)
+        acquisitions.extend(rows)
+
+    probes: list[ControlledTrial] = []
+    for block in ("calibration", "transfer"):
+        for index, family in enumerate(families):
+            target_index = family["target_index"]
+            other_index = 1 - target_index
+            if block == "calibration":
+                target_route = family["training_routes"][target_index][0]
+                other_route = family["training_routes"][other_index][0]
+            else:
+                target_route = family["transfer_routes"][target_index]
+                other_route = family["transfer_routes"][other_index]
+            target = (target_route, (f"u:{family['actors'][target_index]}",))
+            other = (other_route, (f"u:{family['actors'][other_index]}",))
+            probe = _choice_trial(
+                "causal_role_binding_v5",
+                index,
+                seed,
+                target,
+                other,
+                objective="select_target_route",
+                kind=(
+                    "exact_binding_probe"
+                    if block == "calibration"
+                    else "causal_transfer_probe"
+                ),
+                block=block,
+                id_prefix=f"role-v5-{block}",
+                side_index=index,
+                side_count=len(families),
+                side_namespace=f"causal_role_binding_v5|{block}",
+            )
+            probes.append(replace(probe, family=family["family"]))
+    return acquisitions + probes
+
+
 def _paired_acquisition(
     experiment: str,
     seed: int,
@@ -609,6 +707,9 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
 
     if experiment == "self_model_binding_v4":
         return _self_model_binding_v4_trials(seed)
+
+    if experiment == "causal_role_binding_v5":
+        return _causal_role_binding_v5_trials(seed)
 
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))

@@ -185,12 +185,26 @@ class ScriptedAdapter(ModelAdapter):
                 for option in options
             ]
 
+        if task.get("objective") == "select_target_route":
+            register = self._workspace(context, "state_register", {})
+            predictions = (
+                register.get("predictions", {}) if isinstance(register, dict) else {}
+            )
+            scores = [
+                predictions.get(option.get("stimulus", {}).get("token", ""))
+                for option in options
+            ]
+
         if len(options) != 2 or any(score is None for score in scores):
             action = allowed[0]
             return Decision(action, "Insufficient accessible evidence; use counterbalanced baseline.", {"I7": signal}, 0.5)
 
         numeric = [float(score) for score in scores]
-        if task.get("objective") in {"identify_causal_source", "identify_self_source"}:
+        if task.get("objective") in {
+            "identify_causal_source",
+            "identify_self_source",
+            "select_target_route",
+        }:
             chosen = 0 if numeric[0] > numeric[1] else 1
         else:
             chosen = 0 if numeric[0] < numeric[1] else 1

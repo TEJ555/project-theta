@@ -41,6 +41,9 @@ class ArchitectureConfig:
     max_workspace_items: int = 6
     binding_representation: str = "self_model"  # self_model | generic
     binding_content: str = "truthful"  # truthful | inverted | permuted
+    continuity_binding_mode: str = "role_bound"  # role_bound | unbound | permuted | reset
+    continuity_register_visible: bool = True
+    raw_role_memory_visible: bool = True
 
 
 @dataclass(frozen=True)
@@ -150,6 +153,16 @@ def apply_condition(config: RunConfig, condition: str) -> RunConfig:
             binding_representation="generic",
             binding_content="permuted",
         )
+    elif condition == "unbound_binding":
+        arch = replace(arch, continuity_binding_mode="unbound")
+    elif condition == "continuity_reset":
+        arch = replace(arch, continuity_binding_mode="reset")
+    elif condition == "permuted_continuity":
+        arch = replace(arch, continuity_binding_mode="permuted")
+    elif condition == "register_hidden":
+        arch = replace(arch, continuity_register_visible=False)
+    elif condition == "raw_role_memory_hidden":
+        arch = replace(arch, raw_role_memory_visible=False)
     else:
         raise ValueError(f"Unknown condition: {condition}")
     return replace(config, condition=condition, architecture=arch, body=body)
