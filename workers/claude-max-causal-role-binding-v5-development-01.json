@@ -1,0 +1,20 @@
+{
+  "worker_id": "claude-max-causal-role-binding-v5-development-01",
+  "database": "runs/claude-max-causal-role-binding-v5-development-01.sqlite",
+  "base_config": "configs/causal-role-binding-v5-claude-max.json",
+  "experiment": "causal_role_binding_v5",
+  "conditions": [
+    "full",
+    "unbound_binding",
+    "continuity_reset",
+    "permuted_continuity",
+    "register_hidden",
+    "raw_role_memory_hidden"
+  ],
+  "seeds": [9103, 9209, 9311],
+  "adapter": "claude_code",
+  "model": "sonnet",
+  "temperature": 0.0,
+  "max_total_runs": 18,
+  "max_attempts_per_job": 2
+}

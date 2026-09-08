@@ -5,15 +5,15 @@ Only completed databases without WAL files are inspected.
 """
 import collections
 import json
-from pathlib import Path
 import sqlite3
 import statistics
 import sys
+from pathlib import Path
 
 root = Path(sys.argv[1]).resolve()
 sys.path.insert(0, str(root / "src"))
-from project_theta.trials import build_trials
 from project_theta.audits import audit_self_model_binding_v3_schedules
+from project_theta.trials import build_trials
 
 self_seeds = [3631, 3733, 3847, 3943, 4051, 4153, 4253, 4363, 4463, 4567]
 temporal_seeds = [2861, 2971, 3083, 3191, 3301, 3413]

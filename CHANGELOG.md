@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1 - 2026-09-08
+
+- Freeze the bounded V5 Claude Max development pilot before provider execution.
+- Add a resumable 18-run worker across six causal architecture conditions.
+- Preserve routed-system labelling and block any confirmatory or phenomenal claim.
+
 ## 0.8.0 - 2026-09-07
 
 - Add causal role binding v5 with matched raw evidence and separately scored exact and novel
