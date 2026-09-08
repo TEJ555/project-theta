@@ -1,6 +1,8 @@
 # V5 model-backed development analysis draft
 
-Status: reviewer draft. It is not frozen and does not authorise model execution.
+Status: superseded by the frozen development plan and completed pilot. See
+`preregistration/causal-role-binding-v5-claude-max-development-01.md` and
+`results/causal-role-binding-v5-claude-max-development-01.md`.
 
 ## Experimental unit
 

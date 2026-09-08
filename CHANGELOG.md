@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.2 - 2026-09-08
+
+- Complete all 18 frozen V5 Claude Max development runs and 216 probe decisions.
+- Record that all six development progression checks passed.
+- Publish a privacy-reviewed public bundle and routed-system provenance.
+- Preserve the small-sample and phenomenal-consciousness interpretation limits.
+
 ## 0.8.1 - 2026-09-08
 
 - Freeze the bounded V5 Claude Max development pilot before provider execution.

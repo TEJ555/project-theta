@@ -1,0 +1,17 @@
+{
+  "excluded": [
+    "provider session identifiers",
+    "raw provider metadata",
+    "API credentials",
+    "working database files"
+  ],
+  "exports": [
+    {
+      "completed": 18,
+      "file": "claude-max-causal-role-binding-v5-development-01.public.json",
+      "runs": 18,
+      "sha256": "b75cb119563ea49eef69ee116a88b864ab88b1c1cfdccb0bd86e9aa458193f31"
+    }
+  ],
+  "format": "project-theta-public-bundle-v1"
+}

@@ -1,6 +1,6 @@
 # Study registry
 
-Last updated: 6 September 2026
+Last updated: 8 September 2026
 
 This registry is the source of truth for public study status. A completed run count is not the same as a valid confirmatory result.
 
@@ -22,6 +22,6 @@ This registry is the source of truth for public study status. A completed run co
 | Causal role binding v5 local validation | Complete | Engineering validation | 100 seeds and 300 scripted runs passed. Role-bound transfer 1.000; exact-capable unbound control 0.500 on novel transfer. No provider calls. |
 | V5 diagnostic controls local validation | Complete | Engineering validation | 100 fresh seeds and 400 scripted runs passed register-hidden, raw-memory-hidden and pointer-permutation expectations. No provider calls. |
 | V5 external review | Not started | Methods review | Technical controls are present. An outside reviewer must challenge their fairness and construct validity before any model-backed pilot. |
-| V5 model-backed pilot | Frozen, execution authorised | Development | Three fresh seeds, six conditions and 216 maximum Claude Max prompts. External review is still required before confirmation. |
+| V5 model-backed pilot | Complete, 18 of 18 | Development | All six frozen progression checks passed. Full and raw-memory-hidden transfer were 1.000, permuted continuity was 0.000, and unbound and register-hidden were 0.556. Three seed pairs are not confirmatory. |
 
 All studies concern behavioural or computational indicators. None measures phenomenal consciousness.
