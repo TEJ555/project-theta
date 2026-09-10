@@ -9,6 +9,7 @@ from project_theta.adapters.anthropic_adapter import AnthropicAdapter
 from project_theta.adapters.base import AdapterError
 from project_theta.adapters.claude_code_adapter import ClaudeCodeSubscriptionAdapter
 from project_theta.adapters.nvidia_nim_adapter import NvidiaNimAdapter
+from project_theta.adapters.ollama_adapter import OllamaAdapter
 from project_theta.adapters.openai_adapter import OpenAIAdapter
 from project_theta.adapters.scripted import ScriptedAdapter
 from project_theta.config import RunConfig
@@ -261,6 +262,64 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(
             adapter.last_metadata["model"], "nvidia/nemotron-3.5-lightning-30b-a3b"
         )
+
+    def test_ollama_adapter_requires_digest_and_uses_schema(self):
+        captured = []
+
+        class FakeResponse:
+            def __init__(self, payload):
+                self.payload = payload
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc_value, traceback):
+                return False
+
+            def read(self):
+                return json.dumps(self.payload).encode("utf-8")
+
+        def fake_urlopen(req, timeout):
+            captured.append((req, timeout))
+            if req.full_url.endswith("/api/tags"):
+                return FakeResponse({
+                    "models": [{
+                        "name": "qwen3:8b",
+                        "model": "qwen3:8b",
+                        "digest": "a" * 64,
+                        "details": {
+                            "parameter_size": "8.2B",
+                            "quantization_level": "Q4_K_M",
+                        },
+                    }]
+                })
+            return FakeResponse({
+                "model": "qwen3:8b",
+                "created_at": "test",
+                "prompt_eval_count": 30,
+                "eval_count": 10,
+                "total_duration": 100,
+                "response": json.dumps({
+                    "action": "observe",
+                    "rationale": "test",
+                    "prediction": {"I7": 0.0},
+                    "confidence": 0.5,
+                    "self_report": "",
+                    "request_stop": False,
+                    "state_update": {"entries": [], "note": ""},
+                }),
+            })
+
+        with patch("project_theta.adapters.ollama_adapter.request.urlopen", fake_urlopen):
+            adapter = OllamaAdapter("qwen3:8b", seed=3101, max_output_tokens=321)
+            decision = adapter.decide({"permitted_actions": ["observe"]})
+
+        request_payload = json.loads(captured[1][0].data.decode("utf-8"))
+        self.assertEqual(decision.action, "observe")
+        self.assertEqual(request_payload["format"]["type"], "object")
+        self.assertFalse(request_payload["think"])
+        self.assertEqual(request_payload["options"]["num_predict"], 321)
+        self.assertEqual(adapter.last_metadata["model_digest"], "a" * 64)
 
     def test_anthropic_adapter_uses_schema_and_enforces_cost_guard(self):
         captured = {}

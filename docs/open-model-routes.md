@@ -64,7 +64,7 @@ Advantages:
 - no provider API charge;
 - no model routing;
 - the weights can be retained;
-- the exact model digest and runtime can be archived;
+- the exact model digest is collected automatically and the runtime can be archived;
 - later work can add activation-level and component-level interventions.
 
 Limits:

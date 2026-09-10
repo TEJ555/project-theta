@@ -188,6 +188,10 @@ $env:THETA_ENABLE_MODEL_RUNS = "YES"
 theta run --experiment endogenous_agency_v6 --adapter ollama --model qwen3:8b --seeds 3101 --conditions full,evidence_only,journal_only,permuted_journal,neutral_journal --max-runs 5 --db runs/ollama-v6-development-01.sqlite
 ```
 
+The Ollama adapter sends the full decision JSON schema, refuses to run if the named
+model is absent, limits output length, and records the local model digest with every
+decision.
+
 Exact availability and model access vary by account and provider. Keep the model ID,
 version, temperature, prompts, and provider response identifiers with every run.
 Model-backed execution is locked unless `THETA_ENABLE_MODEL_RUNS=YES` is set and

@@ -7,9 +7,29 @@ $pooledDatabasePath = Join-Path $projectRoot "runs\endogenous-agency-v6-pooled-b
 $primarySeeds = (2100..2199) -join ","
 $pooledSeeds = (2300..2499) -join ","
 
+function Get-AvailableDatabasePath([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $Path
+    }
+    $parent = Split-Path -Parent $Path
+    $stem = [System.IO.Path]::GetFileNameWithoutExtension($Path)
+    $extension = [System.IO.Path]::GetExtension($Path)
+    $index = 2
+    do {
+        $candidate = Join-Path $parent "$stem-$index$extension"
+        $index += 1
+    } while (Test-Path -LiteralPath $candidate)
+    return $candidate
+}
+
 if (-not (Test-Path -LiteralPath $theta)) {
     throw "Project Theta is not installed in .venv."
 }
+
+$databasePath = Get-AvailableDatabasePath $databasePath
+$pooledDatabasePath = Get-AvailableDatabasePath $pooledDatabasePath
+Write-Host "Primary database: $databasePath"
+Write-Host "Pooled baseline database: $pooledDatabasePath"
 
 try {
     Set-Location -LiteralPath $projectRoot

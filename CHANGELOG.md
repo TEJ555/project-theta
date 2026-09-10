@@ -3,7 +3,8 @@
 ## Unreleased
 
 - Add an NVIDIA hosted NIM adapter for fixed open-model development runs.
-- Strengthen Ollama output handling with the full Project Theta decision schema.
+- Strengthen Ollama output handling with the full decision schema, output cap and
+  automatic model-digest provenance.
 - Add bounded V6 development configurations and an NVIDIA key-safe launcher.
 - Document hosted and local open-model replication routes and their limits.
 - Add an executable V5 answer-table and raw-memory shortcut audit.
