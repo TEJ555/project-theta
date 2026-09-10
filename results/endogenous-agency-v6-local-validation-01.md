@@ -2,11 +2,15 @@
 
 Completed: 10 September 2026
 
+Validated code revision: `83dc48d57c3255e714f9620da1925fee04936bea`
+
 ## Outcome
 
 The deterministic engineering validation completed 700 no-provider runs. All 500
 primary runs and all 200 pooled-correlation negative-control runs completed. The
 100-seed schedule audit and the 500-run execution audit passed.
+
+Both validation databases recorded the clean committed revision above for every run.
 
 This validates schedule construction, blinding, model-authored-state plumbing,
 diagnostic conditions and baseline behaviour. It is not evidence from an evaluated
