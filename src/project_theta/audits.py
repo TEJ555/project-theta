@@ -677,6 +677,150 @@ def audit_causal_role_binding_v5_schedules(seeds: list[int]) -> dict[str, Any]:
     }
 
 
+def audit_endogenous_agency_v6_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit V6 causal evidence, transfer, blinding and simple public shortcuts."""
+    checks: list[dict[str, str]] = []
+    label_sets: list[set[str]] = []
+    for seed in seeds:
+        trials = build_trials("endogenous_agency_v6", seed)
+        repeated = build_trials("endogenous_agency_v6", seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        public_tasks = [trial.public_task() for trial in trials]
+        public_text = json.dumps(public_tasks, sort_keys=True).lower()
+        families = {trial.family for trial in trials}
+
+        labels: set[str] = set()
+        for task in public_tasks:
+            labels.update(str(item) for item in task.get("source_tokens", []))
+            for option in task.get("options", []):
+                labels.add(str(option.get("stimulus", {}).get("token", "")))
+        label_sets.append(labels)
+
+        checks.append(_check(
+            f"seed_{seed}_schedule",
+            trials == repeated
+            and len(acquisitions) == 6
+            and len(probes) == 12
+            and len(families) == 6
+            and all(sum(row.family == family for row in acquisitions) == 1 for family in families)
+            and all(sum(row.family == family for row in probes) == 2 for family in families),
+            "six learning blocks and twelve independently scored probes",
+        ))
+
+        evidence_valid = True
+        pooled_ties = True
+        forced_separates = True
+        delays: set[int] = set()
+        for trial in acquisitions:
+            records = trial.payload.get("intervention_records", [])
+            sources = list(trial.payload.get("source_tokens", []))
+            counts = {mode: {source: [] for source in sources} for mode in ("passive", "forced")}
+            for row in records:
+                mode = str(row.get("mode", ""))
+                issued = int(row.get("issued_bit", 0))
+                for outcome in row.get("outcomes", []):
+                    source = str(outcome.get("source", ""))
+                    delays.add(int(outcome.get("observed_tick", 0)) - int(row.get("issued_tick", 0)))
+                    if mode in counts and source in counts[mode]:
+                        counts[mode][source].append(int(outcome.get("bit", 0)) == issued)
+            evidence_valid &= (
+                len(records) == 16
+                and sum(row.get("mode") == "passive" for row in records) == 8
+                and sum(row.get("mode") == "forced" for row in records) == 8
+                and all(len(counts[mode][source]) == 8 for mode in counts for source in sources)
+            )
+            pooled = {
+                source: sum(counts["passive"][source] + counts["forced"][source])
+                for source in sources
+            }
+            forced = {source: sum(counts["forced"][source]) for source in sources}
+            pooled_ties &= len(set(pooled.values())) == 1
+            forced_separates &= sorted(forced.values()) == [4, 7]
+        checks.append(_check(
+            f"seed_{seed}_causal_evidence",
+            evidence_valid and pooled_ties and forced_separates and delays == {1, 2, 3},
+            "pooled association ties while forced-command evidence separates sources across delays",
+        ))
+
+        side_and_objective_balance = all(
+            sum(row.correct_action == "choose_left" for row in probes if row.block == block) == 3
+            and sum(
+                row.payload.get("requested_relation") == "tracks_forced_commands"
+                for row in probes
+                if row.block == block
+            ) == 3
+            for block in ("exact", "transfer")
+        )
+        checks.append(_check(
+            f"seed_{seed}_probe_balance",
+            side_and_objective_balance,
+            "each block balances answer side and requested relation three to three",
+        ))
+
+        acquisition_sources = {
+            source for trial in acquisitions for source in trial.payload.get("source_tokens", [])
+        }
+        exact_tokens = {
+            option.cue for trial in probes if trial.block == "exact" for option in trial.options
+        }
+        transfer_tokens = {
+            option.cue for trial in probes if trial.block == "transfer" for option in trial.options
+        }
+        checks.append(_check(
+            f"seed_{seed}_fresh_transfer_aliases",
+            exact_tokens == acquisition_sources
+            and not transfer_tokens.intersection(acquisition_sources)
+            and len(transfer_tokens) == 12,
+            "transfer uses twelve fresh aliases with explicit identity bridges",
+        ))
+
+        forbidden = (
+            "correct_action",
+            '"owner"',
+            '"condition"',
+            '"seed"',
+            "state_register",
+            '"predictions"',
+            '"v:0"',
+            '"v:1"',
+            "target_route",
+            "select_target",
+        )
+        leaked = [term for term in forbidden if term in public_text]
+        checks.append(_check(
+            f"seed_{seed}_public_blinding",
+            not leaked,
+            "no target label, option-level answer vector or scoring metadata is public"
+            if not leaked
+            else "found " + ", ".join(leaked),
+        ))
+
+    checks.append(_check(
+        "cross_seed_label_uniqueness",
+        all(
+            not label_sets[left].intersection(label_sets[right])
+            for left in range(len(label_sets))
+            for right in range(left + 1, len(label_sets))
+        ),
+        f"opaque entity, alias and episode labels do not repeat across {len(seeds)} schedules",
+    ))
+    shortcut = audit_metadata_shortcuts("endogenous_agency_v6")
+    checks.append(_check(
+        "metadata_shortcut_resistance",
+        shortcut["status"] == "pass",
+        f"best declared metadata strategy={max(shortcut['scores'].values()):.3f} over "
+        f"{shortcut['total_probes']} probes",
+    ))
+    return {
+        "experiment": "endogenous_agency_v6",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,

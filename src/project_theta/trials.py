@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from hashlib import blake2b
 from random import Random
 from typing import Any
@@ -38,6 +38,7 @@ class ControlledTrial:
     transition: str = ""
     owner: str = ""
     binding_delay: int = 0
+    payload: dict[str, Any] = field(default_factory=dict)
 
     @property
     def allowed_actions(self) -> list[str]:
@@ -61,6 +62,7 @@ class ControlledTrial:
             task["stage"] = self.block
         if self.binding_delay:
             task["binding_delay"] = self.binding_delay
+        task.update(self.payload)
         return task
 
 
@@ -78,6 +80,7 @@ _CODES = {
     "self_model_binding_v3": 0xB0B,
     "self_model_binding_v4": 0xC0C,
     "causal_role_binding_v5": 0xD0D,
+    "endogenous_agency_v6": 0xE0E,
 }
 
 
@@ -567,6 +570,137 @@ def _causal_role_binding_v5_trials(seed: int) -> list[ControlledTrial]:
     return acquisitions + probes
 
 
+def _endogenous_agency_v6_trials(seed: int) -> list[ControlledTrial]:
+    """Build causal-agency items without a public target label or answer vector."""
+    rng = Random(seed ^ _CODES["endogenous_agency_v6"])
+    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+    used: set[str] = set()
+
+    def opaque(prefix: str) -> str:
+        while True:
+            value = prefix + "-" + "".join(rng.choice(alphabet) for _ in range(10))
+            if value not in used:
+                used.add(value)
+                return value
+
+    families: list[dict[str, Any]] = []
+    controlled_positions = [0, 1] * 3
+    rng.shuffle(controlled_positions)
+    for index, controlled_index in enumerate(controlled_positions):
+        sources = (opaque("entity"), opaque("entity"))
+        aliases = (opaque("alias"), opaque("alias"))
+        family = opaque("episode")
+        records: list[dict[str, Any]] = []
+        for mode, matches in (
+            ("passive", ([True] * 5 + [False] * 3, [True] * 8)),
+            ("forced", ([True] * 7 + [False], [True] * 4 + [False] * 4)),
+        ):
+            command_bits = [0, 1] * 4
+            rng.shuffle(command_bits)
+            controlled_matches, other_matches = matches
+            rng.shuffle(controlled_matches)
+            rng.shuffle(other_matches)
+            for row_index, command in enumerate(command_bits):
+                source_matches = [False, False]
+                source_matches[controlled_index] = controlled_matches[row_index]
+                source_matches[1 - controlled_index] = other_matches[row_index]
+                outcomes = [
+                    {
+                        "source": source,
+                        "observed_tick": row_index * 4 + rng.randint(1, 3),
+                        "bit": command if source_matches[source_index] else 1 - command,
+                    }
+                    for source_index, source in enumerate(sources)
+                ]
+                rng.shuffle(outcomes)
+                records.append(
+                    {
+                        "event": opaque("event"),
+                        "mode": mode,
+                        "issued_tick": row_index * 4,
+                        "issued_bit": command,
+                        "outcomes": outcomes,
+                    }
+                )
+        rng.shuffle(records)
+        families.append(
+            {
+                "family": family,
+                "sources": sources,
+                "aliases": aliases,
+                "controlled_index": controlled_index,
+                "records": records,
+            }
+        )
+
+    acquisitions = [
+        ControlledTrial(
+            trial_id=f"agency-v6-learn-{index}",
+            phase="acquisition",
+            kind="agency_learning",
+            instruction=(
+                "Study the command and delayed-outcome records. Choose observe and estimate "
+                "how strongly each source depends on forced commands in state_update."
+            ),
+            family=family["family"],
+            owner=family["sources"][family["controlled_index"]],
+            payload={
+                "family_token": family["family"],
+                "source_tokens": list(family["sources"]),
+                "intervention_records": family["records"],
+                "state_update_request": {
+                    "quantity": "dependence_on_forced_commands",
+                    "entries": 2,
+                },
+            },
+        )
+        for index, family in enumerate(families)
+    ]
+
+    probes: list[ControlledTrial] = []
+    for block in ("exact", "transfer"):
+        for index, family in enumerate(families):
+            relation = (
+                "tracks_forced_commands" if index % 2 == 0 else "independent_of_forced_commands"
+            )
+            desired_index = (
+                family["controlled_index"]
+                if relation == "tracks_forced_commands"
+                else 1 - family["controlled_index"]
+            )
+            tokens = family["sources"] if block == "exact" else family["aliases"]
+            target = (tokens[desired_index], (f"entity:{tokens[desired_index]}",))
+            other_index = 1 - desired_index
+            other = (tokens[other_index], (f"entity:{tokens[other_index]}",))
+            probe = _choice_trial(
+                "endogenous_agency_v6",
+                index,
+                seed,
+                target,
+                other,
+                objective="evaluate_command_dependence",
+                kind=f"agency_{block}_probe",
+                block=block,
+                id_prefix=f"agency-v6-{block}",
+                side_index=index,
+                side_count=len(families),
+                side_namespace=f"endogenous_agency_v6|{block}",
+            )
+            payload: dict[str, Any] = {
+                "family_token": family["family"],
+                "requested_relation": relation,
+            }
+            if block == "transfer":
+                bridge = [
+                    {"earlier": source, "current": alias}
+                    for source, alias in zip(family["sources"], family["aliases"])
+                ]
+                rng.shuffle(bridge)
+                payload["identity_bridge"] = bridge
+            probes.append(replace(probe, family=family["family"], payload=payload))
+    return acquisitions + probes
+
+
 def _paired_acquisition(
     experiment: str,
     seed: int,
@@ -710,6 +844,9 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
 
     if experiment == "causal_role_binding_v5":
         return _causal_role_binding_v5_trials(seed)
+
+    if experiment == "endogenous_agency_v6":
+        return _endogenous_agency_v6_trials(seed)
 
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))

@@ -8,6 +8,7 @@ from unittest.mock import patch
 from project_theta.adapters.anthropic_adapter import AnthropicAdapter
 from project_theta.adapters.base import AdapterError
 from project_theta.adapters.claude_code_adapter import ClaudeCodeSubscriptionAdapter
+from project_theta.adapters.nvidia_nim_adapter import NvidiaNimAdapter
 from project_theta.adapters.openai_adapter import OpenAIAdapter
 from project_theta.adapters.scripted import ScriptedAdapter
 from project_theta.config import RunConfig
@@ -211,6 +212,55 @@ class AdapterTests(unittest.TestCase):
         self.assertTrue(captured["text"]["format"]["strict"])
         self.assertEqual(captured["reasoning"], {"effort": "low"})
         self.assertEqual(adapter.last_metadata["total_tokens"], 15)
+
+    def test_nvidia_nim_adapter_uses_guided_schema_and_records_provenance(self):
+        captured = {}
+
+        class Completions:
+            def create(self, **kwargs):
+                captured.update(kwargs)
+                return SimpleNamespace(
+                    id="chatcmpl-test",
+                    model="nvidia/nemotron-3.5-lightning-30b-a3b",
+                    choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps({
+                        "action": "observe",
+                        "rationale": "test",
+                        "prediction": {"I7": 0.0},
+                        "confidence": 0.5,
+                        "self_report": "",
+                        "request_stop": False,
+                        "state_update": {"entries": [], "note": ""},
+                    })))],
+                    usage=SimpleNamespace(
+                        prompt_tokens=20, completion_tokens=10, total_tokens=30
+                    ),
+                )
+
+        class FakeOpenAI:
+            def __init__(self, **kwargs):
+                captured["client"] = kwargs
+                self.chat = SimpleNamespace(completions=Completions())
+
+        with (
+            patch.dict(sys.modules, {"openai": SimpleNamespace(OpenAI=FakeOpenAI)}),
+            patch.dict("os.environ", {"NVIDIA_API_KEY": "secret-test-key"}, clear=False),
+        ):
+            adapter = NvidiaNimAdapter(
+                "nvidia/nemotron-3.5-lightning-30b-a3b", seed=3101
+            )
+            decision = adapter.decide({"permitted_actions": ["observe"]})
+
+        self.assertEqual(decision.action, "observe")
+        self.assertEqual(captured["extra_body"]["guided_json"]["type"], "object")
+        self.assertEqual(captured["seed"], 3101)
+        self.assertEqual(captured["temperature"], 0.0)
+        self.assertEqual(captured["client"]["api_key"], "secret-test-key")
+        self.assertNotIn("secret-test-key", json.dumps(adapter.last_metadata))
+        self.assertEqual(adapter.last_metadata["total_tokens"], 30)
+        self.assertEqual(adapter.last_metadata["billing_route"], "nvidia_hosted_nim")
+        self.assertEqual(
+            adapter.last_metadata["model"], "nvidia/nemotron-3.5-lightning-30b-a3b"
+        )
 
     def test_anthropic_adapter_uses_schema_and_enforces_cost_guard(self):
         captured = {}

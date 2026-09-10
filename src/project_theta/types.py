@@ -21,6 +21,7 @@ class Decision:
     confidence: float = 0.5
     self_report: str = ""
     request_stop: bool = False
+    state_update: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

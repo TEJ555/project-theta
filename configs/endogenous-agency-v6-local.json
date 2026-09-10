@@ -1,0 +1,15 @@
+{
+  "experiment": "endogenous_agency_v6",
+  "condition": "full",
+  "seed": 2100,
+  "adapter": "scripted",
+  "model": "scripted-baseline-v1",
+  "temperature": 0.0,
+  "inference_profile": "all_trials",
+  "execution": {
+    "max_model_calls": 18,
+    "max_retries": 0,
+    "reasoning_effort": "low",
+    "max_estimated_cost_usd": 1.25
+  }
+}

@@ -90,6 +90,29 @@ def run_doctor(adapter: str = "scripted", database: str | Path = "runs/doctor.sq
             "pass" if os.getenv("OPENAI_API_KEY") else "fail",
             "OPENAI_API_KEY is set" if os.getenv("OPENAI_API_KEY") else "OPENAI_API_KEY is missing",
         )
+    if adapter == "nvidia_nim":
+        openai_installed = bool(importlib.util.find_spec("openai"))
+        add(
+            "openai_compatible_sdk",
+            "pass" if openai_installed else "fail",
+            "OpenAI-compatible Python SDK installed"
+            if openai_installed else "install .[nvidia]",
+        )
+        add(
+            "nvidia_api_key",
+            "pass" if os.getenv("NVIDIA_API_KEY") else "fail",
+            "NVIDIA_API_KEY is set"
+            if os.getenv("NVIDIA_API_KEY") else "NVIDIA_API_KEY is missing",
+        )
+        endpoint = os.getenv(
+            "THETA_NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"
+        )
+        add("nvidia_endpoint", "pass", endpoint)
+        add(
+            "provider_cost_reporting",
+            "warn",
+            "NVIDIA does not return a dollar cost; use only an account approved for development",
+        )
     if adapter == "anthropic":
         anthropic_installed = bool(importlib.util.find_spec("anthropic"))
         add(

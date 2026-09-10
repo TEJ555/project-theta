@@ -9,6 +9,7 @@ from uuid import uuid4
 from .adapters import (
     AnthropicAdapter,
     ClaudeCodeSubscriptionAdapter,
+    NvidiaNimAdapter,
     OllamaAdapter,
     OpenAIAdapter,
     ScriptedAdapter,
@@ -48,6 +49,8 @@ def make_adapter(config: RunConfig) -> ModelAdapter:
         )
     if config.adapter == "ollama":
         return OllamaAdapter(config.model, config.temperature, config.seed, **kwargs)
+    if config.adapter == "nvidia_nim":
+        return NvidiaNimAdapter(config.model, config.temperature, config.seed, **kwargs)
     raise ValueError(f"Unknown adapter: {config.adapter}")
 
 
@@ -292,6 +295,25 @@ class ExperimentHarness:
                         )
                         memory_cue = selected.cue
                         memory_tags = ("probe", *selected.features)
+                    state_update_correct = None
+                    if trial.kind == "agency_learning":
+                        update_entries = decision.state_update.get("entries", [])
+                        scored_entries = [
+                            item
+                            for item in update_entries
+                            if isinstance(item, dict)
+                            and item.get("family") == trial.family
+                            and isinstance(item.get("dependence"), (int, float))
+                        ]
+                        if len(scored_entries) == 2 and len(
+                            {float(item["dependence"]) for item in scored_entries}
+                        ) == 2:
+                            state_update_correct = (
+                                max(scored_entries, key=lambda item: float(item["dependence"]))[
+                                    "source"
+                                ]
+                                == trial.owner
+                            )
                     public_events = (
                         WorldEvent("trial_observation", (0, 0), detail=trial.kind),
                     )
@@ -366,6 +388,7 @@ class ExperimentHarness:
                         "is_correct": decision.action == trial.correct_action if trial.correct_action else None,
                         "confidence": decision.confidence,
                         "invalid_action": invalid_action,
+                        "state_update_correct": state_update_correct,
                         "baseline_signal": signals.get("I7", 0.0),
                         "outcome_signal": outcome_signals.get("I7", 0.0),
                         "perturbation": trial.perturbation,

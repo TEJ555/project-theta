@@ -151,6 +151,25 @@ For isolation, create a dedicated `project-theta` workspace in the Claude Consol
 its monthly spend limit to $5 USD, and create the pilot key inside that workspace. Do
 not use the unrestricted Default Workspace key and do not paste the key into chat.
 
+NVIDIA hosted NIM development endpoint, using a fixed open model:
+
+```powershell
+python -m pip install -e ".[nvidia]"
+.\scripts\run_nvidia_nim_v6_pilot.ps1
+```
+
+The launcher asks privately for an NVIDIA API key, audits the V6 schedule, checks the
+environment, and runs one five-condition development block using the exact model ID
+`nvidia/nemotron-3.5-lightning-30b-a3b`. It allows at most 90 hosted requests and
+removes a newly entered key when the process ends. The key is never stored in Project
+Theta data. NVIDIA does not return a dollar charge with each response, so the project
+records tokens and route provenance but does not invent a cost estimate.
+
+This route is useful for development and cross-model replication because it does not
+use Claude Code routing. It is still a hosted service whose runtime can change. A
+locally stored open-weight model with a recorded file digest remains the stronger
+long-term reproducibility target. See `docs/open-model-routes.md`.
+
 OpenAI (uses the Responses API and structured JSON output):
 
 ```powershell
@@ -161,11 +180,12 @@ theta doctor --adapter openai --db runs/api-doctor.sqlite
 theta run --experiment private_theta --adapter openai --model gpt-5.6 --seeds 11 --max-runs 3 --db runs/api-pilot.sqlite
 ```
 
-Ollama-compatible local server:
+Ollama local server, with no provider requests:
 
 ```powershell
+$env:THETA_OLLAMA_MODEL = "qwen3:8b"
 $env:THETA_ENABLE_MODEL_RUNS = "YES"
-theta run --experiment private_theta --adapter ollama --model llama3.2 --seeds 11 --max-runs 3
+theta run --experiment endogenous_agency_v6 --adapter ollama --model qwen3:8b --seeds 3101 --conditions full,evidence_only,journal_only,permuted_journal,neutral_journal --max-runs 5 --db runs/ollama-v6-development-01.sqlite
 ```
 
 Exact availability and model access vary by account and provider. Keep the model ID,
@@ -227,7 +247,7 @@ src/project_theta/
   analysis.py       paired effects, bootstrap intervals and validity warnings
   storage.py        SQLite schema and provenance logging
   worker.py         resumable, bounded continuous-run worker
-  adapters/         scripted, OpenAI, and Ollama adapters
+  adapters/         scripted, hosted-provider, subscription, and local adapters
 configs/            versioned full/control/ablation conditions
 docs/               research, technical, ethics, schema, metrics
 preregistration/    blank and worked preregistration templates

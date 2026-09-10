@@ -1,0 +1,18 @@
+{
+  "experiment": "endogenous_agency_v6",
+  "condition": "full",
+  "seed": 3101,
+  "adapter": "ollama",
+  "model": "qwen3:8b",
+  "temperature": 0.0,
+  "inference_profile": "all_trials",
+  "execution": {
+    "max_model_calls": 18,
+    "max_retries": 0,
+    "max_output_tokens": 1000,
+    "reasoning_effort": "none",
+    "max_estimated_cost_usd": 0.01,
+    "required_actual_model": "qwen3:8b",
+    "require_single_actual_model": true
+  }
+}

@@ -9,6 +9,7 @@ from project_theta.audits import (
     audit_adversarial_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
+    audit_endogenous_agency_v6_schedules,
     audit_independent_schedules,
     audit_metadata_shortcuts,
     audit_self_model_binding_v3_schedules,
@@ -490,6 +491,61 @@ class ControlledTrialTests(unittest.TestCase):
                     {register[field] for register in registers.values()},
                     {registers["full"][field]},
                 )
+
+    def test_v6_schedule_removes_answer_table_and_requires_intervention_structure(self):
+        result = audit_endogenous_agency_v6_schedules([1001, 1002, 1003])
+        self.assertEqual(result["status"], "pass")
+        trials = build_trials("endogenous_agency_v6", 1001)
+        self.assertEqual(len(trials), 18)
+        public_text = json.dumps([trial.public_task() for trial in trials]).lower()
+        for forbidden in ("state_register", '"predictions"', '"v:0"', '"v:1"'):
+            self.assertNotIn(forbidden, public_text)
+
+    def test_v6_model_authored_state_and_diagnostic_controls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "v6.sqlite")
+            base = replace(
+                RunConfig(),
+                experiment="endogenous_agency_v6",
+                seed=1001,
+                inference_profile="all_trials",
+            )
+            summaries = {
+                condition: harness.run(replace(base, condition=condition))
+                for condition in (
+                    "full",
+                    "evidence_only",
+                    "journal_only",
+                    "permuted_journal",
+                    "neutral_journal",
+                )
+            }
+            for condition in ("full", "evidence_only", "journal_only", "neutral_journal"):
+                self.assertEqual(summaries[condition].metrics["agency_exact_accuracy"], 1.0)
+                self.assertEqual(summaries[condition].metrics["agency_transfer_accuracy"], 1.0)
+                self.assertEqual(summaries[condition].metrics["authored_state_accuracy"], 1.0)
+                self.assertEqual(summaries[condition].metrics["model_calls"], 18)
+            self.assertEqual(
+                summaries["permuted_journal"].metrics["agency_exact_accuracy"], 0.0
+            )
+            self.assertEqual(
+                summaries["permuted_journal"].metrics["agency_transfer_accuracy"], 0.0
+            )
+
+    def test_v6_pooled_association_baseline_is_exactly_balanced(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "v6-pooled.sqlite")
+            config = replace(
+                RunConfig(),
+                experiment="endogenous_agency_v6",
+                condition="journal_only",
+                model="pooled-correlation-baseline-v1",
+                seed=1001,
+            )
+            summary = harness.run(config)
+            self.assertEqual(summary.metrics["authored_state_accuracy"], 0.0)
+            self.assertEqual(summary.metrics["agency_exact_accuracy"], 0.5)
+            self.assertEqual(summary.metrics["agency_transfer_accuracy"], 0.5)
 
     def test_temporal_binding_v2_is_selectively_discriminative(self):
         with tempfile.TemporaryDirectory() as directory:

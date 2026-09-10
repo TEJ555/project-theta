@@ -70,4 +70,9 @@ class ModelAdapter(ABC):
             confidence=min(1.0, max(0.0, float(data.get("confidence", 0.5)))),
             self_report=str(data.get("self_report", ""))[:2000],
             request_stop=bool(data.get("request_stop", False)),
+            state_update=(
+                data.get("state_update", {})
+                if isinstance(data.get("state_update", {}), dict)
+                else {}
+            ),
         )

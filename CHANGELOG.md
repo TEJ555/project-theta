@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+- Add an NVIDIA hosted NIM adapter for fixed open-model development runs.
+- Strengthen Ollama output handling with the full Project Theta decision schema.
+- Add bounded V6 development configurations and an NVIDIA key-safe launcher.
+- Document hosted and local open-model replication routes and their limits.
+- Add an executable V5 answer-table and raw-memory shortcut audit.
+- Reclassify the V5 model pilot as scaffold engineering after the adversarial audit.
+- Block further V5 scaling and require endogenous state formation in V6.
+- Add endogenous agency v6 with intervention-sensitive evidence, model-authored state,
+  fresh alias transfer, reversed objectives and five mediation diagnostics.
+- Add V6 shortcut audits, a pooled-association negative control and a frozen no-provider
+  validation plan.
+
 ## 0.8.2 - 2026-09-08
 
 - Complete all 18 frozen V5 Claude Max development runs and 216 probe decisions.

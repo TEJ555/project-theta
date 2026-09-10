@@ -44,6 +44,8 @@ class ArchitectureConfig:
     continuity_binding_mode: str = "role_bound"  # role_bound | unbound | permuted | reset
     continuity_register_visible: bool = True
     raw_role_memory_visible: bool = True
+    authored_journal_mode: str = "truthful"  # truthful | hidden | permuted | neutral
+    causal_evidence_visible: bool = True
 
 
 @dataclass(frozen=True)
@@ -163,6 +165,14 @@ def apply_condition(config: RunConfig, condition: str) -> RunConfig:
         arch = replace(arch, continuity_register_visible=False)
     elif condition == "raw_role_memory_hidden":
         arch = replace(arch, raw_role_memory_visible=False)
+    elif condition == "evidence_only":
+        arch = replace(arch, authored_journal_mode="hidden")
+    elif condition == "journal_only":
+        arch = replace(arch, causal_evidence_visible=False)
+    elif condition == "permuted_journal":
+        arch = replace(arch, authored_journal_mode="permuted")
+    elif condition == "neutral_journal":
+        arch = replace(arch, authored_journal_mode="neutral")
     else:
         raise ValueError(f"Unknown condition: {condition}")
     return replace(config, condition=condition, architecture=arch, body=body)

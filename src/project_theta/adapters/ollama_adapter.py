@@ -6,7 +6,7 @@ from time import monotonic
 from typing import Any
 from urllib import request
 
-from ..prompts import AGENT_INSTRUCTIONS
+from ..prompts import AGENT_INSTRUCTIONS, DECISION_SCHEMA
 from .base import AdapterError, ModelAdapter
 
 
@@ -25,7 +25,7 @@ class OllamaAdapter(ModelAdapter):
             "system": AGENT_INSTRUCTIONS,
             "prompt": json.dumps(context, sort_keys=True),
             "stream": False,
-            "format": "json",
+            "format": DECISION_SCHEMA,
             "options": {"temperature": self.temperature, "seed": self.seed},
         }
         req = request.Request(
@@ -43,6 +43,14 @@ class OllamaAdapter(ModelAdapter):
                 "output_tokens": result.get("eval_count"),
                 "total_duration_ns": result.get("total_duration"),
                 "model": result.get("model", self.model),
+                "requested_model": self.model,
+                "seed": self.seed,
+                "temperature_requested": self.temperature,
+                "temperature_applied": self.temperature,
+                "structured_output": "json_schema",
+                "endpoint_host": "localhost",
+                "billing_route": "local_ollama",
+                "provider_reported_cost_usd": 0.0,
             }
             return self.decision_from_mapping(json.loads(result["response"]))
         except Exception as exc:

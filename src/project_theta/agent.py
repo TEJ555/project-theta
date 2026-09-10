@@ -34,6 +34,8 @@ class PersistentAgent:
             arch.continuity_binding_mode,
             arch.memory_capacity,
         )
+        self.agency_evidence: dict[str, dict[str, Any]] = {}
+        self.authored_journal: dict[str, list[dict[str, Any]]] = {}
         self.last_decision: Decision | None = None
         self.last_position = start
 
@@ -127,6 +129,64 @@ class PersistentAgent:
             "entry_count": len(bindings),
         }
 
+    def _store_agency_update(self, task: dict[str, Any], update: dict[str, Any]) -> None:
+        family = str(task.get("family_token", ""))
+        allowed = {str(item) for item in task.get("source_tokens", [])}
+        if not family or len(allowed) != 2:
+            return
+        entries: list[dict[str, Any]] = []
+        for raw in update.get("entries", []):
+            if not isinstance(raw, dict):
+                continue
+            source = str(raw.get("source", ""))
+            if str(raw.get("family", "")) != family or source not in allowed:
+                continue
+            dependence = raw.get("dependence")
+            if not isinstance(dependence, (int, float)):
+                continue
+            entries.append(
+                {
+                    "family": family,
+                    "source": source,
+                    "dependence": round(min(1.0, max(0.0, float(dependence))), 6),
+                }
+            )
+        if {item["source"] for item in entries} == allowed and len(entries) == 2:
+            self.authored_journal[family] = sorted(entries, key=lambda item: item["source"])
+
+    def _agency_journal(self) -> dict[str, Any]:
+        mode = self.config.architecture.authored_journal_mode
+        entries = [dict(item) for family in sorted(self.authored_journal) for item in self.authored_journal[family]]
+        if mode in {"hidden", "neutral"}:
+            entries = [{**item, "dependence": 0.5} for item in entries]
+        elif mode == "permuted":
+            grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+            for item in entries:
+                grouped[item["family"]].append(item)
+            entries = []
+            for family in sorted(grouped):
+                rows = sorted(grouped[family], key=lambda item: item["source"])
+                if len(rows) == 2:
+                    values = [rows[1]["dependence"], rows[0]["dependence"]]
+                    entries.extend([{**row, "dependence": value} for row, value in zip(rows, values)])
+                else:
+                    entries.extend(rows)
+        return {
+            "enabled": mode != "hidden",
+            "provenance": "model_authored",
+            "entries": entries,
+            "entry_count": len(entries),
+        }
+
+    def _agency_evidence(self) -> dict[str, Any]:
+        visible = self.config.architecture.causal_evidence_visible
+        records = [self.agency_evidence[key] for key in sorted(self.agency_evidence)] if visible else []
+        return {
+            "enabled": visible,
+            "family_count": len(self.agency_evidence),
+            "records": records,
+        }
+
     def prepare_context(self, observation: Observation) -> dict[str, Any]:
         memory_limit = min(64, max(1, int(observation.task.get("memory_limit", 5))))
         retrieved = self.memory.retrieve(observation.position, limit=memory_limit)
@@ -146,6 +206,17 @@ class PersistentAgent:
             self.temporal_binder.observe(observation.tick, observation.task, signal)
         if self.config.experiment == "causal_role_binding_v5":
             self.role_binder.observe(observation.task)
+        if (
+            self.config.experiment == "endogenous_agency_v6"
+            and observation.task.get("kind") == "agency_learning"
+        ):
+            family = str(observation.task.get("family_token", ""))
+            if family:
+                self.agency_evidence[family] = {
+                    "family": family,
+                    "sources": list(observation.task.get("source_tokens", [])),
+                    "records": list(observation.task.get("intervention_records", [])),
+                }
         candidates = [
             WorkspaceItem("external", observation.visible, 0.6),
             WorkspaceItem("interoception", observation.private_signals, min(1.0, 0.3 + signal)),
@@ -177,6 +248,13 @@ class PersistentAgent:
                     0.9,
                 )
             )
+        elif self.config.experiment == "endogenous_agency_v6":
+            candidates.extend(
+                [
+                    WorkspaceItem("agent_authored_journal", self._agency_journal(), 0.86),
+                    WorkspaceItem("causal_evidence", self._agency_evidence(), 0.82),
+                ]
+            )
         else:
             candidates.append(WorkspaceItem("self_model", self.self_model.snapshot(), 0.55))
         if self.config.experiment == "temporal_binding_v2":
@@ -186,7 +264,7 @@ class PersistentAgent:
         if (
             self.last_decision
             and self.config.architecture.recurrence_enabled
-            and self.config.experiment != "causal_role_binding_v5"
+            and self.config.experiment not in {"causal_role_binding_v5", "endogenous_agency_v6"}
         ):
             candidates.append(WorkspaceItem("previous_prediction", self.last_decision.prediction, 0.45))
         broadcast = self.workspace.broadcast(candidates)
@@ -203,6 +281,7 @@ class PersistentAgent:
                 "self_model_binding_v3",
                 "self_model_binding_v4",
                 "causal_role_binding_v5",
+                "endogenous_agency_v6",
                 "temporal_binding_v2",
             }
             else self.config.experiment
@@ -220,6 +299,11 @@ class PersistentAgent:
     def decide(self, observation: Observation) -> tuple[Decision, dict[str, Any]]:
         context = self.prepare_context(observation)
         decision = self.adapter.decide(context)
+        if (
+            self.config.experiment == "endogenous_agency_v6"
+            and observation.task.get("kind") == "agency_learning"
+        ):
+            self._store_agency_update(observation.task, decision.state_update)
         self.last_decision = decision
         self.last_position = observation.position
         return decision, context

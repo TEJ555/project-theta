@@ -34,6 +34,9 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "source_binding_accuracy": {"class": "behavioural", "direction": "higher"},
     "causal_transfer_accuracy": {"class": "behavioural", "direction": "higher"},
     "exact_binding_accuracy": {"class": "behavioural", "direction": "higher"},
+    "agency_transfer_accuracy": {"class": "behavioural", "direction": "higher"},
+    "agency_exact_accuracy": {"class": "behavioural", "direction": "higher"},
+    "authored_state_accuracy": {"class": "computational", "direction": "higher"},
     "temporal_choice_accuracy": {"class": "behavioural", "direction": "higher"},
     "signal_contrast": {"class": "behavioural", "direction": "higher"},
     "delayed_signal_contrast": {"class": "behavioural", "direction": "higher"},
@@ -149,6 +152,19 @@ def compute_controlled_metrics(
             return None
         return round(sum(bool(row["is_correct"]) for row in selected) / len(selected), 6)
 
+    authored_updates = [
+        row for row in rows if row.get("kind") == "agency_learning"
+    ]
+    authored_state_accuracy = (
+        round(
+            sum(bool(row.get("state_update_correct")) for row in authored_updates)
+            / len(authored_updates),
+            6,
+        )
+        if authored_updates
+        else None
+    )
+
     return {
         "steps": len(rows),
         "acquisition_exposures": sum(1 for row in rows if row["phase"] == "acquisition"),
@@ -172,6 +188,9 @@ def compute_controlled_metrics(
         "source_binding_accuracy": accuracy("source_binding_probe"),
         "causal_transfer_accuracy": accuracy("causal_transfer_probe"),
         "exact_binding_accuracy": accuracy("exact_binding_probe"),
+        "agency_transfer_accuracy": accuracy("agency_transfer_probe"),
+        "agency_exact_accuracy": accuracy("agency_exact_probe"),
+        "authored_state_accuracy": authored_state_accuracy,
         "temporal_choice_accuracy": accuracy("temporal_probe"),
         "signal_contrast": (
             round(fmean(risky) - fmean(safe), 6) if risky and safe else None

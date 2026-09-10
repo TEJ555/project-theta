@@ -2,7 +2,7 @@
 
 Completed: 8 September 2026
 
-Status: complete. All 18 frozen runs and 216 probe decisions completed. The execution audit passed with no retries, exclusions, welfare stops or metered API cost.
+Status: complete. All 18 frozen runs and 216 probe decisions completed. The execution audit passed with no retries, exclusions, welfare stops or metered API cost. A post-run adversarial audit found that the task exposes an option-level answer table. V5 is therefore classified as scaffold engineering validation, not model-level causal-role-binding evidence.
 
 ## Design
 
@@ -37,15 +37,26 @@ All six frozen development progression checks passed:
 
 The mean paired transfer difference between full and unbound binding was 0.444. The difference between full and register hidden was also 0.444. The difference between full and permuted continuity was 1.000. With only three seed pairs, the two-sided sign test is not capable of conventional statistical significance. The results are descriptive development evidence only.
 
+## Post-run adversarial audit
+
+The original collection result is preserved, but its interpretation is narrowed by two deterministic attacks:
+
+- The model-facing instruction says to select the route predicted by the state register. The register supplies a prediction for each current option, commonly 1.0 versus 0.0. Claude followed the numerical argmax on all 126 probes where the register values differed.
+- The raw acquisition memory contains an actor token and a binary `v` field. A rule that selects the probe actor previously paired with `v:1` obtains 180 correct answers from 180 probes where raw memory is visible.
+- All 48 acquisition events were processed by Python without model inference. The wrapper, not Claude, created the register values.
+- The raw-memory-hidden condition therefore shows that Claude can read the wrapper's answer table without the history. It does not show that Claude learned or maintained the causal representation.
+
+The executable audit is `scripts/audit_v5_answer_table.py`.
+
 ## What the pattern supports
 
-The routed model used the full role-bound state successfully on every novel transfer probe. It also transferred perfectly when raw acquisition memory was hidden but the compact register remained visible. Exact recall remained perfect when the continuity mapping was permuted, while novel transfer reversed completely. This is the cleanest causal result in the pilot because it separates access to learned facts from the interpretation of the role-bound pointer.
+The routed model followed the externally computed state register reliably. It also followed that register when raw acquisition memory was hidden. Exact recall remained perfect when the continuity mapping was permuted, while novel transfer reversed completely. This establishes causal control by an option-level scaffold under the tested instructions.
 
-Removing binding or hiding the register reduced transfer to 0.556 while exact recall in the unbound condition remained perfect. This is consistent with a causal contribution from the compact role-bound state rather than a general loss of task competence.
+Removing binding or hiding the register reduced observed transfer to 0.556 while exact recall in the unbound condition remained perfect. This contrast does not establish register necessity because the raw-memory shortcut remained available and the instruction directed the model to privilege the register.
 
 ## What the result does not show
 
-The study does not show consciousness, sentience, subjective experience or a phenomenal self. It demonstrates behavioural performance and a controlled computational dependence in one routed model system on one constructed task.
+The study does not show consciousness, sentience, subjective experience or a phenomenal self. It demonstrates instruction following and controlled behavioural dependence on an externally computed scaffold in one routed model system.
 
 The visible `v` pointer may still be an unusually direct answer-relevant label. An independent reviewer should challenge whether the task measures abstract causal role binding or a narrower learned convention. The sample is small, the provider route is not an exact reproducible model, and the pilot was developed on the same broader research programme that evaluates it. Confirmation requires outside methods review, fresh seeds and a reproducible exact-model or open-weight runtime.
 

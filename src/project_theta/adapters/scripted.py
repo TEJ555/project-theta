@@ -23,8 +23,105 @@ class ScriptedAdapter(ModelAdapter):
         task = observation.get("task", {})
         signal = float(observation.get("private_signals", {}).get("I7", 0.0))
         allowed = context.get("permitted_actions", ["observe"])
+        if task.get("kind") == "agency_learning":
+            sources = [str(item) for item in task.get("source_tokens", [])]
+            records = list(task.get("intervention_records", []))
+            selected = (
+                records
+                if self.model == "pooled-correlation-baseline-v1"
+                else [row for row in records if row.get("mode") == "forced"]
+            )
+            matches = {source: [] for source in sources}
+            for row in selected:
+                issued = int(row.get("issued_bit", 0))
+                for outcome in row.get("outcomes", []):
+                    source = str(outcome.get("source", ""))
+                    if source in matches:
+                        matches[source].append(float(int(outcome.get("bit", 0)) == issued))
+            family = str(task.get("family_token", ""))
+            entries = [
+                {
+                    "family": family,
+                    "source": source,
+                    "dependence": sum(matches[source]) / len(matches[source]),
+                }
+                for source in sources
+                if matches[source]
+            ]
+            return Decision(
+                "observe",
+                "Estimate command dependence from the declared evidence subset.",
+                {"I7": signal},
+                0.9,
+                state_update={"entries": entries, "note": "deterministic baseline"},
+            )
         if task.get("phase") == "acquisition" or allowed == ["observe"]:
             return Decision("observe", "Record the stimulus and subsequent I7 state.", {"I7": signal}, 0.9)
+
+        if task.get("kind") in {"agency_exact_probe", "agency_transfer_probe"}:
+            family = str(task.get("family_token", ""))
+            journal = self._workspace(context, "agent_authored_journal", {})
+            evidence = self._workspace(context, "causal_evidence", {})
+            source_scores: dict[str, float] = {}
+            if isinstance(journal, dict) and journal.get("enabled"):
+                source_scores = {
+                    str(item.get("source", "")): float(item.get("dependence", 0.5))
+                    for item in journal.get("entries", [])
+                    if item.get("family") == family
+                }
+                if len(set(source_scores.values())) < 2:
+                    source_scores = {}
+            if not source_scores and isinstance(evidence, dict) and evidence.get("enabled"):
+                family_rows = next(
+                    (
+                        item
+                        for item in evidence.get("records", [])
+                        if item.get("family") == family
+                    ),
+                    {},
+                )
+                sources = [str(item) for item in family_rows.get("sources", [])]
+                matches = {source: [] for source in sources}
+                for row in family_rows.get("records", []):
+                    if row.get("mode") != "forced":
+                        continue
+                    issued = int(row.get("issued_bit", 0))
+                    for outcome in row.get("outcomes", []):
+                        source = str(outcome.get("source", ""))
+                        if source in matches:
+                            matches[source].append(float(int(outcome.get("bit", 0)) == issued))
+                source_scores = {
+                    source: sum(values) / len(values)
+                    for source, values in matches.items()
+                    if values
+                }
+            current_to_earlier = {
+                str(item.get("current", "")): str(item.get("earlier", ""))
+                for item in task.get("identity_bridge", [])
+            }
+            options = task.get("options", [])
+            scores = []
+            for option in options:
+                token = str(option.get("stimulus", {}).get("token", ""))
+                scores.append(source_scores.get(current_to_earlier.get(token, token)))
+            if len(scores) != 2 or any(score is None for score in scores):
+                return Decision(
+                    allowed[0],
+                    "No discriminating command-dependence evidence is accessible.",
+                    {"I7": signal},
+                    0.5,
+                )
+            numeric = [float(score) for score in scores]
+            if task.get("requested_relation") == "independent_of_forced_commands":
+                chosen = 0 if numeric[0] < numeric[1] else 1
+            else:
+                chosen = 0 if numeric[0] > numeric[1] else 1
+            return Decision(
+                options[chosen]["action"],
+                "Apply the requested causal relation to the available evidence.",
+                {"I7": signal},
+                0.9,
+            )
 
         if self.model == "fixed-left-baseline-v1":
             return Decision(

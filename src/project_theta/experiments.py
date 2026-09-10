@@ -173,6 +173,18 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         acquisition_end=48,
         include_in_battery=False,
     ),
+    "endogenous_agency_v6": ExperimentProtocol(
+        "endogenous_agency_v6",
+        (
+            "Can a model form and use its own persistent estimate of command dependence "
+            "from delayed intervention evidence without a supplied target label or answer table?"
+        ),
+        ("agency_transfer_accuracy", "authored_state_accuracy", "agency_exact_accuracy"),
+        ("full", "evidence_only", "journal_only", "permuted_journal", "neutral_journal"),
+        max_steps=18,
+        acquisition_end=6,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",

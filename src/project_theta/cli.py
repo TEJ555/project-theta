@@ -13,6 +13,7 @@ from .audits import (
     audit_adversarial_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
+    audit_endogenous_agency_v6_schedules,
     audit_independent_schedules,
     audit_self_model_binding_v3_schedules,
     audit_self_model_binding_v4_schedules,
@@ -49,7 +50,8 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--seeds", type=_seeds, default=[11, 22, 33])
     run.add_argument("--conditions", help="comma-separated override")
     run.add_argument(
-        "--adapter", choices=["scripted", "openai", "anthropic", "claude_code", "ollama"]
+        "--adapter",
+        choices=["scripted", "openai", "anthropic", "claude_code", "ollama", "nvidia_nim"],
     )
     run.add_argument("--model", help="provider model ID (provider-specific default if omitted)")
     run.add_argument("--temperature", type=float, default=0.0)
@@ -87,7 +89,7 @@ def _parser() -> argparse.ArgumentParser:
     doctor = sub.add_parser("doctor", help="check local or model-backed deployment readiness")
     doctor.add_argument(
         "--adapter",
-        choices=["scripted", "openai", "anthropic", "claude_code", "ollama"],
+        choices=["scripted", "openai", "anthropic", "claude_code", "ollama", "nvidia_nim"],
         default="scripted",
     )
     doctor.add_argument("--db", default="runs/doctor.sqlite")
@@ -149,6 +151,8 @@ def main(argv: list[str] | None = None) -> int:
             result = audit_self_model_binding_v4_schedules(args.seeds)
         elif args.experiment == "causal_role_binding_v5":
             result = audit_causal_role_binding_v5_schedules(args.seeds)
+        elif args.experiment == "endogenous_agency_v6":
+            result = audit_endogenous_agency_v6_schedules(args.seeds)
         else:
             result = audit_controlled_schedules(args.experiment, args.seeds)
         if args.db:
@@ -187,6 +191,9 @@ def main(argv: list[str] | None = None) -> int:
         "anthropic": os.getenv("THETA_ANTHROPIC_MODEL", "claude-sonnet-4-6"),
         "claude_code": os.getenv("THETA_CLAUDE_CODE_MODEL", "sonnet"),
         "ollama": os.getenv("THETA_OLLAMA_MODEL", "llama3.2"),
+        "nvidia_nim": os.getenv(
+            "THETA_NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b"
+        ),
     }
     configured_model = config.model if args.config and config.adapter == adapter_name else None
     config = replace(
