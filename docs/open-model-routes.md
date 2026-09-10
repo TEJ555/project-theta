@@ -78,8 +78,7 @@ After installing Ollama, pull the model and run a one-seed development block:
 
 ```powershell
 ollama pull qwen3:8b
-$env:THETA_ENABLE_MODEL_RUNS = "YES"
-theta run --config configs/ollama-v6-development.json --experiment endogenous_agency_v6 --seeds 3101 --conditions full,evidence_only,journal_only,permuted_journal,neutral_journal --max-runs 5 --db runs/ollama-v6-development-01.sqlite
+.\scripts\run_ollama_v6_pilot.ps1
 ```
 
 ## Interpretation

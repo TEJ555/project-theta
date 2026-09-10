@@ -183,9 +183,8 @@ theta run --experiment private_theta --adapter openai --model gpt-5.6 --seeds 11
 Ollama local server, with no provider requests:
 
 ```powershell
-$env:THETA_OLLAMA_MODEL = "qwen3:8b"
-$env:THETA_ENABLE_MODEL_RUNS = "YES"
-theta run --experiment endogenous_agency_v6 --adapter ollama --model qwen3:8b --seeds 3101 --conditions full,evidence_only,journal_only,permuted_journal,neutral_journal --max-runs 5 --db runs/ollama-v6-development-01.sqlite
+ollama pull qwen3:8b
+.\scripts\run_ollama_v6_pilot.ps1
 ```
 
 The Ollama adapter sends the full decision JSON schema, refuses to run if the named

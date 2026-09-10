@@ -6,6 +6,7 @@
 - Strengthen Ollama output handling with the full decision schema, output cap and
   automatic model-digest provenance.
 - Add bounded V6 development configurations and an NVIDIA key-safe launcher.
+- Add a bounded one-command local Ollama V6 launcher.
 - Document hosted and local open-model replication routes and their limits.
 - Add an executable V5 answer-table and raw-memory shortcut audit.
 - Reclassify the V5 model pilot as scaffold engineering after the adversarial audit.
