@@ -3,17 +3,17 @@
   "condition": "full",
   "seed": 3101,
   "adapter": "nvidia_nim",
-  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "model": "openai/gpt-oss-20b",
   "temperature": 0.0,
   "inference_profile": "all_trials",
   "execution": {
-    "request_timeout_seconds": 120.0,
+    "request_timeout_seconds": 300.0,
     "max_model_calls": 18,
     "max_retries": 4,
-    "max_output_tokens": 4000,
-    "reasoning_effort": "none",
+    "max_output_tokens": 4096,
+    "reasoning_effort": "low",
     "max_estimated_cost_usd": 0.25,
-    "required_actual_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "required_actual_model": "openai/gpt-oss-20b",
     "require_single_actual_model": true
   }
 }

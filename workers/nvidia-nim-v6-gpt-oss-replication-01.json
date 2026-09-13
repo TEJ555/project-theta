@@ -1,0 +1,35 @@
+{
+  "worker_id": "nvidia-nim-v6-gpt-oss-replication-01",
+  "database": "runs/nvidia-nim-v6-gpt-oss-replication-01.sqlite",
+  "base_config": "configs/nvidia-nim-v6-gpt-oss-development.json",
+  "experiment": "endogenous_agency_v6",
+  "conditions": [
+    "full",
+    "evidence_only",
+    "journal_only",
+    "permuted_journal",
+    "neutral_journal"
+  ],
+  "seeds": [
+    3329,
+    3350,
+    3221,
+    3265,
+    3657,
+    3893,
+    3363,
+    3242,
+    3324,
+    3749,
+    4003,
+    3417,
+    3268,
+    3397,
+    3838
+  ],
+  "adapter": "nvidia_nim",
+  "model": "openai/gpt-oss-20b",
+  "temperature": 0.0,
+  "max_total_runs": 75,
+  "max_attempts_per_job": 2
+}

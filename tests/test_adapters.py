@@ -214,7 +214,7 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(captured["reasoning"], {"effort": "low"})
         self.assertEqual(adapter.last_metadata["total_tokens"], 15)
 
-    def test_nvidia_nim_adapter_uses_guided_schema_and_records_provenance(self):
+    def test_nvidia_nim_adapter_uses_json_mode_and_records_provenance(self):
         captured = {}
 
         class Completions:
@@ -252,16 +252,62 @@ class AdapterTests(unittest.TestCase):
             decision = adapter.decide({"permitted_actions": ["observe"]})
 
         self.assertEqual(decision.action, "observe")
-        self.assertEqual(captured["extra_body"]["guided_json"]["type"], "object")
+        self.assertEqual(captured["response_format"], {"type": "json_object"})
+        self.assertNotIn("additionalProperties", captured["messages"][1]["content"])
+        self.assertEqual(
+            captured["extra_body"]["chat_template_kwargs"],
+            {"enable_thinking": False},
+        )
         self.assertEqual(captured["seed"], 3101)
         self.assertEqual(captured["temperature"], 0.0)
         self.assertEqual(captured["client"]["api_key"], "secret-test-key")
         self.assertNotIn("secret-test-key", json.dumps(adapter.last_metadata))
         self.assertEqual(adapter.last_metadata["total_tokens"], 30)
         self.assertEqual(adapter.last_metadata["billing_route"], "nvidia_hosted_nim")
+        self.assertFalse(adapter.last_metadata["thinking_enabled"])
         self.assertEqual(
             adapter.last_metadata["model"], "nvidia/nemotron-3.5-lightning-30b-a3b"
         )
+
+        with (
+            patch.dict(sys.modules, {"openai": SimpleNamespace(OpenAI=FakeOpenAI)}),
+            patch.dict("os.environ", {"NVIDIA_API_KEY": "secret-test-key"}, clear=False),
+        ):
+            glm_adapter = NvidiaNimAdapter("z-ai/glm-5.3-flash", seed=3101)
+        self.assertEqual(
+            glm_adapter.request_extra_body,
+            {"thinking": {"type": "enabled"}},
+        )
+        self.assertTrue(glm_adapter.thinking_enabled)
+
+        with (
+            patch.dict(sys.modules, {"openai": SimpleNamespace(OpenAI=FakeOpenAI)}),
+            patch.dict("os.environ", {"NVIDIA_API_KEY": "secret-test-key"}, clear=False),
+        ):
+            gpt_oss_adapter = NvidiaNimAdapter(
+                "openai/gpt-oss-20b", seed=3101, reasoning_effort="low"
+            )
+        self.assertEqual(
+            gpt_oss_adapter.request_extra_body,
+            {"reasoning_effort": "low"},
+        )
+        self.assertTrue(gpt_oss_adapter.thinking_enabled)
+
+        valid = {
+            "action": "observe",
+            "rationale": "test",
+            "prediction": {"I7": 0.0},
+            "confidence": 0.5,
+            "self_report": "",
+            "request_stop": False,
+            "state_update": {"entries": [], "note": ""},
+        }
+        NvidiaNimAdapter._validate_payload(valid)
+        for field, value in (("confidence", float("nan")), ("confidence", 2.0)):
+            invalid = dict(valid)
+            invalid[field] = value
+            with self.assertRaises(AdapterError):
+                NvidiaNimAdapter._validate_payload(invalid)
 
     def test_ollama_adapter_requires_digest_and_uses_schema(self):
         captured = []

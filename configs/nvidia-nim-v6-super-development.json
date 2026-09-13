@@ -3,7 +3,7 @@
   "condition": "full",
   "seed": 3101,
   "adapter": "nvidia_nim",
-  "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "model": "nvidia/nemotron-3-super-120b-a12b",
   "temperature": 0.0,
   "inference_profile": "all_trials",
   "execution": {
@@ -13,7 +13,7 @@
     "max_output_tokens": 4000,
     "reasoning_effort": "none",
     "max_estimated_cost_usd": 0.25,
-    "required_actual_model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+    "required_actual_model": "nvidia/nemotron-3-super-120b-a12b",
     "require_single_actual_model": true
   }
 }

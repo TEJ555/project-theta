@@ -1,6 +1,6 @@
 # Study registry
 
-Last updated: 10 September 2026
+Last updated: 13 September 2026
 
 This registry is the source of truth for public study status. A completed run count is not the same as a valid confirmatory result.
 
@@ -24,6 +24,8 @@ This registry is the source of truth for public study status. A completed run co
 | V5 external review | Not started | Methods review | Technical controls are present. An outside reviewer must challenge their fairness and construct validity before any model-backed pilot. |
 | V5 model-backed pilot | Complete, internally invalidated | Scaffold engineering | All six numerical progression checks passed, but a post-run audit found an option-level answer table and a perfect raw-memory shortcut. Do not scale or interpret as model-level role binding. |
 | V6 endogenous agency local validation | Complete | Engineering validation | All 500 primary and 200 pooled-baseline runs completed. Schedule and execution audits passed. The pooled-correlation baseline scored 0.500. No provider evidence yet. |
-| V6 NVIDIA NIM development pilot | Frozen, ready | Development | One seed, five conditions and 90 maximum hosted requests on exact model ID `nvidia/nemotron-3.5-lightning-30b-a3b`. |
+| V6 NVIDIA route screening | Complete | Scaffold engineering | GLM 5.3 Flash scored 0.000 and Nemotron Super 120B scored 0.500 on the full-condition competence gate. Invalid or retired routes were not scaled. |
+| V6 GPT OSS development pilot | Complete | Development | One seed and five conditions completed on exact model `openai/gpt-oss-20b`. Full 1.000, evidence only 0.000, journal only 0.667, permuted journal 0.667, neutral journal 0.500. This inspected pilot is exploratory. |
+| V6 GPT OSS internal replication 01 | Frozen, ready | Development replication | Fifteen fresh paired seeds, five conditions, exactly balanced condition order, and 1,350 maximum hosted requests. Not confirmatory without outside methods review. |
 
 All studies concern behavioural or computational indicators. None measures phenomenal consciousness.
