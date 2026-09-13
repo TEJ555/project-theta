@@ -33,16 +33,32 @@ full run in the five-condition pilot scored 12 of 12. This difference shows that
 single seed and nominally deterministic decoding do not remove all run-level
 variation on a hosted service.
 
-## What the pilot suggests
+## Post-pilot diagnostic finding
 
-The model can solve the V6 causal transfer task when raw evidence and its truthful
-self-authored journal are both available. Performance dropped when the journal was
-removed, neutralised, or covertly permuted. The journal-only condition remained above
-chance in this one run, which is consistent with the journal retaining useful state.
+The headline transfer scores do not validate the intended mechanism. Authored-state
+accuracy was only 0.167 in the full run. It was 0.000 in the separate competence gate.
+The model therefore reached high transfer accuracy without correctly identifying the
+command-dependent source in its journal.
 
-This is the architecture-sensitive pattern the task was designed to look for. It is
-only a reason to replicate. One seed cannot establish stability, rule out hidden
-prompt interactions, or support a general claim about model agency.
+A source audit then found contradictory V6 probe wording. The generic instruction
+asked for the route most causally associated with change, while half of the payloads
+asked for the route independent of forced commands. A model could follow either cue
+and appear systematically correct, wrong, or at chance. The deterministic scripted
+baseline followed the payload directly, so the earlier local validation did not catch
+the natural-language conflict.
+
+Subsequent full-condition checks reinforced the failure:
+
+| Route or format | Transfer accuracy | Authored-state accuracy | Outcome |
+|---|---:|---:|---|
+| GPT OSS 20B, original JSON mode gate | 0.833 | 0.000 | Mechanism failed |
+| GPT OSS 20B, original JSON mode pilot | 1.000 | 0.167 | Mechanism failed |
+| GPT OSS 20B, strict schema | 0.167 | 0.333 | Competence gate failed |
+| Nemotron Super 120B | 0.500 | not promoted | Competence gate failed |
+| Nemotron Ultra 550B | 0.500 | 0.167 | Competence gate failed |
+
+The intended V6 interpretation is therefore internally invalidated. Its data remain
+preserved as development evidence about the failure mode.
 
 ## What the pilot does not show
 
@@ -50,9 +66,16 @@ The result does not show experience, awareness, feeling, suffering, sentience, o
 phenomenal consciousness. A non-conscious causal-learning algorithm can solve the
 task. The observations are behavioural and computational indicators only.
 
-## Next decision
+## Replication outcome and next decision
 
-A fresh 15-seed internal replication is frozen separately. It balances condition
-order exactly and treats seeds as the paired units. The pilot seed is excluded from
-all replication estimates.
+The frozen 15-seed replication started on its committed plan. Seed 3329 full completed,
+then the evidence-only run returned an out-of-range dependence value after three valid
+decisions. The strict preregistered rule stopped the worker. No replication effect was
+calculated. After the wording and authored-state failures were identified, the worker
+was retired rather than resumed.
 
+V7 preserves the causal task but makes both requested relations explicit in the probe
+instruction. Its first GPT OSS 20B full-condition run completed and audited, but scored
+0.500 transfer accuracy and 0.167 authored-state accuracy. V7 is not eligible for
+scaling in its current form. The next protocol needs an easier-to-validate acquisition
+stage and active interventions chosen by the agent.

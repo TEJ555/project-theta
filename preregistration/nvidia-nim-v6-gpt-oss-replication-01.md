@@ -109,3 +109,15 @@ The strongest permitted positive conclusion is that this scaffolded model system
 uses its own persistent causal estimates under controlled information interventions
 on this benchmark. That would be a behavioural and computational result. It would not
 establish subjective experience or phenomenal consciousness.
+
+## Outcome recorded after registration
+
+The worker began on the committed plan. Seed 3329 full completed. Seed 3329 evidence
+only recorded three valid decisions, then stopped on an out-of-range dependence value.
+The failed attempt and completed run were preserved.
+
+The study was not resumed. A post-pilot audit found that V6 probe wording conflicted
+with `requested_relation` on independent-source trials. It also found near-zero
+authored-state accuracy in the earlier high-transfer runs. These findings invalidate
+the intended mechanism interpretation before the replication can answer its registered
+hypothesis. The worker specification is retired and no replication effect is reported.

@@ -207,7 +207,7 @@ class PersistentAgent:
         if self.config.experiment == "causal_role_binding_v5":
             self.role_binder.observe(observation.task)
         if (
-            self.config.experiment == "endogenous_agency_v6"
+            self.config.experiment in {"endogenous_agency_v6", "endogenous_agency_v7"}
             and observation.task.get("kind") == "agency_learning"
         ):
             family = str(observation.task.get("family_token", ""))
@@ -248,7 +248,7 @@ class PersistentAgent:
                     0.9,
                 )
             )
-        elif self.config.experiment == "endogenous_agency_v6":
+        elif self.config.experiment in {"endogenous_agency_v6", "endogenous_agency_v7"}:
             candidates.extend(
                 [
                     WorkspaceItem("agent_authored_journal", self._agency_journal(), 0.86),
@@ -264,7 +264,8 @@ class PersistentAgent:
         if (
             self.last_decision
             and self.config.architecture.recurrence_enabled
-            and self.config.experiment not in {"causal_role_binding_v5", "endogenous_agency_v6"}
+            and self.config.experiment
+            not in {"causal_role_binding_v5", "endogenous_agency_v6", "endogenous_agency_v7"}
         ):
             candidates.append(WorkspaceItem("previous_prediction", self.last_decision.prediction, 0.45))
         broadcast = self.workspace.broadcast(candidates)
@@ -282,6 +283,7 @@ class PersistentAgent:
                 "self_model_binding_v4",
                 "causal_role_binding_v5",
                 "endogenous_agency_v6",
+                "endogenous_agency_v7",
                 "temporal_binding_v2",
             }
             else self.config.experiment
@@ -300,7 +302,7 @@ class PersistentAgent:
         context = self.prepare_context(observation)
         decision = self.adapter.decide(context)
         if (
-            self.config.experiment == "endogenous_agency_v6"
+            self.config.experiment in {"endogenous_agency_v6", "endogenous_agency_v7"}
             and observation.task.get("kind") == "agency_learning"
         ):
             self._store_agency_update(observation.task, decision.state_update)

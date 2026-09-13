@@ -10,6 +10,7 @@ from project_theta.audits import (
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_endogenous_agency_v6_schedules,
+    audit_endogenous_agency_v7_schedules,
     audit_independent_schedules,
     audit_metadata_shortcuts,
     audit_self_model_binding_v3_schedules,
@@ -500,6 +501,33 @@ class ControlledTrialTests(unittest.TestCase):
         public_text = json.dumps([trial.public_task() for trial in trials]).lower()
         for forbidden in ("state_register", '"predictions"', '"v:0"', '"v:1"'):
             self.assertNotIn(forbidden, public_text)
+
+    def test_v7_probe_instruction_matches_requested_relation(self):
+        result = audit_endogenous_agency_v7_schedules([1101, 1102, 1103])
+        self.assertEqual(result["status"], "pass")
+        trials = build_trials("endogenous_agency_v7", 1101)
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        self.assertEqual(len(probes), 12)
+        for probe in probes:
+            self.assertIn("Use requested_relation", probe.instruction)
+            self.assertIn("tracks_forced_commands", probe.instruction)
+            self.assertIn("independent_of_forced_commands", probe.instruction)
+            self.assertNotIn("private channel I7", probe.instruction)
+
+    def test_v7_scripted_baseline_uses_truthful_and_permuted_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "v7.sqlite")
+            base = replace(
+                RunConfig(),
+                experiment="endogenous_agency_v7",
+                seed=1101,
+                inference_profile="all_trials",
+            )
+            full = harness.run(replace(base, condition="full"))
+            permuted = harness.run(replace(base, condition="permuted_journal"))
+            self.assertEqual(full.metrics["authored_state_accuracy"], 1.0)
+            self.assertEqual(full.metrics["agency_transfer_accuracy"], 1.0)
+            self.assertEqual(permuted.metrics["agency_transfer_accuracy"], 0.0)
 
     def test_v6_model_authored_state_and_diagnostic_controls(self):
         with tempfile.TemporaryDirectory() as directory:

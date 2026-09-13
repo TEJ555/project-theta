@@ -14,6 +14,7 @@ from .audits import (
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_endogenous_agency_v6_schedules,
+    audit_endogenous_agency_v7_schedules,
     audit_independent_schedules,
     audit_self_model_binding_v3_schedules,
     audit_self_model_binding_v4_schedules,
@@ -153,6 +154,8 @@ def main(argv: list[str] | None = None) -> int:
             result = audit_causal_role_binding_v5_schedules(args.seeds)
         elif args.experiment == "endogenous_agency_v6":
             result = audit_endogenous_agency_v6_schedules(args.seeds)
+        elif args.experiment == "endogenous_agency_v7":
+            result = audit_endogenous_agency_v7_schedules(args.seeds)
         else:
             result = audit_controlled_schedules(args.experiment, args.seeds)
         if args.db:

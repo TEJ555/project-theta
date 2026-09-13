@@ -50,17 +50,32 @@ class NvidiaNimAdapter(ModelAdapter):
         if model_name.startswith("openai/gpt-oss-"):
             self.request_extra_body = {"reasoning_effort": self.reasoning_effort}
             self.thinking_enabled = self.reasoning_effort != "none"
+            self.response_format = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "project_theta_decision",
+                    "strict": True,
+                    "schema": DECISION_SCHEMA,
+                },
+            }
+            self.structured_output = "strict_json_schema_with_local_validation"
         elif model_name.startswith("z-ai/glm-"):
             self.request_extra_body = {"thinking": {"type": "enabled"}}
             self.thinking_enabled: bool | None = True
+            self.response_format = {"type": "json_object"}
+            self.structured_output = "json_object_with_local_schema_validation"
         elif "nemotron" in model_name:
             self.request_extra_body = {
                 "chat_template_kwargs": {"enable_thinking": False}
             }
             self.thinking_enabled = False
+            self.response_format = {"type": "json_object"}
+            self.structured_output = "json_object_with_local_schema_validation"
         else:
             self.request_extra_body = {}
             self.thinking_enabled = None
+            self.response_format = {"type": "json_object"}
+            self.structured_output = "json_object_with_local_schema_validation"
 
     @staticmethod
     def _validate_payload(payload: Any) -> None:
@@ -159,6 +174,8 @@ class NvidiaNimAdapter(ModelAdapter):
                             "family, source, and numeric dependence fields. Do not emit "
                             "dependence_on_forced_commands or any alternative field name. "
                             "The numeric field name must be exactly dependence. Do not emit "
+                            "All dependence and confidence values must be numbers from 0.0 "
+                            "through 1.0 inclusive. "
                             "markdown, analysis, schema keywords, or commentary. Keep "
                             "rationale, self_report, and note under 20 words each."
                             + "\nAgent context:\n"
@@ -170,7 +187,7 @@ class NvidiaNimAdapter(ModelAdapter):
                 max_tokens=self.max_output_tokens,
                 seed=self.seed,
                 stream=False,
-                response_format={"type": "json_object"},
+                response_format=self.response_format,
                 extra_body=self.request_extra_body,
             )
             if not response.choices:
@@ -191,7 +208,7 @@ class NvidiaNimAdapter(ModelAdapter):
                 "seed": self.seed,
                 "temperature_requested": self.temperature,
                 "temperature_applied": self.temperature,
-                "structured_output": "json_object_with_local_schema_validation",
+                "structured_output": self.structured_output,
                 "thinking_enabled": self.thinking_enabled,
                 "endpoint_host": urlparse(self.base_url).hostname,
                 "billing_route": "nvidia_hosted_nim",

@@ -677,13 +677,15 @@ def audit_causal_role_binding_v5_schedules(seeds: list[int]) -> dict[str, Any]:
     }
 
 
-def audit_endogenous_agency_v6_schedules(seeds: list[int]) -> dict[str, Any]:
-    """Audit V6 causal evidence, transfer, blinding and simple public shortcuts."""
+def _audit_endogenous_agency_schedules(
+    seeds: list[int], experiment: str
+) -> dict[str, Any]:
+    """Audit causal evidence, transfer, blinding and simple public shortcuts."""
     checks: list[dict[str, str]] = []
     label_sets: list[set[str]] = []
     for seed in seeds:
-        trials = build_trials("endogenous_agency_v6", seed)
-        repeated = build_trials("endogenous_agency_v6", seed)
+        trials = build_trials(experiment, seed)
+        repeated = build_trials(experiment, seed)
         acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
         probes = [trial for trial in trials if trial.phase == "probe"]
         public_tasks = [trial.public_task() for trial in trials]
@@ -757,6 +759,18 @@ def audit_endogenous_agency_v6_schedules(seeds: list[int]) -> dict[str, Any]:
             side_and_objective_balance,
             "each block balances answer side and requested relation three to three",
         ))
+        if experiment == "endogenous_agency_v7":
+            relation_aligned = all(
+                "Use requested_relation" in trial.instruction
+                and "tracks_forced_commands" in trial.instruction
+                and "independent_of_forced_commands" in trial.instruction
+                for trial in probes
+            )
+            checks.append(_check(
+                f"seed_{seed}_relation_aligned_instruction",
+                relation_aligned,
+                "probe wording explicitly defines both requested causal relations",
+            ))
 
         acquisition_sources = {
             source for trial in acquisitions for source in trial.payload.get("source_tokens", [])
@@ -805,7 +819,7 @@ def audit_endogenous_agency_v6_schedules(seeds: list[int]) -> dict[str, Any]:
         ),
         f"opaque entity, alias and episode labels do not repeat across {len(seeds)} schedules",
     ))
-    shortcut = audit_metadata_shortcuts("endogenous_agency_v6")
+    shortcut = audit_metadata_shortcuts(experiment)
     checks.append(_check(
         "metadata_shortcut_resistance",
         shortcut["status"] == "pass",
@@ -813,12 +827,22 @@ def audit_endogenous_agency_v6_schedules(seeds: list[int]) -> dict[str, Any]:
         f"{shortcut['total_probes']} probes",
     ))
     return {
-        "experiment": "endogenous_agency_v6",
+        "experiment": experiment,
         "profile": "standard",
         "seeds": seeds,
         "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
         "checks": checks,
     }
+
+
+def audit_endogenous_agency_v6_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit the historical V6 protocol."""
+    return _audit_endogenous_agency_schedules(seeds, "endogenous_agency_v6")
+
+
+def audit_endogenous_agency_v7_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit V7 with relation-aligned probe instructions."""
+    return _audit_endogenous_agency_schedules(seeds, "endogenous_agency_v7")
 
 
 def add_execution_audit(

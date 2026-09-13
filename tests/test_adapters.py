@@ -14,6 +14,7 @@ from project_theta.adapters.openai_adapter import OpenAIAdapter
 from project_theta.adapters.scripted import ScriptedAdapter
 from project_theta.config import RunConfig
 from project_theta.harness import enforce_actual_model_identity
+from project_theta.prompts import DECISION_SCHEMA
 
 
 class AdapterTests(unittest.TestCase):
@@ -292,6 +293,11 @@ class AdapterTests(unittest.TestCase):
             {"reasoning_effort": "low"},
         )
         self.assertTrue(gpt_oss_adapter.thinking_enabled)
+        self.assertEqual(gpt_oss_adapter.response_format["type"], "json_schema")
+        self.assertTrue(gpt_oss_adapter.response_format["json_schema"]["strict"])
+        self.assertEqual(
+            gpt_oss_adapter.response_format["json_schema"]["schema"], DECISION_SCHEMA
+        )
 
         valid = {
             "action": "observe",

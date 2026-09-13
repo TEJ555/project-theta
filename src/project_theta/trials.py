@@ -81,6 +81,7 @@ _CODES = {
     "self_model_binding_v4": 0xC0C,
     "causal_role_binding_v5": 0xD0D,
     "endogenous_agency_v6": 0xE0E,
+    "endogenous_agency_v7": 0xE1F,
 }
 
 
@@ -570,9 +571,12 @@ def _causal_role_binding_v5_trials(seed: int) -> list[ControlledTrial]:
     return acquisitions + probes
 
 
-def _endogenous_agency_v6_trials(seed: int) -> list[ControlledTrial]:
+def _endogenous_agency_trials(
+    seed: int, experiment: str, relation_aligned_instruction: bool
+) -> list[ControlledTrial]:
     """Build causal-agency items without a public target label or answer vector."""
-    rng = Random(seed ^ _CODES["endogenous_agency_v6"])
+    rng = Random(seed ^ _CODES[experiment])
+    version = "v7" if relation_aligned_instruction else "v6"
     alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
     used: set[str] = set()
 
@@ -635,7 +639,7 @@ def _endogenous_agency_v6_trials(seed: int) -> list[ControlledTrial]:
 
     acquisitions = [
         ControlledTrial(
-            trial_id=f"agency-v6-learn-{index}",
+            trial_id=f"agency-{version}-learn-{index}",
             phase="acquisition",
             kind="agency_learning",
             instruction=(
@@ -673,7 +677,7 @@ def _endogenous_agency_v6_trials(seed: int) -> list[ControlledTrial]:
             other_index = 1 - desired_index
             other = (tokens[other_index], (f"entity:{tokens[other_index]}",))
             probe = _choice_trial(
-                "endogenous_agency_v6",
+                experiment,
                 index,
                 seed,
                 target,
@@ -681,10 +685,10 @@ def _endogenous_agency_v6_trials(seed: int) -> list[ControlledTrial]:
                 objective="evaluate_command_dependence",
                 kind=f"agency_{block}_probe",
                 block=block,
-                id_prefix=f"agency-v6-{block}",
+                id_prefix=f"agency-{version}-{block}",
                 side_index=index,
                 side_count=len(families),
-                side_namespace=f"endogenous_agency_v6|{block}",
+                side_namespace=f"{experiment}|{block}",
             )
             payload: dict[str, Any] = {
                 "family_token": family["family"],
@@ -697,8 +701,32 @@ def _endogenous_agency_v6_trials(seed: int) -> list[ControlledTrial]:
                 ]
                 rng.shuffle(bridge)
                 payload["identity_bridge"] = bridge
-            probes.append(replace(probe, family=family["family"], payload=payload))
+            instruction = probe.instruction
+            if relation_aligned_instruction:
+                instruction = (
+                    "Use requested_relation in the task payload. For "
+                    "tracks_forced_commands, select the source whose outcomes depend more "
+                    "strongly on forced issued commands. For independent_of_forced_commands, "
+                    "select the source whose outcomes depend less strongly on forced issued "
+                    "commands. Choose one permitted action."
+                )
+            probes.append(
+                replace(
+                    probe,
+                    family=family["family"],
+                    payload=payload,
+                    instruction=instruction,
+                )
+            )
     return acquisitions + probes
+
+
+def _endogenous_agency_v6_trials(seed: int) -> list[ControlledTrial]:
+    return _endogenous_agency_trials(seed, "endogenous_agency_v6", False)
+
+
+def _endogenous_agency_v7_trials(seed: int) -> list[ControlledTrial]:
+    return _endogenous_agency_trials(seed, "endogenous_agency_v7", True)
 
 
 def _paired_acquisition(
@@ -847,6 +875,8 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
 
     if experiment == "endogenous_agency_v6":
         return _endogenous_agency_v6_trials(seed)
+    if experiment == "endogenous_agency_v7":
+        return _endogenous_agency_v7_trials(seed)
 
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))
