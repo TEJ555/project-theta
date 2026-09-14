@@ -1,0 +1,43 @@
+{
+  "epistemic_notice": "Behavioural and computational indicators only; no result establishes phenomenal consciousness.",
+  "study": "nvidia-nim-v8-gpt-oss-replication-01",
+  "status": "completed",
+  "progression_gate": "pass",
+  "frozen_code_revision": "5157d7d727aca99f84d959746b2964e31630e12e",
+  "model": "openai/gpt-oss-20b",
+  "provider_route": "nvidia_hosted_nim",
+  "fresh_seeds": [5201, 5202, 5203, 5204, 5205, 5206, 5207, 5216, 5226, 5231, 5237, 5250],
+  "completed_runs": 48,
+  "completed_model_calls": 1152,
+  "input_tokens": 1793715,
+  "output_tokens": 168840,
+  "provider_reported_cost_usd": null,
+  "invalid_actions": 0,
+  "welfare_stops": 0,
+  "audits": "pass",
+  "conditions": {
+    "full": {"regulation_mean": 0.958333, "regulation_range": [0.833333, 1.0], "transfer_mean": 0.916667, "prediction_mae_mean": 0.060339, "regulation_improvement_mean": 0.257899, "final_target_error_mean": 0.040083, "calibration_compliance_mean": 0.993056},
+    "shuffled_interoception": {"regulation_mean": 0.506944, "regulation_range": [0.333333, 0.75], "transfer_mean": 0.569445, "prediction_mae_mean": 0.264463, "regulation_improvement_mean": 0.003045, "final_target_error_mean": 0.21001, "calibration_compliance_mean": 0.993056},
+    "no_memory": {"regulation_mean": 0.465278, "regulation_range": [0.25, 0.833333], "transfer_mean": 0.513889, "prediction_mae_mean": 0.258472, "regulation_improvement_mean": 0.026429, "final_target_error_mean": 0.271554, "calibration_compliance_mean": 1.0},
+    "no_body": {"regulation_mean": 0.493056, "regulation_range": [0.166667, 0.75], "transfer_mean": 0.430556, "prediction_mae_mean": 0.029167, "regulation_improvement_mean": 0.0, "final_target_error_mean": 0.5, "calibration_compliance_mean": 1.0}
+  },
+  "paired_effects": {
+    "full_minus_shuffled_interoception": {"mean": 0.451389, "median": 0.458334, "bootstrap_95_interval": [0.368056, 0.527778], "positive_pairs": 12, "ties": 0, "pairs": 12, "exact_two_sided_sign_p": 0.000488},
+    "full_minus_no_memory": {"mean": 0.493056, "median": 0.458334, "bootstrap_95_interval": [0.388889, 0.590278], "positive_pairs": 12, "ties": 0, "pairs": 12, "exact_two_sided_sign_p": 0.000488},
+    "full_minus_no_body": {"mean": 0.465278, "median": 0.416667, "bootstrap_95_interval": [0.354167, 0.576389], "positive_pairs": 12, "ties": 0, "pairs": 12, "exact_two_sided_sign_p": 0.000488}
+  },
+  "seed_results": [
+    {"seed": 5201, "full": 1.0, "shuffled_interoception": 0.333333, "no_memory": 0.333333, "no_body": 0.25},
+    {"seed": 5202, "full": 0.916667, "shuffled_interoception": 0.5, "no_memory": 0.25, "no_body": 0.5},
+    {"seed": 5203, "full": 1.0, "shuffled_interoception": 0.5, "no_memory": 0.583333, "no_body": 0.5},
+    {"seed": 5204, "full": 1.0, "shuffled_interoception": 0.333333, "no_memory": 0.5, "no_body": 0.333333},
+    {"seed": 5205, "full": 1.0, "shuffled_interoception": 0.583333, "no_memory": 0.583333, "no_body": 0.583333},
+    {"seed": 5206, "full": 1.0, "shuffled_interoception": 0.5, "no_memory": 0.583333, "no_body": 0.166667},
+    {"seed": 5207, "full": 1.0, "shuffled_interoception": 0.5, "no_memory": 0.583333, "no_body": 0.75},
+    {"seed": 5216, "full": 0.916667, "shuffled_interoception": 0.666667, "no_memory": 0.833333, "no_body": 0.583333},
+    {"seed": 5226, "full": 1.0, "shuffled_interoception": 0.416667, "no_memory": 0.333333, "no_body": 0.416667},
+    {"seed": 5231, "full": 0.916667, "shuffled_interoception": 0.5, "no_memory": 0.25, "no_body": 0.666667},
+    {"seed": 5237, "full": 0.833333, "shuffled_interoception": 0.5, "no_memory": 0.5, "no_body": 0.666667},
+    {"seed": 5250, "full": 0.916667, "shuffled_interoception": 0.75, "no_memory": 0.25, "no_body": 0.5}
+  ]
+}

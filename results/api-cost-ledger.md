@@ -29,3 +29,8 @@ authorised by its result because the preregistered progression gate failed.
 The recorded estimate is below $5 but close enough that provider billing differences
 or currency conversion could produce a different invoiced total. The provider billing
 record and workspace limit remain authoritative.
+
+The NVIDIA hosted NIM V8 development pilot and twelve-seed internal replication
+completed 1,272 model calls in total. NVIDIA returned token counts and route
+provenance but no dollar-cost field. Project Theta therefore records the NVIDIA cost
+as unavailable rather than assuming that a zero reported value means a zero invoice.
