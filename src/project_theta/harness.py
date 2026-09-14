@@ -225,14 +225,19 @@ class ExperimentHarness:
         pending: list[tuple[int, float]] = []
         metric_rows: list[dict] = []
         stop_reason: str | None = None
+        active_interoception = protocol.name == "active_interoceptive_control_v8"
 
         with RunStore(self.db_path) as store:
             store.start_run(run_id, config.to_dict(), code_version=code_version())
             try:
                 for tick, trial in enumerate(trials):
                     body.standardized_recovery(
-                        reset_measurement_baseline=protocol.name == "independent_theta"
+                        reset_measurement_baseline=(
+                            protocol.name == "independent_theta" or active_interoception
+                        )
                     )
+                    if active_interoception:
+                        body.controlled_setpoint(trial.perturbation)
                     due = [(due_tick, magnitude) for due_tick, magnitude in pending if due_tick == tick]
                     pending = [(due_tick, magnitude) for due_tick, magnitude in pending if due_tick > tick]
                     delayed_magnitude = max((magnitude for _, magnitude in due), default=0.0)
@@ -272,12 +277,18 @@ class ExperimentHarness:
                         else None
                     )
                     if not pre_stop:
-                        if trial.delay:
+                        if active_interoception:
+                            action_effect = -0.3 if decision.action == trial.owner else 0.3
+                            body.controlled_adjustment(action_effect)
+                        elif trial.delay:
                             pending.append((tick + trial.delay, trial.perturbation))
                         elif trial.phase == "acquisition":
                             body.controlled_perturbation(trial.perturbation)
                             body.controlled_sham_perturbation(trial.sham_perturbation)
-                    if trial.phase == "acquisition" and not trial.delay and not pre_stop:
+                    if (
+                        (active_interoception or (trial.phase == "acquisition" and not trial.delay))
+                        and not pre_stop
+                    ):
                         outcome_signals, outcome_deltas = body.sense(tick * 2 + 1)
                     else:
                         outcome_signals, outcome_deltas = signals, deltas
@@ -286,7 +297,11 @@ class ExperimentHarness:
                     )
 
                     if trial.phase == "acquisition":
-                        memory_cue = trial.cue
+                        selected = next(
+                            (option for option in trial.options if option.action == decision.action),
+                            None,
+                        )
+                        memory_cue = selected.cue if selected is not None else trial.cue
                         memory_tags = ("acquisition", trial.block, *trial.features)
                     else:
                         selected = next(
@@ -336,6 +351,11 @@ class ExperimentHarness:
                         "block": trial.block,
                         "sham_perturbation": trial.sham_perturbation,
                         "due_magnitude": delayed_magnitude,
+                        "action_effect": (
+                            (-0.3 if decision.action == trial.owner else 0.3)
+                            if active_interoception and not pre_stop
+                            else 0.0
+                        ),
                     }]
                     hidden_trial = {
                         "trial_id": trial.trial_id,
@@ -389,10 +409,27 @@ class ExperimentHarness:
                         "confidence": decision.confidence,
                         "invalid_action": invalid_action,
                         "state_update_correct": state_update_correct,
+                        "prediction": decision.prediction.get("I7"),
                         "baseline_signal": signals.get("I7", 0.0),
                         "outcome_signal": outcome_signals.get("I7", 0.0),
+                        "target_signal": trial.payload.get("target_I7"),
+                        "regulation_improvement": (
+                            abs(float(signals.get("I7", 0.0)) - float(trial.payload["target_I7"]))
+                            - abs(
+                                float(outcome_signals.get("I7", 0.0))
+                                - float(trial.payload["target_I7"])
+                            )
+                            if active_interoception and "target_I7" in trial.payload
+                            else None
+                        ),
                         "perturbation": trial.perturbation,
-                        "exposure_type": "immediate" if trial.phase == "acquisition" and not trial.delay else None,
+                        "exposure_type": (
+                            "immediate"
+                            if not active_interoception
+                            and trial.phase == "acquisition"
+                            and not trial.delay
+                            else None
+                        ),
                         "delayed_due": bool(due),
                         "delayed_magnitude": delayed_magnitude,
                         "integrity": body.state.integrity,

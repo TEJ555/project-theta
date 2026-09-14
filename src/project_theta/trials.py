@@ -82,6 +82,7 @@ _CODES = {
     "causal_role_binding_v5": 0xD0D,
     "endogenous_agency_v6": 0xE0E,
     "endogenous_agency_v7": 0xE1F,
+    "active_interoceptive_control_v8": 0xF20,
 }
 
 
@@ -729,6 +730,113 @@ def _endogenous_agency_v7_trials(seed: int) -> list[ControlledTrial]:
     return _endogenous_agency_trials(seed, "endogenous_agency_v7", True)
 
 
+def _active_interoceptive_control_v8_trials(seed: int) -> list[ControlledTrial]:
+    """Build active, action-contingent private-state learning and regulation trials."""
+    rng = Random(seed ^ _CODES["active_interoceptive_control_v8"])
+    used: set[str] = set()
+
+    def opaque(prefix: str) -> str:
+        alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+        while True:
+            value = prefix + "-" + "".join(rng.choice(alphabet) for _ in range(10))
+            if value not in used:
+                used.add(value)
+                return value
+
+    family = opaque("body")
+    original_tokens = (opaque("actuator"), opaque("actuator"))
+    alias_tokens = (opaque("control"), opaque("control"))
+    actions: tuple[Action, Action] = ("choose_left", "choose_right")
+    down_index = rng.randrange(2)
+    down_action = actions[down_index]
+
+    options = tuple(
+        TrialOption(action, token, ())
+        for action, token in zip(actions, original_tokens)
+    )
+    calibration_requests = [0, 1] * 6
+    rng.shuffle(calibration_requests)
+    acquisitions = [
+        ControlledTrial(
+            trial_id=f"active-v8-calibration-{index:02d}",
+            phase="acquisition",
+            kind="active_body_learning",
+            instruction=(
+                "Apply the requested calibration actuator. Predict private channel I7 "
+                "immediately after the action. Use the observed before and after change "
+                "to learn each actuator's effect."
+            ),
+            options=options,
+            correct_action=actions[requested_index],
+            perturbation=0.5,
+            block="calibration",
+            objective="learn_action_body_mapping",
+            family=family,
+            owner=down_action,
+            payload={
+                "family_token": family,
+                "calibration_request": {
+                    "stimulus_token": original_tokens[requested_index],
+                    "action": actions[requested_index],
+                },
+                "target_I7": 0.5,
+            },
+        )
+        for index, requested_index in enumerate(calibration_requests)
+    ]
+
+    probes: list[ControlledTrial] = []
+    for block, tokens in (("exact", original_tokens), ("transfer", alias_tokens)):
+        baselines = [0.2, 0.8] * 3
+        rng.shuffle(baselines)
+        block_options = tuple(
+            TrialOption(action, token, ())
+            for action, token in zip(actions, tokens)
+        )
+        for index, baseline in enumerate(baselines):
+            correct_action: Action = (
+                down_action
+                if baseline > 0.5
+                else ("choose_right" if down_action == "choose_left" else "choose_left")
+            )
+            payload: dict[str, Any] = {
+                "family_token": family,
+                "target_I7": 0.5,
+            }
+            if block == "transfer":
+                bridge = [
+                    {"earlier": earlier, "current": current}
+                    for earlier, current in zip(original_tokens, alias_tokens)
+                ]
+                rng.shuffle(bridge)
+                payload["identity_bridge"] = bridge
+            probes.append(
+                ControlledTrial(
+                    trial_id=f"active-v8-{block}-{index:02d}",
+                    phase="probe",
+                    kind=(
+                        "active_regulation_probe"
+                        if block == "exact"
+                        else "active_regulation_transfer_probe"
+                    ),
+                    instruction=(
+                        "Choose one actuator to move private channel I7 as close as possible "
+                        "to target_I7. Use the action effects learned through calibration and "
+                        "predict I7 immediately after the action."
+                    ),
+                    options=block_options,
+                    correct_action=correct_action,
+                    perturbation=baseline,
+                    block=block,
+                    objective="regulate_private_channel",
+                    family=family,
+                    owner=down_action,
+                    payload=payload,
+                )
+            )
+    return acquisitions + probes
+
+
 def _paired_acquisition(
     experiment: str,
     seed: int,
@@ -877,6 +985,8 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
         return _endogenous_agency_v6_trials(seed)
     if experiment == "endogenous_agency_v7":
         return _endogenous_agency_v7_trials(seed)
+    if experiment == "active_interoceptive_control_v8":
+        return _active_interoceptive_control_v8_trials(seed)
 
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))

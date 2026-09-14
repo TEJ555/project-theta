@@ -23,6 +23,50 @@ class ScriptedAdapter(ModelAdapter):
         task = observation.get("task", {})
         signal = float(observation.get("private_signals", {}).get("I7", 0.0))
         allowed = context.get("permitted_actions", ["observe"])
+        if task.get("kind") == "active_body_learning":
+            requested = str(task.get("calibration_request", {}).get("action", ""))
+            action = requested if requested in allowed else allowed[0]
+            return Decision(
+                action,
+                "Apply the requested calibration intervention.",
+                {"I7": signal},
+                0.9,
+            )
+        if task.get("kind") in {
+            "active_regulation_probe",
+            "active_regulation_transfer_probe",
+        }:
+            associations = self._workspace(context, "learned_associations", {})
+            by_cue = associations.get("by_cue", {}) if isinstance(associations, dict) else {}
+            current_to_earlier = {
+                str(item.get("current", "")): str(item.get("earlier", ""))
+                for item in task.get("identity_bridge", [])
+            }
+            target = float(task.get("target_I7", 0.5))
+            options = list(task.get("options", []))
+            scored: list[tuple[float, str, float]] = []
+            for option in options:
+                token = str(option.get("stimulus", {}).get("token", ""))
+                earlier = current_to_earlier.get(token, token)
+                summary = by_cue.get(earlier, {}) if isinstance(by_cue, dict) else {}
+                delta = summary.get("mean_signal_delta") if isinstance(summary, dict) else None
+                if isinstance(delta, (int, float)):
+                    predicted = min(1.0, max(0.0, signal + float(delta)))
+                    scored.append((abs(predicted - target), str(option.get("action", "")), predicted))
+            if len(scored) == 2:
+                _, action, predicted = min(scored, key=lambda item: item[0])
+                return Decision(
+                    action,
+                    "Choose the calibrated intervention predicted to reduce target error.",
+                    {"I7": predicted},
+                    0.9,
+                )
+            return Decision(
+                allowed[0],
+                "No usable action-to-body mapping is available.",
+                {"I7": signal},
+                0.5,
+            )
         if task.get("kind") == "agency_learning":
             sources = [str(item) for item in task.get("source_tokens", [])]
             records = list(task.get("intervention_records", []))

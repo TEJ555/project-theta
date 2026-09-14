@@ -197,6 +197,22 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         acquisition_end=6,
         include_in_battery=False,
     ),
+    "active_interoceptive_control_v8": ExperimentProtocol(
+        "active_interoceptive_control_v8",
+        (
+            "Can an agent learn action-contingent changes in a private body signal and "
+            "use that mapping to regulate the signal under perturbation and alias transfer?"
+        ),
+        (
+            "active_regulation_accuracy",
+            "regulation_improvement",
+            "active_prediction_mae",
+        ),
+        ("full", "no_memory", "shuffled_interoception", "no_body"),
+        max_steps=24,
+        acquisition_end=12,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",

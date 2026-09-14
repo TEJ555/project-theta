@@ -10,6 +10,7 @@ from . import EPISTEMIC_NOTICE
 from .analysis import format_summary, summaries_from_database, summarize_runs
 from .audits import (
     add_execution_audit,
+    audit_active_interoceptive_v8_schedules,
     audit_adversarial_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
@@ -144,6 +145,8 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"{args.experiment} has only the standard trial profile.")
         if args.experiment == "independent_theta":
             result = audit_independent_schedules(args.seeds)
+        elif args.experiment == "active_interoceptive_control_v8":
+            result = audit_active_interoceptive_v8_schedules(args.seeds)
         elif args.experiment == "adversarial_theta":
             result = audit_adversarial_schedules(args.seeds, args.profile)
         elif args.experiment == "self_model_binding_v3":

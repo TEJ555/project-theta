@@ -44,6 +44,16 @@ class SyntheticBody:
             return
         self.state.theta = min(1.0, max(self.state.theta, magnitude))
 
+    def controlled_setpoint(self, value: float) -> None:
+        """Set the hidden private-channel state for a bounded laboratory trial."""
+        if self.config.body_enabled:
+            self.state.theta = min(1.0, max(0.0, value))
+
+    def controlled_adjustment(self, delta: float) -> None:
+        """Apply an action-contingent signed change to the private channel."""
+        if self.config.body_enabled:
+            self.state.theta = min(1.0, max(0.0, self.state.theta + delta))
+
     def controlled_sham_perturbation(self, magnitude: float) -> None:
         """Set a plausible private signal that is independent of the true perturbation."""
         if self.config.body_enabled:

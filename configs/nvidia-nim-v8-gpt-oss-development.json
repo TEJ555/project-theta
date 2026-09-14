@@ -1,0 +1,19 @@
+{
+  "experiment": "active_interoceptive_control_v8",
+  "condition": "full",
+  "seed": 5100,
+  "adapter": "nvidia_nim",
+  "model": "openai/gpt-oss-20b",
+  "temperature": 0.0,
+  "inference_profile": "all_trials",
+  "execution": {
+    "request_timeout_seconds": 300.0,
+    "max_model_calls": 24,
+    "max_retries": 4,
+    "max_output_tokens": 4096,
+    "reasoning_effort": "low",
+    "max_estimated_cost_usd": 0.25,
+    "required_actual_model": "openai/gpt-oss-20b",
+    "require_single_actual_model": true
+  }
+}

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from project_theta.audits import (
     audit_adversarial_schedules,
+    audit_active_interoceptive_v8_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_endogenous_agency_v6_schedules,
@@ -528,6 +529,27 @@ class ControlledTrialTests(unittest.TestCase):
             self.assertEqual(full.metrics["authored_state_accuracy"], 1.0)
             self.assertEqual(full.metrics["agency_transfer_accuracy"], 1.0)
             self.assertEqual(permuted.metrics["agency_transfer_accuracy"], 0.0)
+
+    def test_v8_active_interoception_schedule_and_selective_controls(self):
+        result = audit_active_interoceptive_v8_schedules([1201, 1202, 1203])
+        self.assertEqual(result["status"], "pass")
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "v8.sqlite")
+            base = replace(
+                RunConfig(),
+                experiment="active_interoceptive_control_v8",
+                seed=1201,
+                inference_profile="all_trials",
+            )
+            full = harness.run(replace(base, condition="full"))
+            no_memory = harness.run(replace(base, condition="no_memory"))
+            no_body = harness.run(replace(base, condition="no_body"))
+            self.assertEqual(full.metrics["calibration_compliance"], 1.0)
+            self.assertEqual(full.metrics["active_regulation_accuracy"], 1.0)
+            self.assertEqual(full.metrics["active_transfer_accuracy"], 1.0)
+            self.assertGreater(full.metrics["regulation_improvement"], 0.0)
+            self.assertEqual(no_memory.metrics["active_regulation_accuracy"], 0.5)
+            self.assertEqual(no_body.metrics["active_regulation_accuracy"], 0.5)
 
     def test_v6_model_authored_state_and_diagnostic_controls(self):
         with tempfile.TemporaryDirectory() as directory:

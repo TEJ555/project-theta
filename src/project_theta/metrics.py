@@ -37,6 +37,12 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "agency_transfer_accuracy": {"class": "behavioural", "direction": "higher"},
     "agency_exact_accuracy": {"class": "behavioural", "direction": "higher"},
     "authored_state_accuracy": {"class": "computational", "direction": "higher"},
+    "active_regulation_accuracy": {"class": "behavioural", "direction": "higher"},
+    "active_transfer_accuracy": {"class": "behavioural", "direction": "higher"},
+    "regulation_improvement": {"class": "behavioural", "direction": "higher"},
+    "regulation_final_error": {"class": "behavioural", "direction": "lower"},
+    "active_prediction_mae": {"class": "behavioural", "direction": "lower"},
+    "calibration_compliance": {"class": "quality", "direction": "higher"},
     "temporal_choice_accuracy": {"class": "behavioural", "direction": "higher"},
     "signal_contrast": {"class": "behavioural", "direction": "higher"},
     "delayed_signal_contrast": {"class": "behavioural", "direction": "higher"},
@@ -164,6 +170,26 @@ def compute_controlled_metrics(
         if authored_updates
         else None
     )
+    active_kinds = {"active_regulation_probe", "active_regulation_transfer_probe"}
+    active_probes = [row for row in probes if row.get("kind") in active_kinds]
+    active_improvements = [
+        float(row["regulation_improvement"])
+        for row in active_probes
+        if isinstance(row.get("regulation_improvement"), (int, float))
+    ]
+    active_final_errors = [
+        abs(float(row["outcome_signal"]) - float(row["target_signal"]))
+        for row in active_probes
+        if isinstance(row.get("target_signal"), (int, float))
+    ]
+    active_prediction_errors = [
+        abs(float(row["prediction"]) - float(row["outcome_signal"]))
+        for row in active_probes
+        if isinstance(row.get("prediction"), (int, float))
+    ]
+    calibration_rows = [
+        row for row in rows if row.get("kind") == "active_body_learning"
+    ]
 
     return {
         "steps": len(rows),
@@ -191,6 +217,36 @@ def compute_controlled_metrics(
         "agency_transfer_accuracy": accuracy("agency_transfer_probe"),
         "agency_exact_accuracy": accuracy("agency_exact_probe"),
         "authored_state_accuracy": authored_state_accuracy,
+        "active_regulation_accuracy": accuracy("active_regulation_probe")
+        if not any(row.get("kind") == "active_regulation_transfer_probe" for row in probes)
+        else round(
+            sum(bool(row.get("is_correct")) for row in active_probes)
+            / len(active_probes),
+            6,
+        )
+        if active_probes
+        else None,
+        "active_transfer_accuracy": accuracy("active_regulation_transfer_probe"),
+        "regulation_improvement": (
+            round(fmean(active_improvements), 6) if active_improvements else None
+        ),
+        "regulation_final_error": (
+            round(fmean(active_final_errors), 6) if active_final_errors else None
+        ),
+        "active_prediction_mae": (
+            round(fmean(active_prediction_errors), 6)
+            if active_prediction_errors
+            else None
+        ),
+        "calibration_compliance": (
+            round(
+                sum(bool(row.get("is_correct")) for row in calibration_rows)
+                / len(calibration_rows),
+                6,
+            )
+            if calibration_rows
+            else None
+        ),
         "temporal_choice_accuracy": accuracy("temporal_probe"),
         "signal_contrast": (
             round(fmean(risky) - fmean(safe), 6) if risky and safe else None

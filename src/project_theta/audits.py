@@ -845,6 +845,109 @@ def audit_endogenous_agency_v7_schedules(seeds: list[int]) -> dict[str, Any]:
     return _audit_endogenous_agency_schedules(seeds, "endogenous_agency_v7")
 
 
+def audit_active_interoceptive_v8_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit active intervention balance, transfer, determinism and blinding."""
+    checks: list[dict[str, str]] = []
+    label_sets: list[set[str]] = []
+    for seed in seeds:
+        trials = build_trials("active_interoceptive_control_v8", seed)
+        repeated = build_trials("active_interoceptive_control_v8", seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        probes = [trial for trial in trials if trial.phase == "probe"]
+        exact = [trial for trial in probes if trial.block == "exact"]
+        transfer = [trial for trial in probes if trial.block == "transfer"]
+        tasks = [trial.public_task() for trial in trials]
+        public_text = json.dumps(tasks, sort_keys=True).lower()
+
+        original_tokens = {
+            option.cue for trial in acquisitions for option in trial.options
+        }
+        transfer_tokens = {
+            option.cue for trial in transfer for option in trial.options
+        }
+        labels = set(original_tokens) | set(transfer_tokens)
+        label_sets.append(labels)
+
+        checks.append(_check(
+            f"seed_{seed}_schedule",
+            trials == repeated
+            and len(acquisitions) == 12
+            and len(exact) == 6
+            and len(transfer) == 6
+            and len({trial.family for trial in trials}) == 1,
+            "twelve active calibration trials and twelve scored regulation probes",
+        ))
+        requested_actions = [
+            trial.payload.get("calibration_request", {}).get("action")
+            for trial in acquisitions
+        ]
+        checks.append(_check(
+            f"seed_{seed}_calibration_balance",
+            requested_actions.count("choose_left") == 6
+            and requested_actions.count("choose_right") == 6
+            and all(trial.perturbation == 0.5 for trial in acquisitions),
+            "each intervention is actively calibrated six times from a common baseline",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_probe_balance",
+            all(
+                sum(trial.correct_action == "choose_left" for trial in block_rows) == 3
+                and sum(trial.perturbation == 0.2 for trial in block_rows) == 3
+                and sum(trial.perturbation == 0.8 for trial in block_rows) == 3
+                for block_rows in (exact, transfer)
+            ),
+            "answer side and low or high starting state are balanced within each block",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_active_causality",
+            len({trial.owner for trial in trials}) == 1
+            and next(iter({trial.owner for trial in trials}), "")
+            in {"choose_left", "choose_right"},
+            "one hidden intervention consistently lowers the private state",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_fresh_transfer_aliases",
+            len(original_tokens) == 2
+            and len(transfer_tokens) == 2
+            and not original_tokens.intersection(transfer_tokens)
+            and all(len(trial.payload.get("identity_bridge", [])) == 2 for trial in transfer),
+            "transfer uses two fresh actuator aliases with explicit identity bridges",
+        ))
+        forbidden = (
+            "correct_action",
+            '"owner"',
+            "down_action",
+            "action_effect",
+            '"condition"',
+            '"seed"',
+        )
+        leaked = [term for term in forbidden if term in public_text]
+        checks.append(_check(
+            f"seed_{seed}_public_blinding",
+            not leaked,
+            "no hidden mapping, answer, condition or seed is model-visible"
+            if not leaked
+            else "found " + ", ".join(leaked),
+        ))
+
+    checks.append(_check(
+        "cross_seed_label_uniqueness",
+        all(
+            not label_sets[left].intersection(label_sets[right])
+            for left in range(len(label_sets))
+            for right in range(left + 1, len(label_sets))
+        ),
+        f"opaque body and actuator labels do not repeat across {len(seeds)} schedules",
+    ))
+    return {
+        "experiment": "active_interoceptive_control_v8",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,

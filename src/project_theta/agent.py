@@ -284,6 +284,7 @@ class PersistentAgent:
                 "causal_role_binding_v5",
                 "endogenous_agency_v6",
                 "endogenous_agency_v7",
+                "active_interoceptive_control_v8",
                 "temporal_binding_v2",
             }
             else self.config.experiment
