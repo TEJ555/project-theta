@@ -30,5 +30,6 @@ This registry is the source of truth for public study status. A completed run co
 | V7 relation-aligned development | Gate failed | Development | Contradictory probe wording was corrected under a new protocol identifier. GPT OSS 20B scored 0.500 transfer and 0.167 authored-state accuracy, so no larger run is permitted. |
 | V8 active interoceptive control local validation | Complete | Engineering validation | Five seeds and four conditions passed. Full 1.000, no memory 0.500, no body 0.500, shuffled interoception mean 0.483. No provider calls. |
 | V8 NVIDIA GPT OSS development pilot 01 | Complete, progression gate passed | Development | The full condition scored 1.000 versus shuffled interoception 0.583, no body 0.500, and no memory 0.667 on one matched seed. All 96 pilot decisions and audits completed. Eligible for a fresh multi-seed replication. |
+| V8 NVIDIA GPT OSS internal replication 01 | Frozen, ready | Internal replication | Twelve fresh paired seeds, four exactly order-balanced conditions, 48 runs, and 1,152 maximum hosted requests. No replication-seed provider calls occurred before registration. |
 
 All studies concern behavioural or computational indicators. None measures phenomenal consciousness.
