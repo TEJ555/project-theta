@@ -1,5 +1,14 @@
 # NVIDIA GPT OSS V8 internal replication 01
 
+> **Post-publication methods review, 23 September 2026:** An independent AI red-team
+> review verified the recorded numerical result but identified major construct-validity
+> limits in the shuffled control, transfer test, and secondary regulation metrics.
+> The result should be read as evidence of information-dependent control by the
+> composite model and scaffold, not as a clean isolation of action-feedback learning
+> or identity transfer. See the
+> [full review](../docs/v8-independent-ai-red-team-review.md). This was not external
+> human or academic review.
+
 ## Result
 
 The fresh twelve-seed replication passed every preregistered progression criterion.
@@ -10,9 +19,11 @@ The intact system outperformed shuffled interoception on all twelve paired seeds
 mean paired difference was 0.451, with a deterministic bootstrap 95 percent interval
 of 0.368 to 0.528 and an exact two-sided sign-test probability of 0.000488.
 
-This is evidence that the model and scaffold used action-contingent private-body
-information to learn and regulate an opaque internal signal on this benchmark. It is
-not evidence that the system felt the signal or was phenomenally conscious.
+This is evidence that the composite model and scaffold used the available sensor and
+memory information to control an opaque internal signal on this benchmark. The V8
+shuffled comparison does not separate reliable current-state observation from reliable
+action-feedback learning. It is not evidence that the system felt the signal or was
+phenomenally conscious.
 
 ## Registration and execution
 
@@ -76,10 +87,13 @@ comparisons were prespecified mechanism diagnostics.
 | No memory | 0.514 | 0.026 | 0.272 | 0.258 | 1.000 |
 | No body | 0.431 | 0.000 | 0.500 | 0.029 | 1.000 |
 
-Fresh-name transfer remained high in the intact condition. Its predictions were also
-substantially closer to the resulting private signal than predictions made with
-shuffled interoception or without memory. Prediction error in the no-body condition
-is not substantively comparable because no private body signal exists there.
+Fresh-name performance remained high in the intact condition, but the response-action
+mapping was unchanged, so this does not demonstrate necessary use of the identity
+bridge. Its predictions were also substantially closer to the displayed private signal
+than predictions made with shuffled interoception or without memory. Prediction error
+in the no-body condition is not substantively comparable because no private body signal
+exists there. Sensor-based regulation metrics are not common hidden-state endpoints
+across conditions; hidden-state recalculations are reported in the methods review.
 
 ## Progression gate
 
@@ -108,7 +122,8 @@ a single favourable seed. The effect remained positive across all twelve fresh
 paired schedules and deteriorated under three registered information ablations.
 
 The no-memory result supports a role for persistent action-outcome information. The
-shuffled-interoception result supports a role for truthful private-state feedback.
+shuffled-interoception result supports a role for the combined package of truthful
+current-state sensing and truthful action feedback, but does not isolate those factors.
 The no-body result shows that the choice task alone did not produce intact-level
 performance.
 
@@ -119,10 +134,11 @@ statelessly and receives persistence, memory, body state, and workspace structur
 from the surrounding scaffold. The experiment therefore tests the composite system,
 not an unassisted base model.
 
-The study was designed and implemented by the same project that ran it, used one
-model through one hosted provider, and has not yet received independent methods
-review. It does not establish subjective experience, awareness, feeling, suffering,
-sentience, or phenomenal consciousness.
+The study was designed and implemented by the same project that ran it and used one
+model through one hosted provider. It has received an independent AI red-team review,
+but not external human or academic review. The review identified major design limits
+that must be repaired in V9. The result does not establish subjective experience,
+awareness, feeling, suffering, sentience, or phenomenal consciousness.
 
 ## Data
 
