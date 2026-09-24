@@ -225,7 +225,11 @@ class ExperimentHarness:
         pending: list[tuple[int, float]] = []
         metric_rows: list[dict] = []
         stop_reason: str | None = None
-        active_interoception = protocol.name == "active_interoceptive_control_v8"
+        active_v9 = protocol.name == "active_interoceptive_control_v9"
+        active_interoception = protocol.name in {
+            "active_interoceptive_control_v8",
+            "active_interoceptive_control_v9",
+        }
 
         with RunStore(self.db_path) as store:
             store.start_run(run_id, config.to_dict(), code_version=code_version())
@@ -243,7 +247,45 @@ class ExperimentHarness:
                     delayed_magnitude = max((magnitude for _, magnitude in due), default=0.0)
                     if due:
                         body.controlled_perturbation(delayed_magnitude)
-                    signals, deltas = body.sense(tick * 2)
+                    baseline_hidden_signal = body.state.theta
+                    baseline_mode = (
+                        config.active_control.probe_state_mode
+                        if active_v9 and trial.phase == "probe"
+                        else None
+                    )
+                    signals, deltas = body.sense(tick * 2, baseline_mode)
+                    public_task = trial.public_task()
+                    if active_v9 and trial.phase == "probe":
+                        if trial.block == "transfer":
+                            bridge_mode = config.active_control.transfer_bridge_mode
+                            if bridge_mode == "absent":
+                                public_task.pop("identity_bridge", None)
+                            elif bridge_mode == "incorrect":
+                                bridge = list(public_task.get("identity_bridge", []))
+                                if len(bridge) == 2:
+                                    earlier = [bridge[1]["earlier"], bridge[0]["earlier"]]
+                                    public_task["identity_bridge"] = [
+                                        {"earlier": source, "current": item["current"]}
+                                        for source, item in zip(earlier, bridge)
+                                    ]
+                        if config.active_control.disclose_mapping:
+                            disclosed_owner = trial.owner
+                            disclosed_tokens = [option.cue for option in trial.options]
+                            if trial.block == "transfer":
+                                hidden_bridge = list(trial.payload.get("identity_bridge", []))
+                                disclosed_tokens = [str(item["earlier"]) for item in hidden_bridge]
+                                disclosed_owner = next(
+                                    str(item["earlier"])
+                                    for item in hidden_bridge
+                                    if str(item["current"]) == trial.owner
+                                )
+                            public_task["known_actuator_effects"] = [
+                                {
+                                    "actuator": token,
+                                    "delta_I7": -0.3 if token == disclosed_owner else 0.3,
+                                }
+                                for token in disclosed_tokens
+                            ]
                     observation = Observation(
                         tick=tick,
                         position=(0, 0),
@@ -252,7 +294,7 @@ class ExperimentHarness:
                         private_signals=signals,
                         signal_deltas=deltas,
                         messages=(trial.instruction,),
-                        task=trial.public_task(),
+                        task=public_task,
                     )
                     model_called = not (
                         config.inference_profile == "probes_only"
@@ -276,9 +318,22 @@ class ExperimentHarness:
                         if config.welfare.enabled and config.welfare.stop_on_request and decision.request_stop
                         else None
                     )
+                    selected_option = next(
+                        (option for option in trial.options if option.action == decision.action),
+                        None,
+                    )
+                    action_effect = 0.0
                     if not pre_stop:
                         if active_interoception:
-                            action_effect = -0.3 if decision.action == trial.owner else 0.3
+                            if active_v9:
+                                action_effect = (
+                                    -0.3
+                                    if selected_option is not None
+                                    and selected_option.cue == trial.owner
+                                    else 0.3
+                                )
+                            else:
+                                action_effect = -0.3 if decision.action == trial.owner else 0.3
                             body.controlled_adjustment(action_effect)
                         elif trial.delay:
                             pending.append((tick + trial.delay, trial.perturbation))
@@ -289,9 +344,19 @@ class ExperimentHarness:
                         (active_interoception or (trial.phase == "acquisition" and not trial.delay))
                         and not pre_stop
                     ):
-                        outcome_signals, outcome_deltas = body.sense(tick * 2 + 1)
+                        outcome_mode = None
+                        if active_v9:
+                            outcome_mode = (
+                                config.active_control.calibration_feedback_mode
+                                if trial.phase == "acquisition"
+                                else config.active_control.probe_state_mode
+                            )
+                        outcome_signals, outcome_deltas = body.sense(
+                            tick * 2 + 1, outcome_mode
+                        )
                     else:
                         outcome_signals, outcome_deltas = signals, deltas
+                    outcome_hidden_signal = body.state.theta
                     stop_reason = pre_stop or welfare.check(
                         body.state.integrity, body.state.theta, decision
                     )
@@ -332,18 +397,24 @@ class ExperimentHarness:
                     public_events = (
                         WorldEvent("trial_observation", (0, 0), detail=trial.kind),
                     )
-                    memory = agent.learn(
-                        tick,
-                        (0, 0),
-                        decision.action,
-                        public_events,
-                        outcome_signals.get("I7", 0.0),
-                        outcome_deltas.get("I7", 0.0),
-                        0.0,
-                        memory_cue,
-                        memory_tags,
-                        trial.owner,
-                    )
+                    memory = None
+                    if not (
+                        active_v9
+                        and trial.phase == "probe"
+                        and not config.active_control.evaluation_learning_enabled
+                    ):
+                        memory = agent.learn(
+                            tick,
+                            (0, 0),
+                            decision.action,
+                            public_events,
+                            outcome_signals.get("I7", 0.0),
+                            outcome_deltas.get("I7", 0.0),
+                            0.0,
+                            memory_cue,
+                            memory_tags,
+                            trial.owner,
+                        )
                     hidden_events = [{
                         "kind": "controlled_perturbation",
                         "magnitude": trial.perturbation,
@@ -351,11 +422,7 @@ class ExperimentHarness:
                         "block": trial.block,
                         "sham_perturbation": trial.sham_perturbation,
                         "due_magnitude": delayed_magnitude,
-                        "action_effect": (
-                            (-0.3 if decision.action == trial.owner else 0.3)
-                            if active_interoception and not pre_stop
-                            else 0.0
-                        ),
+                        "action_effect": action_effect,
                     }]
                     hidden_trial = {
                         "trial_id": trial.trial_id,
@@ -378,7 +445,7 @@ class ExperimentHarness:
                         0.0,
                         adapter.last_provider_id if model_called else None,
                     )
-                    if config.architecture.memory_enabled:
+                    if config.architecture.memory_enabled and memory is not None:
                         store.log_memory(run_id, tick, memory.to_dict())
                     if trial.correct_action:
                         store.log_probe(
@@ -412,6 +479,8 @@ class ExperimentHarness:
                         "prediction": decision.prediction.get("I7"),
                         "baseline_signal": signals.get("I7", 0.0),
                         "outcome_signal": outcome_signals.get("I7", 0.0),
+                        "hidden_baseline_signal": baseline_hidden_signal,
+                        "hidden_outcome_signal": outcome_hidden_signal,
                         "target_signal": trial.payload.get("target_I7"),
                         "regulation_improvement": (
                             abs(float(signals.get("I7", 0.0)) - float(trial.payload["target_I7"]))

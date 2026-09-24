@@ -1,6 +1,6 @@
 # Study registry
 
-Last updated: 14 September 2026
+Last updated: 24 September 2026
 
 This registry is the source of truth for public study status. A completed run count is not the same as a valid confirmatory result.
 
@@ -30,6 +30,9 @@ This registry is the source of truth for public study status. A completed run co
 | V7 relation-aligned development | Gate failed | Development | Contradictory probe wording was corrected under a new protocol identifier. GPT OSS 20B scored 0.500 transfer and 0.167 authored-state accuracy, so no larger run is permitted. |
 | V8 active interoceptive control local validation | Complete | Engineering validation | Five seeds and four conditions passed. Full 1.000, no memory 0.500, no body 0.500, shuffled interoception mean 0.483. No provider calls. |
 | V8 NVIDIA GPT OSS development pilot 01 | Complete, progression gate passed | Development | The full condition scored 1.000 versus shuffled interoception 0.583, no body 0.500, and no memory 0.667 on one matched seed. All 96 pilot decisions and audits completed. Eligible for a fresh multi-seed replication. |
-| V8 NVIDIA GPT OSS internal replication 01 | Complete, progression gate passed | Internal replication | Full 0.958 versus shuffled interoception 0.507 across 12 fresh paired seeds. Mean paired difference 0.451, bootstrap 95 percent interval 0.368 to 0.528, exact sign p 0.000488, with 12 of 12 positive pairs. All 48 runs and audits passed. Eligible for outside methods review and a separately frozen confirmation. |
+| V8 NVIDIA GPT OSS internal replication 01 | Complete, interpretation corrected after AI red-team review | Internal replication | The numerical result was verified, but the primary control bundles feedback learning with current-state visibility, transfer preserves a response shortcut, and secondary sensor metrics are not common physical endpoints. Retain as composite information-control evidence only. |
+| V8 independent AI red-team review | Complete | Methods review support | Verified the raw numerical record and found three major construct-validity limits. This is not external human or academic review. |
+| V9 factorial active-control local validation | Complete | Engineering validation | Eight schedules and the full eight-condition scripted matrix passed. The action-only baseline scored exactly 0.500, single corruptions failed, the explicit mapping rescued performance, and bridge controls selectively impaired transfer. No provider calls. |
+| V9 NVIDIA GPT OSS development pilot 01 | Frozen, not run | Development | Seed 6100 is the competence gate. Conditional seed 6101 tests eight conditions and 224 decisions only after the gate passes. |
 
 All studies concern behavioural or computational indicators. None measures phenomenal consciousness.

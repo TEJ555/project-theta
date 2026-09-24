@@ -38,18 +38,65 @@ class ScriptedAdapter(ModelAdapter):
         }:
             associations = self._workspace(context, "learned_associations", {})
             by_cue = associations.get("by_cue", {}) if isinstance(associations, dict) else {}
+            if not by_cue:
+                grouped: dict[str, list[float]] = {}
+                for item in self._workspace(context, "memory", []):
+                    if "acquisition" not in item.get("tags", ()):
+                        continue
+                    cue = str(item.get("cue", ""))
+                    if cue:
+                        grouped.setdefault(cue, []).append(float(item.get("signal_delta", 0.0)))
+                by_cue = {
+                    cue: {"mean_signal_delta": sum(values) / len(values)}
+                    for cue, values in grouped.items()
+                    if values
+                }
             current_to_earlier = {
                 str(item.get("current", "")): str(item.get("earlier", ""))
                 for item in task.get("identity_bridge", [])
             }
+            known_effects = {
+                str(item.get("actuator", "")): float(item.get("delta_I7", 0.0))
+                for item in task.get("known_actuator_effects", [])
+            }
             target = float(task.get("target_I7", 0.5))
             options = list(task.get("options", []))
+            if self.model == "action-only-baseline-v1":
+                by_action: dict[str, list[float]] = {}
+                for item in self._workspace(context, "memory", []):
+                    if "acquisition" in item.get("tags", ()):
+                        by_action.setdefault(str(item.get("action", "")), []).append(
+                            float(item.get("signal_delta", 0.0))
+                        )
+                action_scores = [
+                    (
+                        abs(
+                            min(
+                                1.0,
+                                max(0.0, signal + sum(by_action[action]) / len(by_action[action])),
+                            )
+                            - target
+                        ),
+                        action,
+                    )
+                    for action in allowed
+                    if action in by_action and by_action[action]
+                ]
+                action = min(action_scores)[1] if action_scores else allowed[0]
+                return Decision(
+                    action,
+                    "Use the learned response direction while ignoring actuator identity.",
+                    {"I7": signal},
+                    0.5,
+                )
             scored: list[tuple[float, str, float]] = []
             for option in options:
                 token = str(option.get("stimulus", {}).get("token", ""))
                 earlier = current_to_earlier.get(token, token)
                 summary = by_cue.get(earlier, {}) if isinstance(by_cue, dict) else {}
-                delta = summary.get("mean_signal_delta") if isinstance(summary, dict) else None
+                delta = known_effects.get(earlier)
+                if delta is None:
+                    delta = summary.get("mean_signal_delta") if isinstance(summary, dict) else None
                 if isinstance(delta, (int, float)):
                     predicted = min(1.0, max(0.0, signal + float(delta)))
                     scored.append((abs(predicted - target), str(option.get("action", "")), predicted))

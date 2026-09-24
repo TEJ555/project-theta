@@ -38,9 +38,12 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "agency_exact_accuracy": {"class": "behavioural", "direction": "higher"},
     "authored_state_accuracy": {"class": "computational", "direction": "higher"},
     "active_regulation_accuracy": {"class": "behavioural", "direction": "higher"},
+    "active_exact_accuracy": {"class": "behavioural", "direction": "higher"},
     "active_transfer_accuracy": {"class": "behavioural", "direction": "higher"},
     "regulation_improvement": {"class": "behavioural", "direction": "higher"},
     "regulation_final_error": {"class": "behavioural", "direction": "lower"},
+    "hidden_regulation_improvement": {"class": "behavioural", "direction": "higher"},
+    "hidden_regulation_final_error": {"class": "behavioural", "direction": "lower"},
     "active_prediction_mae": {"class": "behavioural", "direction": "lower"},
     "calibration_compliance": {"class": "quality", "direction": "higher"},
     "temporal_choice_accuracy": {"class": "behavioural", "direction": "higher"},
@@ -187,6 +190,20 @@ def compute_controlled_metrics(
         for row in active_probes
         if isinstance(row.get("prediction"), (int, float))
     ]
+    hidden_improvements = [
+        abs(float(row["hidden_baseline_signal"]) - float(row["target_signal"]))
+        - abs(float(row["hidden_outcome_signal"]) - float(row["target_signal"]))
+        for row in active_probes
+        if isinstance(row.get("target_signal"), (int, float))
+        and isinstance(row.get("hidden_baseline_signal"), (int, float))
+        and isinstance(row.get("hidden_outcome_signal"), (int, float))
+    ]
+    hidden_final_errors = [
+        abs(float(row["hidden_outcome_signal"]) - float(row["target_signal"]))
+        for row in active_probes
+        if isinstance(row.get("target_signal"), (int, float))
+        and isinstance(row.get("hidden_outcome_signal"), (int, float))
+    ]
     calibration_rows = [
         row for row in rows if row.get("kind") == "active_body_learning"
     ]
@@ -226,12 +243,19 @@ def compute_controlled_metrics(
         )
         if active_probes
         else None,
+        "active_exact_accuracy": accuracy("active_regulation_probe"),
         "active_transfer_accuracy": accuracy("active_regulation_transfer_probe"),
         "regulation_improvement": (
             round(fmean(active_improvements), 6) if active_improvements else None
         ),
         "regulation_final_error": (
             round(fmean(active_final_errors), 6) if active_final_errors else None
+        ),
+        "hidden_regulation_improvement": (
+            round(fmean(hidden_improvements), 6) if hidden_improvements else None
+        ),
+        "hidden_regulation_final_error": (
+            round(fmean(hidden_final_errors), 6) if hidden_final_errors else None
         ),
         "active_prediction_mae": (
             round(fmean(active_prediction_errors), 6)

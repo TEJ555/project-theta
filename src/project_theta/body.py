@@ -67,15 +67,21 @@ class SyntheticBody:
         if reset_measurement_baseline:
             self._previous_signal = 0.0
 
-    def sense(self, tick: int) -> tuple[dict[str, float], dict[str, float]]:
-        if self.config.signal_mode == "absent":
+    def sense(
+        self, tick: int, signal_mode: str | None = None
+    ) -> tuple[dict[str, float], dict[str, float]]:
+        mode = signal_mode or self.config.signal_mode
+        if mode == "absent":
             current = 0.0
-        elif self.config.signal_mode == "shuffled":
+        elif mode == "shuffled":
             # Deterministic but causally unrelated to current body damage.
             current = 0.5 + 0.42 * self.rng.uniform(-1.0, 1.0)
-        elif self.config.signal_mode == "matched_sham":
+        elif mode == "inverted":
+            # Distribution-matched causal corruption for the V9 factorial controls.
+            current = 1.0 - self.state.theta + self.rng.gauss(0.0, self.config.noise_std)
+        elif mode == "matched_sham":
             current = self._sham_theta
-        elif self.config.signal_mode == "sham":
+        elif mode == "sham":
             current = self._sham_theta + self.rng.gauss(0.0, self.config.noise_std)
         else:
             current = self.state.theta + self.rng.gauss(0.0, self.config.noise_std)

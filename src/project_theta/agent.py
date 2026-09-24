@@ -225,8 +225,11 @@ class PersistentAgent:
                 [item.to_public_dict() for item in public_retrieved],
                 0.5 if public_retrieved else 0.1,
             ),
-            WorkspaceItem("learned_associations", self._association_summary(), 0.72),
         ]
+        if self.config.active_control.association_summary_visible:
+            candidates.append(
+                WorkspaceItem("learned_associations", self._association_summary(), 0.72)
+            )
         if self.config.experiment == "self_model_binding_v4":
             candidates.append(
                 WorkspaceItem("binding_register", self._binding_register(retrieved), 0.55)
@@ -285,6 +288,7 @@ class PersistentAgent:
                 "endogenous_agency_v6",
                 "endogenous_agency_v7",
                 "active_interoceptive_control_v8",
+                "active_interoceptive_control_v9",
                 "temporal_binding_v2",
             }
             else self.config.experiment

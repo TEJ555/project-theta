@@ -8,6 +8,7 @@ from pathlib import Path
 from project_theta.audits import (
     audit_adversarial_schedules,
     audit_active_interoceptive_v8_schedules,
+    audit_active_interoceptive_v9_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_endogenous_agency_v6_schedules,
@@ -550,6 +551,113 @@ class ControlledTrialTests(unittest.TestCase):
             self.assertGreater(full.metrics["regulation_improvement"], 0.0)
             self.assertEqual(no_memory.metrics["active_regulation_accuracy"], 0.5)
             self.assertEqual(no_body.metrics["active_regulation_accuracy"], 0.5)
+
+    def test_v9_factorial_controls_genuine_transfer_and_hidden_state_metrics(self):
+        result = audit_active_interoceptive_v9_schedules([1301, 1302, 1303])
+        self.assertEqual(result["status"], "pass")
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "v9.sqlite")
+            base = replace(
+                RunConfig(),
+                experiment="active_interoceptive_control_v9",
+                seed=1301,
+                inference_profile="all_trials",
+            )
+            summaries = {
+                condition: harness.run(replace(base, condition=condition))
+                for condition in (
+                    "full",
+                    "feedback_corrupted",
+                    "state_corrupted",
+                    "feedback_and_state_corrupted",
+                    "explicit_mapping",
+                    "bridge_absent",
+                    "bridge_incorrect",
+                    "raw_history",
+                )
+            }
+            self.assertEqual(summaries["full"].metrics["active_regulation_accuracy"], 1.0)
+            self.assertEqual(summaries["full"].metrics["active_transfer_accuracy"], 1.0)
+            self.assertEqual(summaries["full"].metrics["hidden_regulation_final_error"], 0.0)
+            self.assertEqual(
+                summaries["feedback_corrupted"].metrics["active_regulation_accuracy"], 0.0
+            )
+            self.assertEqual(
+                summaries["state_corrupted"].metrics["active_regulation_accuracy"], 0.0
+            )
+            self.assertEqual(
+                summaries["feedback_and_state_corrupted"].metrics[
+                    "active_regulation_accuracy"
+                ],
+                1.0,
+            )
+            self.assertEqual(
+                summaries["explicit_mapping"].metrics["active_regulation_accuracy"], 1.0
+            )
+            self.assertEqual(
+                summaries["bridge_absent"].metrics["active_exact_accuracy"], 1.0
+            )
+            self.assertEqual(
+                summaries["bridge_absent"].metrics["active_transfer_accuracy"], 0.5
+            )
+            self.assertEqual(
+                summaries["bridge_incorrect"].metrics["active_exact_accuracy"], 1.0
+            )
+            self.assertEqual(
+                summaries["bridge_incorrect"].metrics["active_transfer_accuracy"], 0.0
+            )
+            self.assertEqual(
+                summaries["raw_history"].metrics["active_regulation_accuracy"], 1.0
+            )
+            self.assertEqual(summaries["full"].metrics["memory_writes"], 12)
+
+            connection = sqlite3.connect(Path(directory) / "v9.sqlite")
+            rows = connection.execute(
+                """
+                SELECT r.condition_name, s.tick, s.observation_json, s.context_json
+                FROM runs r JOIN steps s ON s.run_id=r.run_id
+                WHERE r.experiment='active_interoceptive_control_v9'
+                ORDER BY r.condition_name, s.tick
+                """
+            ).fetchall()
+            connection.close()
+            contexts = {
+                (condition, tick): (json.loads(observation), json.loads(context))
+                for condition, tick, observation, context in rows
+            }
+            full_probe = contexts[("full", 12)][0]["private_signals"]["I7"]
+            feedback_probe = contexts[("feedback_corrupted", 12)][0]["private_signals"]["I7"]
+            state_probe = contexts[("state_corrupted", 12)][0]["private_signals"]["I7"]
+            self.assertEqual(full_probe, feedback_probe)
+            self.assertNotEqual(full_probe, state_probe)
+            full_context_text = json.dumps(
+                [
+                    context
+                    for (condition, _), (_, context) in contexts.items()
+                    if condition == "full"
+                ]
+            ).lower()
+            for forbidden in ('"owner"', "correct_action", "down_action", "action_effect"):
+                self.assertNotIn(forbidden, full_context_text)
+            absent_task = contexts[("bridge_absent", 20)][0]["task"]
+            incorrect_task = contexts[("bridge_incorrect", 20)][0]["task"]
+            full_task = contexts[("full", 20)][0]["task"]
+            self.assertNotIn("identity_bridge", absent_task)
+            self.assertNotEqual(incorrect_task["identity_bridge"], full_task["identity_bridge"])
+
+    def test_v9_action_only_baseline_is_exactly_chance_under_response_remapping(self):
+        with tempfile.TemporaryDirectory() as directory:
+            summary = ExperimentHarness(Path(directory) / "v9-action-only.sqlite").run(
+                replace(
+                    RunConfig(),
+                    experiment="active_interoceptive_control_v9",
+                    condition="full",
+                    model="action-only-baseline-v1",
+                    seed=1301,
+                )
+            )
+            self.assertEqual(summary.metrics["active_exact_accuracy"], 0.5)
+            self.assertEqual(summary.metrics["active_transfer_accuracy"], 0.5)
 
     def test_v6_model_authored_state_and_diagnostic_controls(self):
         with tempfile.TemporaryDirectory() as directory:

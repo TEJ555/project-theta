@@ -61,4 +61,19 @@
 - remaining: exact model identity through a direct provider or reproducible open-weight runtime;
 - remaining: externally reviewed Stage 1 registration before confirmation.
 
+## v0.9 factorial active control
+
+- completed: independent AI red-team review of V8 raw data, implementation and claims;
+- completed: public correction narrowing V8 to composite information-control evidence;
+- completed: independent manipulation of calibration feedback and current-state sensing;
+- completed: hidden-state regulation metrics separated from displayed-sensor prediction;
+- completed: response remapping that forces actuator-identity use during transfer;
+- completed: correct, absent and incorrect identity-bridge conditions;
+- completed: explicit-mapping rescue, raw-history control and action-only baseline;
+- completed: 67-test suite and eight-seed V9 schedule audit;
+- completed: frozen bounded V9 NVIDIA development pilot before provider execution;
+- next: run the single full-condition competence gate on seed 6100;
+- conditional: run the eight-condition development seed 6101 only if the gate passes;
+- remaining: independent human critique before a multi-seed confirmation is frozen.
+
 No milestone converts functional indicators into proof of phenomenal consciousness.

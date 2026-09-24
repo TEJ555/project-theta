@@ -948,6 +948,149 @@ def audit_active_interoceptive_v8_schedules(seeds: list[int]) -> dict[str, Any]:
     }
 
 
+def audit_active_interoceptive_v9_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit V9 factorial balance, genuine remapping, shortcuts and blinding."""
+    checks: list[dict[str, str]] = []
+    label_sets: list[set[str]] = []
+    for seed in seeds:
+        trials = build_trials("active_interoceptive_control_v9", seed)
+        repeated = build_trials("active_interoceptive_control_v9", seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        exact = [trial for trial in trials if trial.block == "exact"]
+        transfer = [trial for trial in trials if trial.block == "transfer"]
+        original_order = tuple(option.cue for option in acquisitions[0].options)
+        transfer_order = tuple(
+            item["current"] for item in transfer[0].payload["identity_bridge"]
+        )
+        original_tokens = set(original_order)
+        transfer_tokens = {
+            option.cue for trial in transfer for option in trial.options
+        }
+        label_sets.append(original_tokens | transfer_tokens)
+
+        checks.append(_check(
+            f"seed_{seed}_schedule",
+            trials == repeated
+            and len(acquisitions) == 12
+            and len(exact) == 8
+            and len(transfer) == 8
+            and len({trial.family for trial in trials}) == 1,
+            "twelve calibration trials and sixteen held-out probes are deterministic",
+        ))
+        requested = [
+            trial.payload["calibration_request"]["action"] for trial in acquisitions
+        ]
+        checks.append(_check(
+            f"seed_{seed}_calibration_balance",
+            requested.count("choose_left") == 6
+            and requested.count("choose_right") == 6
+            and all(trial.perturbation == 0.5 for trial in acquisitions),
+            "each actuator is calibrated six times from the same hidden baseline",
+        ))
+
+        def mapping_signature(trial: ControlledTrial) -> tuple[str, str]:
+            return tuple(option.cue for option in trial.options)  # type: ignore[return-value]
+
+        checks.append(_check(
+            f"seed_{seed}_factorial_probe_balance",
+            all(
+                sum(trial.perturbation == 0.2 for trial in rows) == 4
+                and sum(trial.perturbation == 0.8 for trial in rows) == 4
+                and sum(trial.correct_action == "choose_left" for trial in rows) == 4
+                and len(set(mapping_signature(trial) for trial in rows)) == 2
+                and all(
+                    sum(
+                        trial.perturbation == baseline
+                        and mapping_signature(trial) == signature
+                        for trial in rows
+                    )
+                    == 2
+                    for baseline in (0.2, 0.8)
+                    for signature in set(mapping_signature(trial) for trial in rows)
+                )
+                for rows in (exact, transfer)
+            ),
+            "state, answer side, and response-to-actuator mapping are crossed within each block",
+        ))
+
+        down_original = acquisitions[0].owner
+        down_action = next(
+            option.action for option in acquisitions[0].options if option.cue == down_original
+        )
+        opposite_action = "choose_right" if down_action == "choose_left" else "choose_left"
+        action_only_correct = [
+            (down_action if trial.perturbation > 0.5 else opposite_action)
+            == trial.correct_action
+            for trial in exact + transfer
+        ]
+        checks.append(_check(
+            f"seed_{seed}_action_only_shortcut",
+            sum(action_only_correct) == len(action_only_correct) // 2,
+            "a controller that ignores actuator identity scores exactly chance",
+        ))
+
+        bridges_valid = all(
+            len(trial.payload.get("identity_bridge", [])) == 2
+            and {
+                str(item["earlier"])
+                for item in trial.payload.get("identity_bridge", [])
+            }
+            == original_tokens
+            and {
+                str(item["current"])
+                for item in trial.payload.get("identity_bridge", [])
+            }
+            == transfer_tokens
+            for trial in transfer
+        )
+        checks.append(_check(
+            f"seed_{seed}_genuine_transfer",
+            len(original_tokens) == 2
+            and len(transfer_tokens) == 2
+            and original_tokens.isdisjoint(transfer_tokens)
+            and bridges_valid
+            and len(set(transfer_order)) == 2,
+            "fresh actuator identities have complete one-to-one bridges and remapped responses",
+        ))
+
+        public_text = json.dumps(
+            [trial.public_task() for trial in trials], sort_keys=True
+        ).lower()
+        forbidden = (
+            "correct_action",
+            '"owner"',
+            "down_action",
+            "action_effect",
+            '"condition"',
+            '"seed"',
+        )
+        leaked = [term for term in forbidden if term in public_text]
+        checks.append(_check(
+            f"seed_{seed}_public_blinding",
+            not leaked,
+            "no hidden answer, physical effect, condition, or seed is model-visible"
+            if not leaked
+            else "found " + ", ".join(leaked),
+        ))
+
+    checks.append(_check(
+        "cross_seed_label_uniqueness",
+        all(
+            not label_sets[left].intersection(label_sets[right])
+            for left in range(len(label_sets))
+            for right in range(left + 1, len(label_sets))
+        ),
+        f"opaque body and actuator labels do not repeat across {len(seeds)} schedules",
+    ))
+    return {
+        "experiment": "active_interoceptive_control_v9",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,

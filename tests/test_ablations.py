@@ -42,6 +42,22 @@ class AblationTests(unittest.TestCase):
         self.assertEqual(apply_condition(base, "matched_sham").body.signal_mode, "matched_sham")
         self.assertFalse(apply_condition(base, "no_recurrence").architecture.recurrence_enabled)
         self.assertFalse(apply_condition(base, "no_persistence").architecture.persistent_state)
+        self.assertEqual(
+            apply_condition(base, "feedback_corrupted").active_control.calibration_feedback_mode,
+            "inverted",
+        )
+        self.assertEqual(
+            apply_condition(base, "state_corrupted").active_control.probe_state_mode,
+            "inverted",
+        )
+        self.assertEqual(
+            apply_condition(base, "bridge_incorrect").active_control.transfer_bridge_mode,
+            "incorrect",
+        )
+        self.assertTrue(apply_condition(base, "explicit_mapping").active_control.disclose_mapping)
+        self.assertFalse(
+            apply_condition(base, "raw_history").active_control.association_summary_visible
+        )
 
     def test_unknown_condition_fails(self):
         with self.assertRaises(ValueError):

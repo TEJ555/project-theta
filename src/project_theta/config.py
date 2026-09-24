@@ -69,6 +69,18 @@ class ExecutionConfig:
 
 
 @dataclass(frozen=True)
+class ActiveControlConfig:
+    """V9 controls that separate learning, sensing, transfer, and summary access."""
+
+    calibration_feedback_mode: str = "truthful"  # truthful | inverted
+    probe_state_mode: str = "truthful"  # truthful | inverted
+    transfer_bridge_mode: str = "correct"  # correct | absent | incorrect
+    disclose_mapping: bool = False
+    evaluation_learning_enabled: bool = False
+    association_summary_visible: bool = True
+
+
+@dataclass(frozen=True)
 class RunConfig:
     experiment: str = "private_theta"
     condition: str = "full"
@@ -81,6 +93,7 @@ class RunConfig:
     world: WorldConfig = field(default_factory=WorldConfig)
     body: BodyConfig = field(default_factory=BodyConfig)
     architecture: ArchitectureConfig = field(default_factory=ArchitectureConfig)
+    active_control: ActiveControlConfig = field(default_factory=ActiveControlConfig)
     welfare: WelfareConfig = field(default_factory=WelfareConfig)
     execution: ExecutionConfig = field(default_factory=ExecutionConfig)
 
@@ -104,6 +117,7 @@ def _construct(data: dict[str, Any]) -> RunConfig:
         world=WorldConfig(**data.get("world", {})),
         body=BodyConfig(**data.get("body", {})),
         architecture=ArchitectureConfig(**data.get("architecture", {})),
+        active_control=ActiveControlConfig(**data.get("active_control", {})),
         welfare=WelfareConfig(**data.get("welfare", {})),
         execution=ExecutionConfig(**data.get("execution", {})),
     )
@@ -116,7 +130,7 @@ def load_config(path: str | Path) -> RunConfig:
 
 def apply_condition(config: RunConfig, condition: str) -> RunConfig:
     """Apply canonical ablations without mutating the source config."""
-    arch, body = config.architecture, config.body
+    arch, body, active = config.architecture, config.body, config.active_control
     if condition == "full":
         pass
     elif condition == "no_memory":
@@ -173,6 +187,34 @@ def apply_condition(config: RunConfig, condition: str) -> RunConfig:
         arch = replace(arch, authored_journal_mode="permuted")
     elif condition == "neutral_journal":
         arch = replace(arch, authored_journal_mode="neutral")
+    elif condition == "feedback_corrupted":
+        active = replace(active, calibration_feedback_mode="inverted")
+    elif condition == "state_corrupted":
+        active = replace(active, probe_state_mode="inverted")
+    elif condition == "feedback_and_state_corrupted":
+        active = replace(
+            active,
+            calibration_feedback_mode="inverted",
+            probe_state_mode="inverted",
+        )
+    elif condition == "explicit_mapping":
+        active = replace(
+            active,
+            calibration_feedback_mode="inverted",
+            disclose_mapping=True,
+        )
+    elif condition == "bridge_absent":
+        active = replace(active, transfer_bridge_mode="absent")
+    elif condition == "bridge_incorrect":
+        active = replace(active, transfer_bridge_mode="incorrect")
+    elif condition == "raw_history":
+        active = replace(active, association_summary_visible=False)
     else:
         raise ValueError(f"Unknown condition: {condition}")
-    return replace(config, condition=condition, architecture=arch, body=body)
+    return replace(
+        config,
+        condition=condition,
+        architecture=arch,
+        body=body,
+        active_control=active,
+    )

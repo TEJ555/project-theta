@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add V9 factorial active control to separate calibration feedback from current-state sensing.
+- Add hidden-body regulation metrics and freeze evaluation outcome learning.
+- Add genuine response-remapped transfer with correct, absent and incorrect identity bridges.
+- Add an explicit-mapping rescue, raw-history control and action-only chance baseline.
+- Add V9 schedule audits, tests, design documentation and a frozen NVIDIA development pilot.
+- Publish the independent AI red-team review and corrected interpretation of V8.
 - Add an NVIDIA hosted NIM adapter for fixed open-model development runs.
 - Strengthen Ollama output handling with the full decision schema, output cap and
   automatic model-digest provenance.
