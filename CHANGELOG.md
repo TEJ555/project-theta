@@ -8,6 +8,7 @@
 - Add an explicit-mapping rescue, raw-history control and action-only chance baseline.
 - Add V9 schedule audits, tests, design documentation and a frozen NVIDIA development pilot.
 - Publish the independent AI red-team review and corrected interpretation of V8.
+- Record the failed V9 GPT OSS competence gate and block the conditional pilot.
 - Add an NVIDIA hosted NIM adapter for fixed open-model development runs.
 - Strengthen Ollama output handling with the full decision schema, output cap and
   automatic model-digest provenance.

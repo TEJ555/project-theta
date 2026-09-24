@@ -72,8 +72,9 @@
 - completed: explicit-mapping rescue, raw-history control and action-only baseline;
 - completed: 67-test suite and eight-seed V9 schedule audit;
 - completed: frozen bounded V9 NVIDIA development pilot before provider execution;
-- next: run the single full-condition competence gate on seed 6100;
-- conditional: run the eight-condition development seed 6101 only if the gate passes;
+- completed: seed 6100 competence run completed and failed at 0.500 accuracy;
+- completed: blocked the eight-condition pilot according to the frozen stopping rule;
+- next: create a new protocol with neutral response labels and an interface-comprehension gate;
 - remaining: independent human critique before a multi-seed confirmation is frozen.
 
 No milestone converts functional indicators into proof of phenomenal consciousness.
