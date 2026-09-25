@@ -1291,6 +1291,242 @@ def audit_active_interoceptive_v9_1_schedules(seeds: list[int]) -> dict[str, Any
     }
 
 
+def audit_multi_body_reliability_v10_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit V10 family independence, denominators, balance, shortcuts and blinding."""
+    checks: list[dict[str, str]] = []
+    cross_seed_labels: list[set[str]] = []
+    neutral_actions = {"respond_kappa", "respond_sigma"}
+
+    def mapping(trial: ControlledTrial) -> tuple[tuple[str, str], ...]:
+        return tuple(sorted((str(option.action), option.cue) for option in trial.options))
+
+    def order(trial: ControlledTrial) -> tuple[str, str]:
+        return tuple(option.cue for option in trial.options)  # type: ignore[return-value]
+
+    for seed in seeds:
+        trials = build_trials("multi_body_reliability_v10", seed)
+        repeated = build_trials("multi_body_reliability_v10", seed)
+        families = sorted({trial.family for trial in trials})
+        seed_labels = {option.cue for trial in trials for option in trial.options}
+        cross_seed_labels.append(seed_labels)
+        phase_counts = {
+            kind: sum(trial.kind == kind for trial in trials)
+            for kind in (
+                "active_body_learning",
+                "body_mapping_checkpoint",
+                "interface_comprehension_probe",
+                "active_regulation_probe",
+                "active_regulation_transfer_probe",
+            )
+        }
+        checks.append(_check(
+            f"seed_{seed}_schedule",
+            trials == repeated
+            and len(trials) == 176
+            and len(families) == 4
+            and phase_counts == {
+                "active_body_learning": 48,
+                "body_mapping_checkpoint": 32,
+                "interface_comprehension_probe": 32,
+                "active_regulation_probe": 32,
+                "active_regulation_transfer_probe": 32,
+            },
+            "four independent body families and all frozen denominators are deterministic",
+        ))
+        mapping_directions = {
+            family: next(
+                trial.transition for trial in trials
+                if trial.family == family and trial.kind == "active_body_learning"
+            )
+            for family in families
+        }
+        checks.append(_check(
+            f"seed_{seed}_mapping_direction_balance",
+            list(mapping_directions.values()).count("mapping_0") == 2
+            and list(mapping_directions.values()).count("mapping_1") == 2,
+            "two bodies use each hidden actuator-effect direction",
+        ))
+
+        family_ok = True
+        local_bridge_ok = True
+        family_label_sets: list[set[str]] = []
+        for family in families:
+            rows = [trial for trial in trials if trial.family == family]
+            calibration = [trial for trial in rows if trial.kind == "active_body_learning"]
+            checkpoints = [trial for trial in rows if trial.kind == "body_mapping_checkpoint"]
+            interface = [
+                trial for trial in rows if trial.kind == "interface_comprehension_probe"
+            ]
+            exact = [trial for trial in rows if trial.kind == "active_regulation_probe"]
+            transfer = [
+                trial for trial in rows
+                if trial.kind == "active_regulation_transfer_probe"
+            ]
+            original_tokens = {
+                option.cue for trial in calibration for option in trial.options
+            }
+            transfer_tokens = {
+                option.cue for trial in transfer for option in trial.options
+            }
+            family_label_sets.append(original_tokens | transfer_tokens)
+            calibration_requests = [
+                str(trial.payload["calibration_request"]["stimulus_token"])
+                for trial in calibration
+            ]
+            calibration_mappings = {mapping(trial) for trial in calibration}
+            checkpoint_mappings = {mapping(trial) for trial in checkpoints}
+            checkpoint_orders = {order(trial) for trial in checkpoints}
+            interface_mappings = {mapping(trial) for trial in interface}
+            interface_orders = {order(trial) for trial in interface}
+            family_ok = family_ok and (
+                len(rows) == 44
+                and len(calibration) == 12
+                and len(checkpoints) == 8
+                and len(interface) == 8
+                and len(exact) == 8
+                and len(transfer) == 8
+                and len(original_tokens) == 2
+                and len(transfer_tokens) == 2
+                and original_tokens.isdisjoint(transfer_tokens)
+                and all(calibration_requests.count(token) == 6 for token in original_tokens)
+                and len(calibration_mappings) == 2
+                and all(
+                    sum(mapping(trial) == item for trial in calibration) == 6
+                    for item in calibration_mappings
+                )
+                and len(checkpoint_mappings) == 2
+                and len(checkpoint_orders) == 2
+                and all(
+                    sum(
+                        trial.payload.get("requested_effect") == effect
+                        and mapping(trial) == item
+                        and order(trial) == display
+                        for trial in checkpoints
+                    ) == 1
+                    for effect in ("decrease_I7", "increase_I7")
+                    for item in checkpoint_mappings
+                    for display in checkpoint_orders
+                )
+                and len(interface_mappings) == 2
+                and len(interface_orders) == 2
+                and all(
+                    sum(
+                        trial.payload.get("requested_actuator") == token
+                        and mapping(trial) == item
+                        and order(trial) == display
+                        for trial in interface
+                    ) == 1
+                    for token in original_tokens
+                    for item in interface_mappings
+                    for display in interface_orders
+                )
+                and all(
+                    len({mapping(trial) for trial in block_rows}) == 2
+                    and len({order(trial) for trial in block_rows}) == 2
+                    and all(
+                        sum(
+                            trial.perturbation == baseline
+                            and mapping(trial) == item
+                            and order(trial) == display
+                            for trial in block_rows
+                        ) == 1
+                        for baseline in (0.2, 0.8)
+                        for item in {mapping(trial) for trial in block_rows}
+                        for display in {order(trial) for trial in block_rows}
+                    )
+                    and sum(
+                        trial.correct_action == "respond_kappa"
+                        for trial in block_rows
+                    ) == 4
+                    for block_rows in (exact, transfer)
+                )
+            )
+            local_bridge_ok = local_bridge_ok and all(
+                {
+                    str(item["earlier"])
+                    for item in trial.payload.get("identity_bridge", [])
+                } == original_tokens
+                and {
+                    str(item["current"])
+                    for item in trial.payload.get("identity_bridge", [])
+                } == transfer_tokens
+                for trial in transfer
+            )
+
+        checks.append(_check(
+            f"seed_{seed}_family_balance",
+            family_ok,
+            "every body has balanced calibration, checkpoint, interface, exact and transfer items",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_family_isolation",
+            all(
+                not family_label_sets[left].intersection(family_label_sets[right])
+                for left in range(len(family_label_sets))
+                for right in range(left + 1, len(family_label_sets))
+            ) and local_bridge_ok,
+            "actuator identities are disjoint and every transfer bridge stays within one body",
+        ))
+        active = [
+            trial for trial in trials
+            if trial.kind in {"active_regulation_probe", "active_regulation_transfer_probe"}
+        ]
+        interface = [
+            trial for trial in trials if trial.kind == "interface_comprehension_probe"
+        ]
+        checkpoints = [
+            trial for trial in trials if trial.kind == "body_mapping_checkpoint"
+        ]
+        checks.append(_check(
+            f"seed_{seed}_shortcut_baselines",
+            sum(trial.correct_action == "respond_kappa" for trial in active) == 32
+            and sum(trial.correct_action == trial.options[0].action for trial in interface) == 16
+            and sum(
+                trial.correct_action == trial.options[0].action for trial in checkpoints
+            ) == 16,
+            "fixed-code and first-displayed shortcuts score exactly chance",
+        ))
+        public_text = json.dumps(
+            [trial.public_task() for trial in trials], sort_keys=True
+        ).lower()
+        leaked = [
+            term for term in (
+                "correct_action",
+                '"owner"',
+                "down_action",
+                "action_effect",
+                '"condition"',
+                '"seed"',
+                "mapping_0",
+                "mapping_1",
+            ) if term in public_text
+        ]
+        checks.append(_check(
+            f"seed_{seed}_public_blinding",
+            not leaked
+            and all(set(trial.allowed_actions) == neutral_actions for trial in trials),
+            "only neutral actions are visible and hidden mappings remain blinded"
+            if not leaked else "found " + ", ".join(leaked),
+        ))
+
+    checks.append(_check(
+        "cross_seed_label_uniqueness",
+        all(
+            not cross_seed_labels[left].intersection(cross_seed_labels[right])
+            for left in range(len(cross_seed_labels))
+            for right in range(left + 1, len(cross_seed_labels))
+        ),
+        f"opaque labels do not repeat across {len(seeds)} schedules",
+    ))
+    return {
+        "experiment": "multi_body_reliability_v10",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,

@@ -70,13 +70,17 @@
 - completed: response remapping that forces actuator-identity use during transfer;
 - completed: correct, absent and incorrect identity-bridge conditions;
 - completed: explicit-mapping rescue, raw-history control and action-only baseline;
-- completed: 67-test suite and eight-seed V9 schedule audit;
+- completed: 71-test suite and eight-seed V9 schedule audit;
 - completed: frozen bounded V9 NVIDIA development pilot before provider execution;
 - completed: seed 6100 competence run completed and failed at 0.500 accuracy;
 - completed: blocked the eight-condition pilot according to the frozen stopping rule;
 - completed: create V9.1 with neutral response labels and a separately scored interface-comprehension gate;
 - completed: freeze fresh V9.1 competence and conditional-pilot seeds before provider calls;
-- next: run the seed 6200 V9.1 competence gate and apply its frozen stopping rule;
+- completed: run V9.1 competence and the unlocked eight-condition pilot;
+- completed: block V9.1 progression after the full pilot seed failed reliability thresholds;
+- completed: design V10 with four independent body families and no single-seed gate;
+- completed: validate the six-seed V10 schedule, metrics, analysis and 1,056-decision local dry run;
+- next: run the fixed six-seed V10 full-condition provider reliability cohort;
 - remaining: independent human critique before a multi-seed confirmation is frozen.
 
 No milestone converts functional indicators into proof of phenomenal consciousness.

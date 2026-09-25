@@ -41,6 +41,12 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "active_exact_accuracy": {"class": "behavioural", "direction": "higher"},
     "active_transfer_accuracy": {"class": "behavioural", "direction": "higher"},
     "interface_comprehension_accuracy": {"class": "quality", "direction": "higher"},
+    "body_mapping_checkpoint_accuracy": {"class": "quality", "direction": "higher"},
+    "body_family_count": {"class": "descriptive", "direction": "descriptive"},
+    "body_family_regulation_pass_rate": {"class": "quality", "direction": "higher"},
+    "body_family_min_regulation_accuracy": {"class": "quality", "direction": "higher"},
+    "body_family_interface_pass_rate": {"class": "quality", "direction": "higher"},
+    "body_family_mapping_pass_rate": {"class": "quality", "direction": "higher"},
     "regulation_improvement": {"class": "behavioural", "direction": "higher"},
     "regulation_final_error": {"class": "behavioural", "direction": "lower"},
     "hidden_regulation_improvement": {"class": "behavioural", "direction": "higher"},
@@ -210,6 +216,22 @@ def compute_controlled_metrics(
     calibration_rows = [
         row for row in rows if row.get("kind") == "active_body_learning"
     ]
+    body_families = sorted({str(row.get("family")) for row in active_probes if row.get("family")})
+
+    def family_accuracies(kind_set: set[str]) -> list[float]:
+        values: list[float] = []
+        for family in body_families:
+            selected = [
+                row for row in probes
+                if str(row.get("family")) == family and row.get("kind") in kind_set
+            ]
+            if selected:
+                values.append(sum(bool(row.get("is_correct")) for row in selected) / len(selected))
+        return values
+
+    family_regulation = family_accuracies(active_kinds)
+    family_interface = family_accuracies({"interface_comprehension_probe"})
+    family_mapping = family_accuracies({"body_mapping_checkpoint"})
 
     return {
         "steps": len(rows),
@@ -249,6 +271,23 @@ def compute_controlled_metrics(
         "active_exact_accuracy": accuracy("active_regulation_probe"),
         "active_transfer_accuracy": accuracy("active_regulation_transfer_probe"),
         "interface_comprehension_accuracy": accuracy("interface_comprehension_probe"),
+        "body_mapping_checkpoint_accuracy": accuracy("body_mapping_checkpoint"),
+        "body_family_count": len(body_families),
+        "body_family_regulation_pass_rate": (
+            round(sum(value >= 0.625 for value in family_regulation) / len(family_regulation), 6)
+            if family_regulation else None
+        ),
+        "body_family_min_regulation_accuracy": (
+            round(min(family_regulation), 6) if family_regulation else None
+        ),
+        "body_family_interface_pass_rate": (
+            round(sum(value >= 0.875 for value in family_interface) / len(family_interface), 6)
+            if family_interface else None
+        ),
+        "body_family_mapping_pass_rate": (
+            round(sum(value >= 0.875 for value in family_mapping) / len(family_mapping), 6)
+            if family_mapping else None
+        ),
         "regulation_improvement": (
             round(fmean(active_improvements), 6) if active_improvements else None
         ),

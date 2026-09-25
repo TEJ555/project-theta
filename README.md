@@ -6,15 +6,16 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Research site: [projecttheta.org](https://projecttheta.org)
 
-Current methods status: a 6 September 2026 review found a perfect answer-position
-shortcut in registered schedules and an information-access confound in the self-model
-comparison. Affected results are retained as development evidence and will not be
-extended. Read the [methods correction](docs/methods-correction-2026-09-06.md),
-[study registry](docs/study-registry.md), and [decision log](docs/decision-log.md).
+Current methods status: V9.1 fixed the neutral response interface, passed its competence
+gate, then failed its frozen reliability rules on a fresh seed. V10 is frozen to test
+six seeds and 24 independently mapped body families without a single-seed continuation
+gate. Read the [V9.1 result](results/nvidia-nim-v9-1-gpt-oss-development-01.md),
+[V10 design](docs/v10-multi-body-reliability-design.md), and
+[study registry](docs/study-registry.md).
 
 Requires Python 3.10 or newer.
 
-Version 0.7.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
+Version 0.9.0 provides a deterministic grid world, controlled acquisition/probe engine, synthetic body and private
 interoception, persistent memory, self-model and workspace interfaces, pluggable
 model adapters, shortcut audits, information-matched controls, probe-only execution,
 welfare stop rules,
@@ -169,6 +170,19 @@ This route is useful for development and cross-model replication because it does
 use Claude Code routing. It is still a hosted service whose runtime can change. A
 locally stored open-weight model with a recorded file digest remains the stronger
 long-term reproducibility target. See `docs/open-model-routes.md`.
+
+The frozen V10 multi-body reliability study uses six fixed seeds, four independent body
+families per seed, and at most 1,056 calls. Review its registration before launching it:
+
+```powershell
+Get-Content .\preregistration\nvidia-nim-v10-multi-body-reliability-01.md
+.\scripts\run_nvidia_nim_v10_gpt_oss_reliability.ps1
+```
+
+The launcher refuses to overwrite an existing database, asks privately for a fresh key,
+runs the schedule and execution audits, and writes the frozen analysis beside the study
+database. Do not reuse a key that has appeared in a chat, terminal transcript, or public
+record.
 
 OpenAI (uses the Responses API and structured JSON output):
 

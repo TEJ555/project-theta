@@ -228,11 +228,13 @@ class ExperimentHarness:
         active_v9 = protocol.name in {
             "active_interoceptive_control_v9",
             "active_interoceptive_control_v9_1",
+            "multi_body_reliability_v10",
         }
         active_interoception = protocol.name in {
             "active_interoceptive_control_v8",
             "active_interoceptive_control_v9",
             "active_interoceptive_control_v9_1",
+            "multi_body_reliability_v10",
         }
 
         with RunStore(self.db_path) as store:
@@ -329,7 +331,10 @@ class ExperimentHarness:
                     action_effect = 0.0
                     if not pre_stop:
                         if active_interoception:
-                            if trial.kind == "interface_comprehension_probe":
+                            if trial.kind in {
+                                "interface_comprehension_probe",
+                                "body_mapping_checkpoint",
+                            }:
                                 action_effect = 0.0
                             elif active_v9:
                                 action_effect = (

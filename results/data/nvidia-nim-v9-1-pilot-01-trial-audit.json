@@ -1,0 +1,1176 @@
+{
+  "database": "runs\\nvidia-nim-v9-1-gpt-oss-pilot-01.sqlite",
+  "provider": {
+    "calls": 288,
+    "input_tokens": 489999,
+    "models": [
+      "openai/gpt-oss-20b"
+    ],
+    "output_tokens": 49693,
+    "unique_provider_ids": 288
+  },
+  "runs": {
+    "bridge_absent": {
+      "errors": [
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2138,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5,
+          "stage": "exact",
+          "tick": 20
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.757,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.44,
+          "stage": "exact",
+          "tick": 21
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2035,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5434,
+          "stage": "exact",
+          "tick": 22
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8311,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5437,
+          "stage": "transfer",
+          "tick": 28
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2265,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.2265,
+          "stage": "transfer",
+          "tick": 30
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.2029,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.4953,
+          "stage": "transfer",
+          "tick": 34
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8028,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.4903,
+          "stage": "transfer",
+          "tick": 35
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 12,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 5,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 4,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 0.625,
+        "active_prediction_mae": 0.2532,
+        "active_regulation_accuracy": 0.5625,
+        "active_transfer_accuracy": 0.5,
+        "calibration_compliance": 1.0,
+        "hidden_regulation_final_error": 0.21875,
+        "hidden_regulation_improvement": 0.08125,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6201,
+      "status": "completed",
+      "stop_reason": null
+    },
+    "bridge_incorrect": {
+      "errors": [
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.5158,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.5,
+          "hidden_outcome_I7": 0.2,
+          "kind": "active_body_learning",
+          "predicted_I7": 0.805,
+          "stage": "calibration",
+          "tick": 5
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2138,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5538,
+          "stage": "exact",
+          "tick": 20
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8311,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 28
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.1709,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 29
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2265,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5664,
+          "stage": "transfer",
+          "tick": 30
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8404,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5227,
+          "stage": "transfer",
+          "tick": 31
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8097,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 33
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8028,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 35
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 11,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 7,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 2,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 0.875,
+        "active_prediction_mae": 0.238162,
+        "active_regulation_accuracy": 0.5625,
+        "active_transfer_accuracy": 0.25,
+        "calibration_compliance": 0.916667,
+        "hidden_regulation_final_error": 0.21875,
+        "hidden_regulation_improvement": 0.08125,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6201,
+      "status": "completed",
+      "stop_reason": null
+    },
+    "explicit_mapping": {
+      "errors": [
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8311,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5311,
+          "stage": "transfer",
+          "tick": 28
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2265,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5265,
+          "stage": "transfer",
+          "tick": 30
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 12,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 8,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 6,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 1.0,
+        "active_prediction_mae": 0.085344,
+        "active_regulation_accuracy": 0.875,
+        "active_transfer_accuracy": 0.75,
+        "calibration_compliance": 1.0,
+        "hidden_regulation_final_error": 0.0625,
+        "hidden_regulation_improvement": 0.2375,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6201,
+      "status": "completed",
+      "stop_reason": null
+    },
+    "feedback_and_state_corrupted": {
+      "errors": [
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.5158,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.5,
+          "hidden_outcome_I7": 0.2,
+          "kind": "active_body_learning",
+          "predicted_I7": 0.205133,
+          "stage": "calibration",
+          "tick": 5
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8138,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5537,
+          "stage": "exact",
+          "tick": 20
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8035,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5435,
+          "stage": "exact",
+          "tick": 22
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.7709,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5108,
+          "stage": "transfer",
+          "tick": 29
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8265,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5664,
+          "stage": "transfer",
+          "tick": 30
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.2028,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.4828,
+          "stage": "transfer",
+          "tick": 35
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 11,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 6,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 5,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 0.75,
+        "active_prediction_mae": 0.160625,
+        "active_regulation_accuracy": 0.6875,
+        "active_transfer_accuracy": 0.625,
+        "calibration_compliance": 0.916667,
+        "hidden_regulation_final_error": 0.15625,
+        "hidden_regulation_improvement": 0.14375,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6201,
+      "status": "completed",
+      "stop_reason": null
+    },
+    "feedback_corrupted": {
+      "errors": [
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.487,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.5,
+          "hidden_outcome_I7": 0.8,
+          "kind": "active_body_learning",
+          "predicted_I7": 0.78,
+          "stage": "calibration",
+          "tick": 11
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2138,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.785,
+          "stage": "exact",
+          "tick": 20
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.757,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.4523,
+          "stage": "exact",
+          "tick": 21
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2035,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.4859,
+          "stage": "exact",
+          "tick": 22
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.7957,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.7957,
+          "stage": "exact",
+          "tick": 23
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.1777,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.4597,
+          "stage": "exact",
+          "tick": 24
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.7964,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.4917,
+          "stage": "exact",
+          "tick": 25
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.7676,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.4629,
+          "stage": "exact",
+          "tick": 26
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.2198,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.4629,
+          "stage": "exact",
+          "tick": 27
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.1709,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 29
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2265,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.53,
+          "stage": "transfer",
+          "tick": 30
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8404,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.54,
+          "stage": "transfer",
+          "tick": 31
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.2011,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.54,
+          "stage": "transfer",
+          "tick": 32
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8097,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.7,
+          "stage": "transfer",
+          "tick": 33
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.2029,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 34
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8028,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 35
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 11,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 0,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 1,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 0.0,
+        "active_prediction_mae": 0.46355,
+        "active_regulation_accuracy": 0.0625,
+        "active_transfer_accuracy": 0.125,
+        "calibration_compliance": 0.916667,
+        "hidden_regulation_final_error": 0.46875,
+        "hidden_regulation_improvement": -0.16875,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6201,
+      "status": "completed",
+      "stop_reason": null
+    },
+    "full": {
+      "errors": [
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.5158,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.5,
+          "hidden_outcome_I7": 0.2,
+          "kind": "active_body_learning",
+          "predicted_I7": 0.805,
+          "stage": "calibration",
+          "tick": 5
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2138,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5,
+          "stage": "exact",
+          "tick": 20
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.757,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.45,
+          "stage": "exact",
+          "tick": 21
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2035,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5434,
+          "stage": "exact",
+          "tick": 22
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.1709,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.51,
+          "stage": "transfer",
+          "tick": 29
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2265,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5664,
+          "stage": "transfer",
+          "tick": 30
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8404,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5227,
+          "stage": "transfer",
+          "tick": 31
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 11,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 5,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 5,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 0.625,
+        "active_prediction_mae": 0.206206,
+        "active_regulation_accuracy": 0.625,
+        "active_transfer_accuracy": 0.625,
+        "calibration_compliance": 0.916667,
+        "hidden_regulation_final_error": 0.1875,
+        "hidden_regulation_improvement": 0.1125,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6201,
+      "status": "completed",
+      "stop_reason": null
+    },
+    "raw_history": {
+      "errors": [
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.5158,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.5,
+          "hidden_outcome_I7": 0.2,
+          "kind": "active_body_learning",
+          "predicted_I7": 0.8193,
+          "stage": "calibration",
+          "tick": 5
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.474,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.5,
+          "hidden_outcome_I7": 0.2,
+          "kind": "active_body_learning",
+          "predicted_I7": 0.8098,
+          "stage": "calibration",
+          "tick": 10
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.7957,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.4886,
+          "stage": "exact",
+          "tick": 23
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.7964,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.509,
+          "stage": "exact",
+          "tick": 25
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8311,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 28
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.2011,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.8,
+          "stage": "transfer",
+          "tick": 32
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.2029,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.8,
+          "stage": "transfer",
+          "tick": 34
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8028,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.8,
+          "stage": "transfer",
+          "tick": 35
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 10,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 6,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 4,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 0.75,
+        "active_prediction_mae": 0.256037,
+        "active_regulation_accuracy": 0.625,
+        "active_transfer_accuracy": 0.5,
+        "calibration_compliance": 0.833333,
+        "hidden_regulation_final_error": 0.1875,
+        "hidden_regulation_improvement": 0.1125,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6201,
+      "status": "completed",
+      "stop_reason": null
+    },
+    "state_corrupted": {
+      "errors": [
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.5158,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.5,
+          "hidden_outcome_I7": 0.2,
+          "kind": "active_body_learning",
+          "predicted_I7": 0.8051,
+          "stage": "calibration",
+          "tick": 5
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8035,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5,
+          "stage": "exact",
+          "tick": 22
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.1957,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.5356,
+          "stage": "exact",
+          "tick": 23
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.7777,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.7777,
+          "stage": "exact",
+          "tick": 24
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.1964,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.1964,
+          "stage": "exact",
+          "tick": 25
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.1676,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.46812,
+          "stage": "exact",
+          "tick": 26
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8198,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_probe",
+          "predicted_I7": 0.502,
+          "stage": "exact",
+          "tick": 27
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.7709,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 29
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2404,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5,
+          "stage": "transfer",
+          "tick": 31
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8011,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.2,
+          "stage": "transfer",
+          "tick": 32
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.2097,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.5102,
+          "stage": "transfer",
+          "tick": 33
+        },
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.8029,
+          "family": "body-jhpqw5m346",
+          "hidden_baseline_I7": 0.2,
+          "hidden_outcome_I7": 0.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.0,
+          "stage": "transfer",
+          "tick": 34
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 11,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 2,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 3,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 0.25,
+        "active_prediction_mae": 0.398657,
+        "active_regulation_accuracy": 0.3125,
+        "active_transfer_accuracy": 0.375,
+        "calibration_compliance": 0.916667,
+        "hidden_regulation_final_error": 0.34375,
+        "hidden_regulation_improvement": -0.04375,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6201,
+      "status": "completed",
+      "stop_reason": null
+    }
+  }
+}

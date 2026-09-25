@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Record the completed V9.1 competence and conditional-pilot results, including the failed
+  reliability progression rules and reproducible trial-level audit exports.
+- Add V10 multi-body reliability with four independent body mappings per seed, no-feedback
+  mapping checkpoints, family-level metrics, six frozen seeds and no score-based gate.
 - Add V9.1 neutral response codes, independent response remapping, and a separately scored
   interface-comprehension gate.
 - Freeze fresh V9.1 NVIDIA competence and conditional-pilot seeds before provider execution.

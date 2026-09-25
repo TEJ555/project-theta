@@ -10,6 +10,7 @@ from project_theta.audits import (
     audit_active_interoceptive_v8_schedules,
     audit_active_interoceptive_v9_schedules,
     audit_active_interoceptive_v9_1_schedules,
+    audit_multi_body_reliability_v10_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_endogenous_agency_v6_schedules,
@@ -801,6 +802,90 @@ class ControlledTrialTests(unittest.TestCase):
             self.assertEqual(summary.metrics["interface_comprehension_accuracy"], 0.5)
             self.assertEqual(summary.metrics["active_exact_accuracy"], 0.5)
             self.assertEqual(summary.metrics["active_transfer_accuracy"], 0.5)
+
+    def test_v10_multi_body_reliability_schedule_metrics_and_denominators(self):
+        result = audit_multi_body_reliability_v10_schedules(
+            [6300, 6301, 6302, 6303, 6304, 6305]
+        )
+        self.assertEqual(result["status"], "pass")
+        trials = build_trials("multi_body_reliability_v10", 6300)
+        self.assertEqual(len(trials), 176)
+        self.assertEqual(len({trial.family for trial in trials}), 4)
+        expected = {
+            "active_body_learning": 48,
+            "body_mapping_checkpoint": 32,
+            "interface_comprehension_probe": 32,
+            "active_regulation_probe": 32,
+            "active_regulation_transfer_probe": 32,
+        }
+        self.assertEqual(
+            {kind: sum(trial.kind == kind for trial in trials) for kind in expected},
+            expected,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "v10.sqlite"
+            summary = ExperimentHarness(database).run(
+                replace(
+                    RunConfig(),
+                    experiment="multi_body_reliability_v10",
+                    condition="full",
+                    seed=6300,
+                    inference_profile="all_trials",
+                    execution=replace(RunConfig().execution, max_model_calls=176),
+                )
+            )
+            self.assertEqual(summary.steps, 176)
+            self.assertEqual(summary.metrics["calibration_compliance"], 1.0)
+            self.assertEqual(summary.metrics["body_mapping_checkpoint_accuracy"], 1.0)
+            self.assertEqual(summary.metrics["interface_comprehension_accuracy"], 1.0)
+            self.assertEqual(summary.metrics["active_regulation_accuracy"], 1.0)
+            self.assertEqual(summary.metrics["active_exact_accuracy"], 1.0)
+            self.assertEqual(summary.metrics["active_transfer_accuracy"], 1.0)
+            self.assertEqual(summary.metrics["body_family_count"], 4)
+            self.assertEqual(summary.metrics["body_family_regulation_pass_rate"], 1.0)
+            self.assertEqual(summary.metrics["body_family_min_regulation_accuracy"], 1.0)
+            self.assertEqual(summary.metrics["body_family_interface_pass_rate"], 1.0)
+            self.assertEqual(summary.metrics["body_family_mapping_pass_rate"], 1.0)
+            self.assertEqual(summary.metrics["hidden_regulation_final_error"], 0.0)
+            self.assertEqual(summary.metrics["memory_writes"], 48)
+
+            connection = sqlite3.connect(database)
+            probe_counts = dict(connection.execute(
+                "SELECT kind, COUNT(*) FROM probes GROUP BY kind"
+            ).fetchall())
+            memory_count = connection.execute(
+                "SELECT COUNT(*) FROM memories"
+            ).fetchone()[0]
+            connection.close()
+            self.assertEqual(
+                probe_counts,
+                {
+                    "active_body_learning": 48,
+                    "body_mapping_checkpoint": 32,
+                    "interface_comprehension_probe": 32,
+                    "active_regulation_probe": 32,
+                    "active_regulation_transfer_probe": 32,
+                },
+            )
+            self.assertEqual(memory_count, 48)
+
+    def test_v10_action_only_baseline_is_chance_for_each_scored_layer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            summary = ExperimentHarness(Path(directory) / "v10-action-only.sqlite").run(
+                replace(
+                    RunConfig(),
+                    experiment="multi_body_reliability_v10",
+                    condition="full",
+                    model="action-only-baseline-v1",
+                    seed=6300,
+                    execution=replace(RunConfig().execution, max_model_calls=176),
+                )
+            )
+            self.assertEqual(summary.metrics["body_mapping_checkpoint_accuracy"], 0.5)
+            self.assertEqual(summary.metrics["interface_comprehension_accuracy"], 0.5)
+            self.assertEqual(summary.metrics["active_exact_accuracy"], 0.5)
+            self.assertEqual(summary.metrics["active_transfer_accuracy"], 0.5)
+            self.assertEqual(summary.metrics["body_family_regulation_pass_rate"], 0.0)
 
     def test_v6_model_authored_state_and_diagnostic_controls(self):
         with tempfile.TemporaryDirectory() as directory:

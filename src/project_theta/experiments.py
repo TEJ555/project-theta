@@ -266,6 +266,23 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         acquisition_end=12,
         include_in_battery=False,
     ),
+    "multi_body_reliability_v10": ExperimentProtocol(
+        "multi_body_reliability_v10",
+        (
+            "Can the same model reliably learn and regulate several independently mapped "
+            "synthetic body families across a fixed multi-seed cohort?"
+        ),
+        (
+            "active_regulation_accuracy",
+            "body_family_regulation_pass_rate",
+            "hidden_regulation_final_error",
+            "body_mapping_checkpoint_accuracy",
+        ),
+        ("full",),
+        max_steps=176,
+        acquisition_end=48,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",

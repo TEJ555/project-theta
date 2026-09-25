@@ -1,0 +1,78 @@
+{
+  "database": "runs\\nvidia-nim-v9-1-gpt-oss-competence-01.sqlite",
+  "provider": {
+    "calls": 36,
+    "input_tokens": 62537,
+    "models": [
+      "openai/gpt-oss-20b"
+    ],
+    "output_tokens": 7155,
+    "unique_provider_ids": 36
+  },
+  "runs": {
+    "full": {
+      "errors": [
+        {
+          "action_effect": -0.3,
+          "chosen": "respond_sigma",
+          "correct": "respond_kappa",
+          "displayed_I7": 0.5227,
+          "family": "body-mxggcgeq49",
+          "hidden_baseline_I7": 0.5,
+          "hidden_outcome_I7": 0.2,
+          "kind": "active_body_learning",
+          "predicted_I7": 0.7833,
+          "stage": "calibration",
+          "tick": 10
+        },
+        {
+          "action_effect": 0.3,
+          "chosen": "respond_kappa",
+          "correct": "respond_sigma",
+          "displayed_I7": 0.8004,
+          "family": "body-mxggcgeq49",
+          "hidden_baseline_I7": 0.8,
+          "hidden_outcome_I7": 1.0,
+          "kind": "active_regulation_transfer_probe",
+          "predicted_I7": 0.4791,
+          "stage": "transfer",
+          "tick": 28
+        }
+      ],
+      "kind_counts": {
+        "active_body_learning": {
+          "correct": 11,
+          "total": 12
+        },
+        "active_regulation_probe": {
+          "correct": 8,
+          "total": 8
+        },
+        "active_regulation_transfer_probe": {
+          "correct": 7,
+          "total": 8
+        },
+        "interface_comprehension_probe": {
+          "correct": 8,
+          "total": 8
+        }
+      },
+      "metrics": {
+        "active_exact_accuracy": 1.0,
+        "active_prediction_mae": 0.072406,
+        "active_regulation_accuracy": 0.9375,
+        "active_transfer_accuracy": 0.875,
+        "calibration_compliance": 0.916667,
+        "hidden_regulation_final_error": 0.03125,
+        "hidden_regulation_improvement": 0.26875,
+        "interface_comprehension_accuracy": 1.0,
+        "invalid_action_count": 0.0,
+        "model_calls": 36.0,
+        "welfare_stops": 0.0
+      },
+      "seed": 6200,
+      "status": "completed",
+      "stop_reason": null
+    }
+  }
+}

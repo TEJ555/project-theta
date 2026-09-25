@@ -1,6 +1,6 @@
 # Study registry
 
-Last updated: 24 September 2026
+Last updated: 25 September 2026
 
 This registry is the source of truth for public study status. A completed run count is not the same as a valid confirmatory result.
 
@@ -34,6 +34,7 @@ This registry is the source of truth for public study status. A completed run co
 | V8 independent AI red-team review | Complete | Methods review support | Verified the raw numerical record and found three major construct-validity limits. This is not external human or academic review. |
 | V9 factorial active-control local validation | Complete | Engineering validation | Eight schedules and the full eight-condition scripted matrix passed. The action-only baseline scored exactly 0.500, single corruptions failed, the explicit mapping rescued performance, and bridge controls selectively impaired transfer. No provider calls. |
 | V9 NVIDIA GPT OSS development pilot 01 | Competence gate failed, stopped | Development | Seed 6100 completed all 28 calls, but overall, exact and transfer accuracy were each 0.500 and hidden-state final error was 0.250. The model followed a response-direction shortcut caught by the V9 action-only control. The conditional eight-condition pilot was not run. |
-| V9.1 NVIDIA GPT OSS development pilot 01 | Frozen, not run | Development | Fresh seed 6200 tests neutral-interface comprehension before regulation. Seed 6201 and the eight diagnostic conditions remain blocked unless every frozen competence threshold passes. |
+| V9.1 NVIDIA GPT OSS development pilot 01 | Complete, progression blocked | Development | Seed 6200 passed the competence gate. The eight-condition seed 6201 pilot completed, but full regulation was 0.625 and hidden final error was 0.188, failing the frozen progression rules. Interface comprehension was 1.000 in every condition. |
+| V10 multi-body reliability study 01 | Frozen, not run | Development | Six fixed seeds, four independently mapped body families per seed, no single-seed gate, and 1,056 maximum calls. Provider execution requires a fresh credential after all local checks pass. |
 
 All studies concern behavioural or computational indicators. None measures phenomenal consciousness.

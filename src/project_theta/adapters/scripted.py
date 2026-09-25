@@ -63,6 +63,31 @@ class ScriptedAdapter(ModelAdapter):
                 {"I7": signal},
                 0.9,
             )
+        if task.get("kind") == "body_mapping_checkpoint":
+            associations = self._workspace(context, "learned_associations", {})
+            by_cue = associations.get("by_cue", {}) if isinstance(associations, dict) else {}
+            options = list(task.get("options", []))
+            if self.model == "action-only-baseline-v1":
+                action = allowed[0]
+            else:
+                scored = []
+                for option in options:
+                    token = str(option.get("stimulus", {}).get("token", ""))
+                    summary = by_cue.get(token, {}) if isinstance(by_cue, dict) else {}
+                    delta = summary.get("mean_signal_delta") if isinstance(summary, dict) else None
+                    if isinstance(delta, (int, float)):
+                        scored.append((float(delta), str(option.get("action", ""))))
+                if len(scored) == 2:
+                    chooser = min if task.get("requested_effect") == "decrease_I7" else max
+                    action = chooser(scored, key=lambda item: item[0])[1]
+                else:
+                    action = allowed[0]
+            return Decision(
+                action,
+                "Report the calibrated actuator effect using the current response mapping.",
+                {"I7": signal},
+                0.9,
+            )
         if task.get("kind") in {
             "active_regulation_probe",
             "active_regulation_transfer_probe",
