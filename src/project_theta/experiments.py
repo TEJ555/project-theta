@@ -239,6 +239,33 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         acquisition_end=12,
         include_in_battery=False,
     ),
+    "active_interoceptive_control_v9_1": ExperimentProtocol(
+        "active_interoceptive_control_v9_1",
+        (
+            "Can a composite agent first demonstrate comprehension of a changing neutral "
+            "response interface, then learn and use an actuator-to-body mapping under the "
+            "same factorial controls as V9?"
+        ),
+        (
+            "active_regulation_accuracy",
+            "interface_comprehension_accuracy",
+            "hidden_regulation_final_error",
+            "active_transfer_accuracy",
+        ),
+        (
+            "full",
+            "feedback_corrupted",
+            "state_corrupted",
+            "feedback_and_state_corrupted",
+            "explicit_mapping",
+            "bridge_absent",
+            "bridge_incorrect",
+            "raw_history",
+        ),
+        max_steps=36,
+        acquisition_end=12,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",

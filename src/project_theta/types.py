@@ -5,11 +5,11 @@ from typing import Any, Literal
 
 Action = Literal[
     "north", "south", "east", "west", "wait", "consume", "inspect",
-    "observe", "choose_left", "choose_right",
+    "observe", "choose_left", "choose_right", "respond_kappa", "respond_sigma",
 ]
 VALID_ACTIONS: tuple[Action, ...] = (
     "north", "south", "east", "west", "wait", "consume", "inspect",
-    "observe", "choose_left", "choose_right",
+    "observe", "choose_left", "choose_right", "respond_kappa", "respond_sigma",
 )
 
 

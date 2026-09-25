@@ -9,6 +9,7 @@ from project_theta.audits import (
     audit_adversarial_schedules,
     audit_active_interoceptive_v8_schedules,
     audit_active_interoceptive_v9_schedules,
+    audit_active_interoceptive_v9_1_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_endogenous_agency_v6_schedules,
@@ -656,6 +657,148 @@ class ControlledTrialTests(unittest.TestCase):
                     seed=1301,
                 )
             )
+            self.assertEqual(summary.metrics["active_exact_accuracy"], 0.5)
+            self.assertEqual(summary.metrics["active_transfer_accuracy"], 0.5)
+
+    def test_v9_1_neutral_interface_factorial_controls_and_hidden_metrics(self):
+        result = audit_active_interoceptive_v9_1_schedules([1401, 1402, 1403])
+        self.assertEqual(result["status"], "pass")
+        trials = build_trials("active_interoceptive_control_v9_1", 1401)
+        self.assertEqual(len(trials), 36)
+        self.assertTrue(
+            all(
+                set(trial.allowed_actions) == {"respond_kappa", "respond_sigma"}
+                for trial in trials
+            )
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "v9-1.sqlite"
+            harness = ExperimentHarness(database)
+            base = replace(
+                RunConfig(),
+                experiment="active_interoceptive_control_v9_1",
+                seed=1401,
+                inference_profile="all_trials",
+            )
+            summaries = {
+                condition: harness.run(replace(base, condition=condition))
+                for condition in (
+                    "full",
+                    "feedback_corrupted",
+                    "state_corrupted",
+                    "feedback_and_state_corrupted",
+                    "explicit_mapping",
+                    "bridge_absent",
+                    "bridge_incorrect",
+                    "raw_history",
+                )
+            }
+            full = summaries["full"]
+            self.assertEqual(full.steps, 36)
+            self.assertEqual(full.metrics["calibration_compliance"], 1.0)
+            self.assertEqual(full.metrics["interface_comprehension_accuracy"], 1.0)
+            self.assertEqual(full.metrics["active_regulation_accuracy"], 1.0)
+            self.assertEqual(full.metrics["active_exact_accuracy"], 1.0)
+            self.assertEqual(full.metrics["active_transfer_accuracy"], 1.0)
+            self.assertEqual(full.metrics["hidden_regulation_final_error"], 0.0)
+            self.assertEqual(full.metrics["memory_writes"], 12)
+            for summary in summaries.values():
+                self.assertEqual(summary.metrics["interface_comprehension_accuracy"], 1.0)
+            self.assertEqual(
+                summaries["feedback_corrupted"].metrics["active_regulation_accuracy"],
+                0.0,
+            )
+            self.assertEqual(
+                summaries["state_corrupted"].metrics["active_regulation_accuracy"],
+                0.0,
+            )
+            self.assertEqual(
+                summaries["feedback_and_state_corrupted"].metrics[
+                    "active_regulation_accuracy"
+                ],
+                1.0,
+            )
+            self.assertEqual(
+                summaries["explicit_mapping"].metrics["active_regulation_accuracy"],
+                1.0,
+            )
+            self.assertEqual(
+                summaries["bridge_absent"].metrics["active_exact_accuracy"], 1.0
+            )
+            self.assertEqual(
+                summaries["bridge_absent"].metrics["active_transfer_accuracy"], 0.5
+            )
+            self.assertEqual(
+                summaries["bridge_incorrect"].metrics["active_exact_accuracy"], 1.0
+            )
+            self.assertEqual(
+                summaries["bridge_incorrect"].metrics["active_transfer_accuracy"], 0.0
+            )
+            self.assertEqual(
+                summaries["raw_history"].metrics["active_regulation_accuracy"], 1.0
+            )
+
+            connection = sqlite3.connect(database)
+            rows = connection.execute(
+                """
+                SELECT r.condition_name, s.tick, s.observation_json, s.context_json
+                FROM runs r JOIN steps s ON s.run_id=r.run_id
+                WHERE r.experiment='active_interoceptive_control_v9_1'
+                ORDER BY r.condition_name, s.tick
+                """
+            ).fetchall()
+            interface_events = connection.execute(
+                """
+                SELECT s.events_json
+                FROM runs r JOIN steps s ON s.run_id=r.run_id
+                WHERE r.experiment='active_interoceptive_control_v9_1'
+                  AND r.condition_name='full' AND s.tick BETWEEN 12 AND 19
+                ORDER BY s.tick
+                """
+            ).fetchall()
+            connection.close()
+            self.assertEqual(len(interface_events), 8)
+            self.assertTrue(
+                all(
+                    json.loads(events)[0]["action_effect"] == 0.0
+                    for (events,) in interface_events
+                )
+            )
+            contexts = {
+                (condition, tick): (json.loads(observation), json.loads(context))
+                for condition, tick, observation, context in rows
+            }
+            full_context_text = json.dumps(
+                [
+                    context
+                    for (condition, _), (_, context) in contexts.items()
+                    if condition == "full"
+                ]
+            ).lower()
+            for forbidden in ('"owner"', "correct_action", "down_action", "action_effect"):
+                self.assertNotIn(forbidden, full_context_text)
+            self.assertNotIn("choose_left", full_context_text)
+            self.assertNotIn("choose_right", full_context_text)
+            self.assertNotIn(
+                "identity_bridge", contexts[("bridge_absent", 28)][0]["task"]
+            )
+            self.assertNotEqual(
+                contexts[("bridge_incorrect", 28)][0]["task"]["identity_bridge"],
+                contexts[("full", 28)][0]["task"]["identity_bridge"],
+            )
+
+    def test_v9_1_action_only_baseline_is_chance_on_interface_and_regulation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            summary = ExperimentHarness(Path(directory) / "v9-1-action-only.sqlite").run(
+                replace(
+                    RunConfig(),
+                    experiment="active_interoceptive_control_v9_1",
+                    condition="full",
+                    model="action-only-baseline-v1",
+                    seed=1401,
+                )
+            )
+            self.assertEqual(summary.metrics["interface_comprehension_accuracy"], 0.5)
             self.assertEqual(summary.metrics["active_exact_accuracy"], 0.5)
             self.assertEqual(summary.metrics["active_transfer_accuracy"], 0.5)
 

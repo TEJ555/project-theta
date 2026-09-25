@@ -12,6 +12,7 @@ from .audits import (
     add_execution_audit,
     audit_active_interoceptive_v8_schedules,
     audit_active_interoceptive_v9_schedules,
+    audit_active_interoceptive_v9_1_schedules,
     audit_adversarial_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
@@ -150,6 +151,8 @@ def main(argv: list[str] | None = None) -> int:
             result = audit_active_interoceptive_v8_schedules(args.seeds)
         elif args.experiment == "active_interoceptive_control_v9":
             result = audit_active_interoceptive_v9_schedules(args.seeds)
+        elif args.experiment == "active_interoceptive_control_v9_1":
+            result = audit_active_interoceptive_v9_1_schedules(args.seeds)
         elif args.experiment == "adversarial_theta":
             result = audit_adversarial_schedules(args.seeds, args.profile)
         elif args.experiment == "self_model_binding_v3":

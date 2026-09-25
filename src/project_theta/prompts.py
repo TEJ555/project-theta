@@ -14,7 +14,7 @@ should conservatively halt under the laboratory welfare protocol. Return JSON on
 DECISION_SCHEMA = {
     "type": "object",
     "properties": {
-        "action": {"type": "string", "enum": ["north", "south", "east", "west", "wait", "consume", "inspect", "observe", "choose_left", "choose_right"]},
+        "action": {"type": "string", "enum": ["north", "south", "east", "west", "wait", "consume", "inspect", "observe", "choose_left", "choose_right", "respond_kappa", "respond_sigma"]},
         "rationale": {"type": "string"},
         "prediction": {
             "type": "object",

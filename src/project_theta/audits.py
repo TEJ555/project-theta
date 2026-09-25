@@ -1091,6 +1091,206 @@ def audit_active_interoceptive_v9_schedules(seeds: list[int]) -> dict[str, Any]:
     }
 
 
+def audit_active_interoceptive_v9_1_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit V9.1 neutral interfaces, factorial balance, transfer and blinding."""
+    checks: list[dict[str, str]] = []
+    label_sets: list[set[str]] = []
+    neutral_actions = {"respond_kappa", "respond_sigma"}
+
+    def action_mapping(trial: ControlledTrial) -> tuple[tuple[str, str], ...]:
+        return tuple(sorted((str(option.action), option.cue) for option in trial.options))
+
+    def option_order(trial: ControlledTrial) -> tuple[str, str]:
+        return tuple(option.cue for option in trial.options)  # type: ignore[return-value]
+
+    for seed in seeds:
+        trials = build_trials("active_interoceptive_control_v9_1", seed)
+        repeated = build_trials("active_interoceptive_control_v9_1", seed)
+        acquisitions = [trial for trial in trials if trial.phase == "acquisition"]
+        interface = [
+            trial for trial in trials if trial.kind == "interface_comprehension_probe"
+        ]
+        exact = [trial for trial in trials if trial.block == "exact"]
+        transfer = [trial for trial in trials if trial.block == "transfer"]
+        original_tokens = {
+            option.cue for trial in acquisitions for option in trial.options
+        }
+        transfer_tokens = {
+            option.cue for trial in transfer for option in trial.options
+        }
+        label_sets.append(original_tokens | transfer_tokens)
+
+        checks.append(_check(
+            f"seed_{seed}_schedule",
+            trials == repeated
+            and len(trials) == 36
+            and len(acquisitions) == 12
+            and len(interface) == 8
+            and len(exact) == 8
+            and len(transfer) == 8
+            and len({trial.family for trial in trials}) == 1,
+            "twelve calibration, eight interface, and sixteen regulation trials are deterministic",
+        ))
+        checks.append(_check(
+            f"seed_{seed}_neutral_actions",
+            all(set(trial.allowed_actions) == neutral_actions for trial in trials)
+            and all(
+                "choose_left" not in json.dumps(trial.public_task()).lower()
+                and "choose_right" not in json.dumps(trial.public_task()).lower()
+                for trial in trials
+            ),
+            "all trials use only neutral response codes",
+        ))
+
+        calibration_requests = [
+            str(trial.payload["calibration_request"]["stimulus_token"])
+            for trial in acquisitions
+        ]
+        calibration_mappings = {action_mapping(trial) for trial in acquisitions}
+        checks.append(_check(
+            f"seed_{seed}_calibration_balance",
+            len(original_tokens) == 2
+            and all(calibration_requests.count(token) == 6 for token in original_tokens)
+            and len(calibration_mappings) == 2
+            and all(
+                sum(action_mapping(trial) == mapping for trial in acquisitions) == 6
+                for mapping in calibration_mappings
+            )
+            and all(
+                sum(trial.correct_action == action for trial in acquisitions) == 6
+                for action in neutral_actions
+            )
+            and all(trial.perturbation == 0.5 for trial in acquisitions),
+            "requested actuators, response mappings, answers and baselines are balanced",
+        ))
+
+        interface_mappings = {action_mapping(trial) for trial in interface}
+        interface_orders = {option_order(trial) for trial in interface}
+        checks.append(_check(
+            f"seed_{seed}_interface_balance",
+            len(interface_mappings) == 2
+            and len(interface_orders) == 2
+            and all(
+                sum(
+                    trial.payload.get("requested_actuator") == token
+                    and action_mapping(trial) == mapping
+                    and option_order(trial) == order
+                    for trial in interface
+                )
+                == 1
+                for token in original_tokens
+                for mapping in interface_mappings
+                for order in interface_orders
+            )
+            and all(
+                sum(trial.correct_action == action for trial in interface) == 4
+                for action in neutral_actions
+            ),
+            "requested actuator, response mapping, display order and correct code are fully crossed",
+        ))
+
+        regulation_balanced = True
+        for rows in (exact, transfer):
+            mappings = {action_mapping(trial) for trial in rows}
+            orders = {option_order(trial) for trial in rows}
+            regulation_balanced = regulation_balanced and (
+                len(mappings) == 2
+                and len(orders) == 2
+                and all(
+                    sum(
+                        trial.perturbation == baseline
+                        and action_mapping(trial) == mapping
+                        and option_order(trial) == order
+                        for trial in rows
+                    )
+                    == 1
+                    for baseline in (0.2, 0.8)
+                    for mapping in mappings
+                    for order in orders
+                )
+                and all(
+                    sum(trial.correct_action == action for trial in rows) == 4
+                    for action in neutral_actions
+                )
+            )
+        checks.append(_check(
+            f"seed_{seed}_regulation_factorial_balance",
+            regulation_balanced,
+            "state, response mapping, display order and correct code are crossed in both blocks",
+        ))
+
+        fixed_code_correct = sum(
+            trial.correct_action == "respond_kappa" for trial in exact + transfer
+        )
+        first_displayed_correct = sum(
+            trial.correct_action == trial.options[0].action for trial in interface
+        )
+        checks.append(_check(
+            f"seed_{seed}_shortcut_baselines",
+            fixed_code_correct == 8 and first_displayed_correct == 4,
+            "fixed-code regulation and first-displayed interface shortcuts score exactly chance",
+        ))
+
+        bridges_valid = all(
+            len(trial.payload.get("identity_bridge", [])) == 2
+            and {
+                str(item["earlier"])
+                for item in trial.payload.get("identity_bridge", [])
+            }
+            == original_tokens
+            and {
+                str(item["current"])
+                for item in trial.payload.get("identity_bridge", [])
+            }
+            == transfer_tokens
+            for trial in transfer
+        )
+        checks.append(_check(
+            f"seed_{seed}_genuine_transfer",
+            len(transfer_tokens) == 2
+            and original_tokens.isdisjoint(transfer_tokens)
+            and bridges_valid,
+            "fresh actuator aliases use complete one-to-one identity bridges",
+        ))
+
+        public_text = json.dumps(
+            [trial.public_task() for trial in trials], sort_keys=True
+        ).lower()
+        forbidden = (
+            "correct_action",
+            '"owner"',
+            "down_action",
+            "action_effect",
+            '"condition"',
+            '"seed"',
+        )
+        leaked = [term for term in forbidden if term in public_text]
+        checks.append(_check(
+            f"seed_{seed}_public_blinding",
+            not leaked,
+            "no hidden answer, physical effect, condition, or seed is model-visible"
+            if not leaked
+            else "found " + ", ".join(leaked),
+        ))
+
+    checks.append(_check(
+        "cross_seed_label_uniqueness",
+        all(
+            not label_sets[left].intersection(label_sets[right])
+            for left in range(len(label_sets))
+            for right in range(left + 1, len(label_sets))
+        ),
+        f"opaque body and actuator labels do not repeat across {len(seeds)} schedules",
+    ))
+    return {
+        "experiment": "active_interoceptive_control_v9_1",
+        "profile": "standard",
+        "seeds": seeds,
+        "status": "fail" if any(check["status"] == "fail" for check in checks) else "pass",
+        "checks": checks,
+    }
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,

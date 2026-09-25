@@ -225,10 +225,14 @@ class ExperimentHarness:
         pending: list[tuple[int, float]] = []
         metric_rows: list[dict] = []
         stop_reason: str | None = None
-        active_v9 = protocol.name == "active_interoceptive_control_v9"
+        active_v9 = protocol.name in {
+            "active_interoceptive_control_v9",
+            "active_interoceptive_control_v9_1",
+        }
         active_interoception = protocol.name in {
             "active_interoceptive_control_v8",
             "active_interoceptive_control_v9",
+            "active_interoceptive_control_v9_1",
         }
 
         with RunStore(self.db_path) as store:
@@ -325,7 +329,9 @@ class ExperimentHarness:
                     action_effect = 0.0
                     if not pre_stop:
                         if active_interoception:
-                            if active_v9:
+                            if trial.kind == "interface_comprehension_probe":
+                                action_effect = 0.0
+                            elif active_v9:
                                 action_effect = (
                                     -0.3
                                     if selected_option is not None

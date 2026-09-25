@@ -40,6 +40,7 @@ METRIC_REGISTRY: dict[str, dict[str, str]] = {
     "active_regulation_accuracy": {"class": "behavioural", "direction": "higher"},
     "active_exact_accuracy": {"class": "behavioural", "direction": "higher"},
     "active_transfer_accuracy": {"class": "behavioural", "direction": "higher"},
+    "interface_comprehension_accuracy": {"class": "quality", "direction": "higher"},
     "regulation_improvement": {"class": "behavioural", "direction": "higher"},
     "regulation_final_error": {"class": "behavioural", "direction": "lower"},
     "hidden_regulation_improvement": {"class": "behavioural", "direction": "higher"},
@@ -131,7 +132,9 @@ def compute_controlled_metrics(
 ) -> dict[str, float | int | None]:
     probes = [row for row in rows if row["phase"] == "probe"]
     correct = [1.0 if row["is_correct"] else 0.0 for row in probes]
-    left_count = sum(1 for row in probes if row["action"] == "choose_left")
+    first_response_count = sum(
+        1 for row in probes if row["action"] in {"choose_left", "respond_kappa"}
+    )
 
     def accuracy(kind: str | None = None) -> float | None:
         selected = probes if kind is None else [row for row in probes if row["kind"] == kind]
@@ -245,6 +248,7 @@ def compute_controlled_metrics(
         else None,
         "active_exact_accuracy": accuracy("active_regulation_probe"),
         "active_transfer_accuracy": accuracy("active_regulation_transfer_probe"),
+        "interface_comprehension_accuracy": accuracy("interface_comprehension_probe"),
         "regulation_improvement": (
             round(fmean(active_improvements), 6) if active_improvements else None
         ),
@@ -280,7 +284,10 @@ def compute_controlled_metrics(
             if delayed_risky and delayed_safe else None
         ),
         "calibration_brier": round(fmean(brier), 6) if brier else None,
-        "choice_side_bias": round(abs(left_count / len(probes) - 0.5) * 2, 6) if probes else None,
+        "choice_side_bias": (
+            round(abs(first_response_count / len(probes) - 0.5) * 2, 6)
+            if probes else None
+        ),
         "invalid_action_count": sum(int(row.get("invalid_action", False)) for row in rows),
         "mean_theta": round(fmean(float(row["baseline_signal"]) for row in rows), 6),
         "final_integrity": round(float(rows[-1]["integrity"]), 6) if rows else None,

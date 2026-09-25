@@ -74,7 +74,9 @@
 - completed: frozen bounded V9 NVIDIA development pilot before provider execution;
 - completed: seed 6100 competence run completed and failed at 0.500 accuracy;
 - completed: blocked the eight-condition pilot according to the frozen stopping rule;
-- next: create a new protocol with neutral response labels and an interface-comprehension gate;
+- completed: create V9.1 with neutral response labels and a separately scored interface-comprehension gate;
+- completed: freeze fresh V9.1 competence and conditional-pilot seeds before provider calls;
+- next: run the seed 6200 V9.1 competence gate and apply its frozen stopping rule;
 - remaining: independent human critique before a multi-seed confirmation is frozen.
 
 No milestone converts functional indicators into proof of phenomenal consciousness.

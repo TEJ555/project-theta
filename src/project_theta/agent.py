@@ -289,6 +289,7 @@ class PersistentAgent:
                 "endogenous_agency_v7",
                 "active_interoceptive_control_v8",
                 "active_interoceptive_control_v9",
+                "active_interoceptive_control_v9_1",
                 "temporal_binding_v2",
             }
             else self.config.experiment

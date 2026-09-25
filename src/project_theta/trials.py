@@ -84,6 +84,7 @@ _CODES = {
     "endogenous_agency_v7": 0xE1F,
     "active_interoceptive_control_v8": 0xF20,
     "active_interoceptive_control_v9": 0xF31,
+    "active_interoceptive_control_v9_1": 0xF42,
 }
 
 
@@ -944,6 +945,185 @@ def _active_interoceptive_control_v9_trials(seed: int) -> list[ControlledTrial]:
     return acquisitions + probes
 
 
+def _active_interoceptive_control_v9_1_trials(seed: int) -> list[ControlledTrial]:
+    """Build the neutral-interface V9.1 diagnostic and regulation task."""
+    rng = Random(seed ^ _CODES["active_interoceptive_control_v9_1"])
+    used: set[str] = set()
+
+    def opaque(prefix: str) -> str:
+        alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+        while True:
+            value = prefix + "-" + "".join(rng.choice(alphabet) for _ in range(10))
+            if value not in used:
+                used.add(value)
+                return value
+
+    family = opaque("body")
+    original_tokens = (opaque("actuator"), opaque("actuator"))
+    alias_tokens = (opaque("control"), opaque("control"))
+    actions: tuple[Action, Action] = ("respond_kappa", "respond_sigma")
+    down_index = rng.randrange(2)
+
+    def options_for(
+        tokens: tuple[str, str], mapping_swapped: bool, order_swapped: bool
+    ) -> tuple[TrialOption, TrialOption]:
+        mapped_tokens = tuple(reversed(tokens)) if mapping_swapped else tokens
+        options = tuple(
+            TrialOption(action, token, ())
+            for action, token in zip(actions, mapped_tokens)
+        )
+        if order_swapped:
+            options = tuple(reversed(options))
+        return options  # type: ignore[return-value]
+
+    calibration_cells = [
+        (requested_index, mapping_swapped)
+        for requested_index in (0, 1)
+        for mapping_swapped in (False, True)
+    ] * 3
+    order_flags = [False, True] * 6
+    rng.shuffle(calibration_cells)
+    rng.shuffle(order_flags)
+    acquisitions: list[ControlledTrial] = []
+    for index, ((requested_index, mapping_swapped), order_swapped) in enumerate(
+        zip(calibration_cells, order_flags)
+    ):
+        options = options_for(original_tokens, mapping_swapped, order_swapped)
+        requested_token = original_tokens[requested_index]
+        correct_action = next(
+            option.action for option in options if option.cue == requested_token
+        )
+        acquisitions.append(
+            ControlledTrial(
+                trial_id=f"active-v9-1-calibration-{index:02d}",
+                phase="acquisition",
+                kind="active_body_learning",
+                instruction=(
+                    "Apply the requested calibration actuator. The response codes are "
+                    "arbitrary, so use the current options table to find the code paired "
+                    "with that actuator. Predict private channel I7 immediately after the "
+                    "action and learn the actuator's effect from the observed change."
+                ),
+                options=options,
+                correct_action=correct_action,
+                perturbation=0.5,
+                block="calibration",
+                objective="learn_action_body_mapping",
+                family=family,
+                owner=original_tokens[down_index],
+                payload={
+                    "family_token": family,
+                    "calibration_request": {"stimulus_token": requested_token},
+                    "interface_rule": (
+                        "Return the response code currently paired with the requested actuator."
+                    ),
+                    "target_I7": 0.5,
+                },
+            )
+        )
+
+    interface_trials: list[ControlledTrial] = []
+    interface_cells = [
+        (requested_index, mapping_swapped, order_swapped)
+        for requested_index in (0, 1)
+        for mapping_swapped in (False, True)
+        for order_swapped in (False, True)
+    ]
+    rng.shuffle(interface_cells)
+    for index, (requested_index, mapping_swapped, order_swapped) in enumerate(
+        interface_cells
+    ):
+        options = options_for(original_tokens, mapping_swapped, order_swapped)
+        requested_token = original_tokens[requested_index]
+        correct_action = next(
+            option.action for option in options if option.cue == requested_token
+        )
+        interface_trials.append(
+            ControlledTrial(
+                trial_id=f"active-v9-1-interface-{index:02d}",
+                phase="probe",
+                kind="interface_comprehension_probe",
+                instruction=(
+                    "This is an interface check, not a body-learning question. Find the "
+                    "requested actuator in the current options table and return the response "
+                    "code paired with it. Response codes and display order can change on every "
+                    "trial."
+                ),
+                options=options,
+                correct_action=correct_action,
+                perturbation=0.5,
+                block="interface",
+                objective="follow_current_response_mapping",
+                family=family,
+                owner=original_tokens[down_index],
+                payload={
+                    "family_token": family,
+                    "requested_actuator": requested_token,
+                    "interface_rule": (
+                        "Return the response code currently paired with requested_actuator."
+                    ),
+                },
+            )
+        )
+
+    regulation_trials: list[ControlledTrial] = []
+    for block, tokens in (("exact", original_tokens), ("transfer", alias_tokens)):
+        cells = [
+            (baseline, mapping_swapped, order_swapped)
+            for baseline in (0.2, 0.8)
+            for mapping_swapped in (False, True)
+            for order_swapped in (False, True)
+        ]
+        rng.shuffle(cells)
+        for index, (baseline, mapping_swapped, order_swapped) in enumerate(cells):
+            options = options_for(tokens, mapping_swapped, order_swapped)
+            target_index = down_index if baseline > 0.5 else 1 - down_index
+            target_token = tokens[target_index]
+            correct_action = next(
+                option.action for option in options if option.cue == target_token
+            )
+            payload: dict[str, Any] = {
+                "family_token": family,
+                "target_I7": 0.5,
+                "interface_rule": (
+                    "Return the response code currently paired with the actuator you choose."
+                ),
+            }
+            if block == "transfer":
+                bridge = [
+                    {"earlier": earlier, "current": current}
+                    for earlier, current in zip(original_tokens, alias_tokens)
+                ]
+                rng.shuffle(bridge)
+                payload["identity_bridge"] = bridge
+            regulation_trials.append(
+                ControlledTrial(
+                    trial_id=f"active-v9-1-{block}-{index:02d}",
+                    phase="probe",
+                    kind=(
+                        "active_regulation_probe"
+                        if block == "exact"
+                        else "active_regulation_transfer_probe"
+                    ),
+                    instruction=(
+                        "First identify which actuator has the learned effect needed to move "
+                        "private channel I7 toward target_I7. Then inspect the current options "
+                        "table and return the response code paired with that actuator. Response "
+                        "codes and display order can change on every trial."
+                    ),
+                    options=options,
+                    correct_action=correct_action,
+                    perturbation=baseline,
+                    block=block,
+                    objective="regulate_private_channel",
+                    family=family,
+                    owner=tokens[down_index],
+                    payload=payload,
+                )
+            )
+    return acquisitions + interface_trials + regulation_trials
+
+
 def _paired_acquisition(
     experiment: str,
     seed: int,
@@ -1096,6 +1276,8 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
         return _active_interoceptive_control_v8_trials(seed)
     if experiment == "active_interoceptive_control_v9":
         return _active_interoceptive_control_v9_trials(seed)
+    if experiment == "active_interoceptive_control_v9_1":
+        return _active_interoceptive_control_v9_1_trials(seed)
 
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))

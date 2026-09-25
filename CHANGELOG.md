@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add V9.1 neutral response codes, independent response remapping, and a separately scored
+  interface-comprehension gate.
+- Freeze fresh V9.1 NVIDIA competence and conditional-pilot seeds before provider execution.
 - Add V9 factorial active control to separate calibration feedback from current-state sensing.
 - Add hidden-body regulation metrics and freeze evaluation outcome learning.
 - Add genuine response-remapped transfer with correct, absent and incorrect identity bridges.

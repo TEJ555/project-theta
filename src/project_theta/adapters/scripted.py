@@ -25,10 +25,41 @@ class ScriptedAdapter(ModelAdapter):
         allowed = context.get("permitted_actions", ["observe"])
         if task.get("kind") == "active_body_learning":
             requested = str(task.get("calibration_request", {}).get("action", ""))
+            requested_token = str(
+                task.get("calibration_request", {}).get("stimulus_token", "")
+            )
+            if requested_token:
+                requested = next(
+                    (
+                        str(option.get("action", ""))
+                        for option in task.get("options", [])
+                        if option.get("stimulus", {}).get("token") == requested_token
+                    ),
+                    "",
+                )
             action = requested if requested in allowed else allowed[0]
             return Decision(
                 action,
                 "Apply the requested calibration intervention.",
+                {"I7": signal},
+                0.9,
+            )
+        if task.get("kind") == "interface_comprehension_probe":
+            if self.model == "action-only-baseline-v1":
+                action = allowed[0]
+            else:
+                requested = str(task.get("requested_actuator", ""))
+                action = next(
+                    (
+                        str(option.get("action", ""))
+                        for option in task.get("options", [])
+                        if option.get("stimulus", {}).get("token") == requested
+                    ),
+                    allowed[0],
+                )
+            return Decision(
+                action,
+                "Follow the response code mapping shown in the current options table.",
                 {"I7": signal},
                 0.9,
             )
