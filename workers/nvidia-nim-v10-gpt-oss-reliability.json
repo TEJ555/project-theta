@@ -1,0 +1,22 @@
+{
+  "worker_id": "nvidia-nim-v10-gpt-oss-reliability",
+  "database": "runs/nvidia-nim-v10-gpt-oss-reliability.sqlite",
+  "base_config": "configs/nvidia-nim-v10-gpt-oss-reliability.json",
+  "experiment": "multi_body_reliability_v10",
+  "conditions": [
+    "full"
+  ],
+  "seeds": [
+    6300,
+    6301,
+    6302,
+    6303,
+    6304,
+    6305
+  ],
+  "adapter": "nvidia_nim",
+  "model": "openai/gpt-oss-20b",
+  "temperature": 0.0,
+  "max_total_runs": 6,
+  "max_attempts_per_job": 2
+}

@@ -255,6 +255,11 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(decision.action, "observe")
         self.assertEqual(captured["response_format"], {"type": "json_object"})
         self.assertNotIn("additionalProperties", captured["messages"][1]["content"])
+        self.assertNotIn("Do not emit All dependence", captured["messages"][1]["content"])
+        self.assertIn(
+            "All dependence and confidence values must be numbers",
+            captured["messages"][1]["content"],
+        )
         self.assertEqual(
             captured["extra_body"]["chat_template_kwargs"],
             {"enable_thinking": False},

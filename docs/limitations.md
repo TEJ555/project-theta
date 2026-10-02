@@ -1,10 +1,11 @@
 # Limitations
 
-Project Theta v0.3 fixes the opportunity problem in v0.1 by guaranteeing acquisition
-and balanced probes, but construct validity remains uncertain. The synthetic body,
-self-model, workspace and perturbations are hand-designed functional analogues, not
-biologically faithful implementations. The scripted baseline is deliberately engineered
-to validate task discrimination and cannot be evidence about AI consciousness.
+Project Theta guarantees acquisition opportunities, balanced probes, hidden scoring,
+and audited shortcut baselines in its current protocols, but construct validity remains
+uncertain. The synthetic body, self-model, workspace and perturbations are hand-designed
+functional analogues, not biologically faithful implementations. The scripted baseline
+is deliberately engineered to validate task discrimination and cannot be evidence about
+AI consciousness.
 
 Language models may solve probes through in-context statistical learning, prompt
 interpretation or training priors. That is interesting behaviour but does not establish
@@ -17,6 +18,20 @@ change. A call-per-trial design has material latency/cost. The bootstrap interva
 descriptive small-sample tool, not a substitute for a powered preregistered analysis.
 No cross-model measurement invariance, external replication, validated welfare scale
 or probability mapping to phenomenal consciousness exists.
+
+V10 improves reliability measurement by nesting four independently mapped body families
+inside each of six frozen seeds. Those families share one model process, prompt contract,
+and surrounding agent implementation, so they are repeated tests within a seed rather
+than independent research subjects. A hierarchical interval can summarize variation in
+this benchmark, but it cannot justify population-level claims about models, providers,
+architectures, or conscious systems.
+
+The V10 full condition also combines several resources: private-state visibility,
+feedback learning, persistent memory, a model-visible association summary, transfer
+bridges, and action selection. A reliable full-condition result is a prerequisite for
+later controls. It does not by itself identify which component is necessary, whether the
+model uses an internal representation matching the wrapper's interpretation, or whether
+the same effect survives information-matched ablations and another model family.
 
 Use this version for bounded model pilots and method development, not consciousness
 classification, rights decisions or claims that a system feels the synthetic signal.

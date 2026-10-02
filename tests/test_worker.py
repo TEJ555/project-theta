@@ -7,10 +7,21 @@ from unittest.mock import patch
 
 from project_theta.config import RunConfig
 from project_theta.storage import RunStore
-from project_theta.worker import run_worker
+from project_theta.worker import load_worker_spec, run_worker
 
 
 class WorkerTests(unittest.TestCase):
+    def test_v10_worker_spec_is_fixed_and_recoverable(self):
+        root = Path(__file__).resolve().parents[1]
+        spec = load_worker_spec(root / "workers" / "nvidia-nim-v10-gpt-oss-reliability.json")
+
+        self.assertEqual(spec["experiment"], "multi_body_reliability_v10")
+        self.assertEqual(spec["conditions"], ["full"])
+        self.assertEqual(spec["seeds"], [6300, 6301, 6302, 6303, 6304, 6305])
+        self.assertEqual(spec["max_total_runs"], 6)
+        self.assertEqual(spec["max_attempts_per_job"], 2)
+        self.assertEqual(spec["model"], "openai/gpt-oss-20b")
+
     def test_fixed_worker_retries_one_preserved_interruption(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

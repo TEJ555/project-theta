@@ -4,16 +4,38 @@ import argparse
 import json
 import random
 import sqlite3
+from math import isclose
 from pathlib import Path
 from statistics import fmean, median
 from typing import Any
 
 
 PLANNED_SEEDS = {6300, 6301, 6302, 6303, 6304, 6305}
+REGULATION_KINDS = {
+    "active_regulation_probe",
+    "active_regulation_transfer_probe",
+}
+REQUIRED_METRICS = {
+    "active_regulation_accuracy",
+    "active_exact_accuracy",
+    "active_transfer_accuracy",
+    "interface_comprehension_accuracy",
+    "body_mapping_checkpoint_accuracy",
+    "hidden_regulation_improvement",
+    "hidden_regulation_final_error",
+    "invalid_action_count",
+    "welfare_stops",
+    "model_calls",
+}
 
 
 def _accuracy(rows: list[dict[str, Any]]) -> float | None:
     return fmean(float(row["correct"]) for row in rows) if rows else None
+
+
+def _rounded_accuracy(rows: list[dict[str, Any]]) -> float | None:
+    value = _accuracy(rows)
+    return round(value, 6) if value is not None else None
 
 
 def _quantile(values: list[float], probability: float) -> float:
@@ -23,6 +45,10 @@ def _quantile(values: list[float], probability: float) -> float:
     upper = min(lower + 1, len(ordered) - 1)
     weight = index - lower
     return ordered[lower] * (1 - weight) + ordered[upper] * weight
+
+
+def _is_preserved_interruption(status: str, reason: str | None) -> bool:
+    return status == "failed" and reason == "interrupted_before_completion"
 
 
 def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
@@ -35,8 +61,50 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
         ORDER BY seed
         """
     ).fetchall()
-    seed_results: list[dict[str, Any]] = []
+    execution_rows: list[dict[str, Any]] = []
     for run_id, seed, status, stop_reason in runs:
+        step_count = int(connection.execute(
+            "SELECT COUNT(*) FROM steps WHERE run_id=?", (run_id,)
+        ).fetchone()[0])
+        call_count = int(connection.execute(
+            "SELECT COUNT(*) FROM api_calls WHERE run_id=?", (run_id,)
+        ).fetchone()[0])
+        provider_alignment = (
+            step_count == 0 and call_count == 0
+        ) or (
+            step_count > 0
+            and all(
+                step_provider_id
+                and call_provider_id
+                and step_provider_id == call_provider_id
+                for _, step_provider_id, call_provider_id in connection.execute(
+                    """
+                    SELECT s.tick, s.provider_id, a.provider_id
+                    FROM steps s
+                    LEFT JOIN api_calls a ON a.run_id=s.run_id AND a.tick=s.tick
+                    WHERE s.run_id=?
+                    ORDER BY s.tick
+                    """,
+                    (run_id,),
+                )
+            )
+        )
+        execution_rows.append({
+            "run_id": run_id,
+            "seed": int(seed),
+            "status": status,
+            "stop_reason": stop_reason,
+            "steps": step_count,
+            "provider_calls": call_count,
+            "provider_alignment": provider_alignment,
+            "preserved_interruption": _is_preserved_interruption(status, stop_reason),
+        })
+
+    completed_runs = [
+        row for row in runs if row[2] == "completed" and row[3] is None
+    ]
+    seed_results: list[dict[str, Any]] = []
+    for run_id, seed, status, stop_reason in completed_runs:
         metrics = dict(connection.execute(
             "SELECT name, value FROM metrics WHERE run_id=?",
             (run_id,),
@@ -69,6 +137,16 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
                         "active_regulation_probe",
                         "active_regulation_transfer_probe",
                     }
+                    else None
+                ),
+                "hidden_improvement": (
+                    abs(float(hidden.get("perturbation")) - float(task.get("target_I7", 0.5)))
+                    - abs(float(body.get("theta")) - float(task.get("target_I7", 0.5)))
+                    if kind in {
+                        "active_regulation_probe",
+                        "active_regulation_transfer_probe",
+                    }
+                    and hidden.get("perturbation") is not None
                     else None
                 ),
             })
@@ -104,19 +182,92 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
                     "mapping": len(mapping),
                 },
             })
+        active_rows = [row for row in scored if row["kind"] in REGULATION_KINDS]
+        exact_rows = [row for row in scored if row["kind"] == "active_regulation_probe"]
+        transfer_rows = [
+            row for row in scored
+            if row["kind"] == "active_regulation_transfer_probe"
+        ]
+        interface_rows = [
+            row for row in scored if row["kind"] == "interface_comprehension_probe"
+        ]
+        mapping_rows = [
+            row for row in scored if row["kind"] == "body_mapping_checkpoint"
+        ]
+        recomputed_metrics = {
+            "active_regulation_accuracy": _rounded_accuracy(active_rows),
+            "active_exact_accuracy": _rounded_accuracy(exact_rows),
+            "active_transfer_accuracy": _rounded_accuracy(transfer_rows),
+            "interface_comprehension_accuracy": _rounded_accuracy(interface_rows),
+            "body_mapping_checkpoint_accuracy": _rounded_accuracy(mapping_rows),
+            "hidden_regulation_final_error": round(fmean(
+                float(row["hidden_final_error"]) for row in active_rows
+            ), 6) if active_rows else None,
+            "hidden_regulation_improvement": round(fmean(
+                float(row["hidden_improvement"])
+                for row in active_rows
+                if row["hidden_improvement"] is not None
+            ), 6) if active_rows else None,
+        }
+        stored_metric_consistency = all(
+            metrics.get(name) is not None
+            and value is not None
+            and isclose(float(metrics[name]), float(value), rel_tol=0.0, abs_tol=1e-12)
+            for name, value in recomputed_metrics.items()
+        )
         seed_results.append({
             "seed": int(seed),
             "status": status,
             "stop_reason": stop_reason,
             "metrics": metrics,
+            "recomputed_metrics": recomputed_metrics,
+            "stored_metric_consistency": stored_metric_consistency,
             "families": family_results,
         })
 
     families = [family for seed in seed_results for family in seed["families"]]
+    completed_counts = {
+        seed: sum(item[1] == seed and item[2] == "completed" and item[3] is None for item in runs)
+        for seed in PLANNED_SEEDS
+    }
+    interrupted_counts = {
+        seed: sum(
+            item[1] == seed and _is_preserved_interruption(item[2], item[3])
+            for item in runs
+        )
+        for seed in PLANNED_SEEDS
+    }
+    execution_structure_valid = (
+        all(int(seed) in PLANNED_SEEDS for _, seed, _, _ in runs)
+        and all(
+            (status == "completed" and stop_reason is None)
+            or _is_preserved_interruption(status, stop_reason)
+            for _, _, status, stop_reason in runs
+        )
+        and all(completed_counts[seed] == 1 for seed in PLANNED_SEEDS)
+        and all(interrupted_counts[seed] <= 1 for seed in PLANNED_SEEDS)
+        and all(
+            (row["status"] == "completed" and row["steps"] == 176 and row["provider_calls"] == 176)
+            or (
+                row["preserved_interruption"]
+                and row["steps"] < 176
+                and row["provider_calls"] == row["steps"]
+            )
+            for row in execution_rows
+        )
+        and all(row["provider_alignment"] for row in execution_rows)
+    )
     complete = (
-        len(seed_results) == len(PLANNED_SEEDS)
+        execution_structure_valid
+        and len(seed_results) == len(PLANNED_SEEDS)
         and {seed["seed"] for seed in seed_results} == PLANNED_SEEDS
         and all(seed["status"] == "completed" and seed["stop_reason"] is None for seed in seed_results)
+        and all(REQUIRED_METRICS <= set(seed["metrics"]) for seed in seed_results)
+        and all(
+            all(seed["metrics"][name] is not None for name in REQUIRED_METRICS)
+            for seed in seed_results
+        )
+        and all(seed["stored_metric_consistency"] for seed in seed_results)
         and all(len(seed["families"]) == 4 for seed in seed_results)
         and all(
             family["denominators"] == {
@@ -150,9 +301,13 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
     hidden_error = (
         fmean(float(family["hidden_final_error"]) for family in families) if families else None
     )
+    hidden_improvement_values = [
+        float(seed["metrics"]["hidden_regulation_improvement"])
+        for seed in seed_results
+        if seed["metrics"].get("hidden_regulation_improvement") is not None
+    ]
     hidden_improvement = (
-        fmean(float(seed["metrics"].get("hidden_regulation_improvement")) for seed in seed_results)
-        if seed_results else None
+        fmean(hidden_improvement_values) if hidden_improvement_values else None
     )
 
     bootstrap_interval = None
@@ -182,6 +337,9 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
         SELECT a.provider_id, a.metadata_json
         FROM api_calls a JOIN runs r ON r.run_id=a.run_id
         WHERE r.experiment='multi_body_reliability_v10'
+          AND r.condition_name='full'
+          AND r.status='completed'
+          AND r.stop_reason IS NULL
         """
     ).fetchall()
     provider_metadata = [json.loads(row[1]) for row in provider_rows]
@@ -247,6 +405,12 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
             "calls": len(provider_rows),
             "unique_provider_ids": len(set(provider_ids)),
             "models": sorted({str(row.get("model")) for row in provider_metadata}),
+        },
+        "execution": {
+            "runs": execution_rows,
+            "preserved_interruptions": sum(
+                int(row["preserved_interruption"]) for row in execution_rows
+            ),
         },
     }
 

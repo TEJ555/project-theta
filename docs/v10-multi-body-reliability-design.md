@@ -77,3 +77,16 @@ A V10 pass would support a narrow claim that the composite system can repeatedly
 use several private action-to-body mappings under controlled remapping and transfer. It
 would still be compatible with non-conscious control and reasoning mechanisms. It would
 not establish subjective experience or phenomenal consciousness.
+
+## Execution recovery
+
+Provider execution uses the fixed worker rather than the direct multi-run command. Each
+seed and condition is an explicit job. A completed job is skipped on recovery, while an
+interrupted attempt is preserved as failed and may be retried once from the beginning.
+The worker blocks duplicate completions, non-retryable failures, a third attempt, an
+unclean code revision, and recovery while an active lock exists.
+
+Recovery never continues from the middle of a synthetic body sequence. The agent's live
+memory and execution context cannot be reconstructed exactly from a partial database, so
+the interrupted attempt remains evidence of an infrastructure failure and the affected
+job restarts from trial zero.

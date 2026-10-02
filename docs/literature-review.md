@@ -389,3 +389,4 @@ visualization, website, and public statement.
 - Checked metadata: `research/reference-verification.json`
 - Bibliography: `references/project-theta.bib`
 - Theory and experiment map: `docs/theory-evidence-map.md`
+- Post-freeze surveillance update: `research/literature-surveillance-2026-10-02.md`

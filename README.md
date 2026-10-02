@@ -11,7 +11,13 @@ gate, then failed its frozen reliability rules on a fresh seed. V10 is frozen to
 six seeds and 24 independently mapped body families without a single-seed continuation
 gate. Read the [V9.1 result](results/nvidia-nim-v9-1-gpt-oss-development-01.md),
 [V10 design](docs/v10-multi-body-reliability-design.md), and
-[study registry](docs/study-registry.md).
+[study registry](docs/study-registry.md). The
+[post-result decision tree](docs/v10-post-result-decision-tree.md) was recorded before
+the V10 outcomes were inspected, as was the
+[results reporting template](docs/v10-results-reporting-template.md). The
+[analysis integrity amendment](docs/v10-analysis-amendment-2026-10-02.md) records all
+post-freeze validation changes and requires the frozen and hardened analyzers to be
+reported together.
 
 Requires Python 3.10 or newer.
 
@@ -179,10 +185,21 @@ Get-Content .\preregistration\nvidia-nim-v10-multi-body-reliability-01.md
 .\scripts\run_nvidia_nim_v10_gpt_oss_reliability.ps1
 ```
 
-The launcher refuses to overwrite an existing database, asks privately for a fresh key,
-runs the schedule and execution audits, and writes the frozen analysis beside the study
-database. Do not reuse a key that has appeared in a chat, terminal transcript, or public
-record.
+The launcher refuses an existing database unless `-Recover` is explicit, asks privately
+for a fresh key, runs preflight plus the schedule and execution audits, and writes the
+frozen analysis beside the study database. The fixed worker preserves an interrupted
+attempt, retries the affected seed once from trial zero, skips completed seeds, and blocks
+duplicate completions. Confirm that no worker is active before using recovery:
+
+```powershell
+.\scripts\run_nvidia_nim_v10_gpt_oss_reliability.ps1 `
+  -Database "runs/nvidia-nim-v10-gpt-oss-reliability-02.sqlite" -Recover
+```
+
+Do not reuse a key that has appeared in a chat, terminal transcript, or public record.
+The pre-outcome methodological challenge is recorded in
+`review/v10-pre-outcome-red-team-2026-10-02.md`. It is an internal AI-assisted review,
+not independent external peer review.
 
 OpenAI (uses the Responses API and structured JSON output):
 
