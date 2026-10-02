@@ -197,6 +197,8 @@ duplicate completions. Confirm that no worker is active before using recovery:
 ```
 
 Do not reuse a key that has appeared in a chat, terminal transcript, or public record.
+Provider failure reasons are redacted before SQLite storage, but prevention remains the
+primary control: keys belong only in the hidden launcher prompt or process environment.
 The pre-outcome methodological challenge is recorded in
 `review/v10-pre-outcome-red-team-2026-10-02.md`. It is an internal AI-assisted review,
 not independent external peer review.

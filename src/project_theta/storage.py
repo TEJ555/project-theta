@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import platform
+import re
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -12,6 +14,28 @@ from typing import Any
 from .prompts import AGENT_INSTRUCTIONS
 
 SCHEMA_VERSION = 2
+
+_SENSITIVE_ENVIRONMENT_KEYS = (
+    "ANTHROPIC_API_KEY",
+    "NVIDIA_API_KEY",
+    "OPENAI_API_KEY",
+)
+_KEY_PATTERNS = (
+    re.compile(r"nvapi-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"sk-ant-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+)
+
+
+def _redact_sensitive_text(value: str) -> str:
+    redacted = str(value)
+    for name in _SENSITIVE_ENVIRONMENT_KEYS:
+        secret = os.getenv(name)
+        if secret and len(secret) >= 8:
+            redacted = redacted.replace(secret, f"[{name}_REDACTED]")
+    for pattern in _KEY_PATTERNS:
+        redacted = pattern.sub("[API_KEY_REDACTED]", redacted)
+    return redacted
 
 SCHEMA_SQL = """
 PRAGMA foreign_keys = ON;
@@ -176,9 +200,10 @@ class RunStore:
         self.connection.commit()
 
     def fail_run(self, run_id: str, reason: str) -> None:
+        safe_reason = _redact_sensitive_text(reason)[:2000]
         self.connection.execute(
             "UPDATE runs SET completed_at=?, status='failed', stop_reason=? WHERE run_id=?",
-            (datetime.now(timezone.utc).isoformat(), reason[:2000], run_id),
+            (datetime.now(timezone.utc).isoformat(), safe_reason, run_id),
         )
         self.connection.commit()
 

@@ -2,6 +2,7 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from project_theta.config import RunConfig
 from project_theta.harness import ExperimentHarness
@@ -29,6 +30,24 @@ class StorageV2Tests(unittest.TestCase):
                     "SELECT status, stop_reason FROM runs WHERE run_id='unfinished'"
                 ).fetchone()
             self.assertEqual(status, ("failed", "interrupted_before_completion"))
+
+    def test_failure_reason_redacts_provider_credentials(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "run.sqlite"
+            secret = "nvapi-this-is-a-long-secret-test-value"
+            with patch.dict("os.environ", {"NVIDIA_API_KEY": secret}, clear=False):
+                with RunStore(database) as store:
+                    store.start_run("failed", RunConfig().to_dict(), "test-version")
+                    store.fail_run(
+                        "failed",
+                        f"Provider rejected Authorization bearer {secret}",
+                    )
+                    reason = store.connection.execute(
+                        "SELECT stop_reason FROM runs WHERE run_id='failed'"
+                    ).fetchone()[0]
+
+            self.assertNotIn(secret, reason)
+            self.assertIn("[NVIDIA_API_KEY_REDACTED]", reason)
 
 
 if __name__ == "__main__":
