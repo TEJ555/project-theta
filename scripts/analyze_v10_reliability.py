@@ -174,6 +174,11 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
                 "hidden_final_error": fmean(
                     float(row["hidden_final_error"]) for row in active
                 ) if active else None,
+                "hidden_improvement": fmean(
+                    float(row["hidden_improvement"])
+                    for row in active
+                    if row["hidden_improvement"] is not None
+                ) if any(row["hidden_improvement"] is not None for row in active) else None,
                 "denominators": {
                     "regulation": len(active),
                     "exact": len(exact),

@@ -127,6 +127,15 @@ class V10AnalysisTests(unittest.TestCase):
             self.assertEqual(result["provider"]["calls"], 1056)
             self.assertEqual(result["execution"]["preserved_interruptions"], 1)
             self.assertEqual(len(result["seeds"]), 6)
+            families = [
+                family
+                for seed in result["seeds"]
+                for family in seed["families"]
+            ]
+            self.assertEqual(len(families), 24)
+            self.assertTrue(all(family["hidden_final_error"] == 0.0 for family in families))
+            for family in families:
+                self.assertAlmostEqual(family["hidden_improvement"], 0.3)
 
             failed = replace(interrupted, seed=6301)
             with RunStore(database) as store:
