@@ -171,11 +171,23 @@ python -m pip install -e ".[nvidia]"
 .\scripts\run_nvidia_nim_v6_pilot.ps1
 ```
 
-The launcher asks privately for an NVIDIA API key, audits the V6 schedule, checks the
-environment, and runs one five-condition development block using the exact model ID
+The current NVIDIA launchers ask privately for an API key once, protect it with Windows
+user encryption outside the repository, and reuse it automatically on later runs. They
+audit the schedule, check the environment, and run the requested study using its exact model ID.
+The plaintext key exists only in the active provider process environment and is removed
+from that process when the launcher exits. It is never written to Project Theta data.
+
+Replace, remove, or check the saved credential with:
+
+```powershell
+.\scripts\manage_nvidia_key.ps1 -Action Set
+.\scripts\manage_nvidia_key.ps1 -Action Remove
+.\scripts\manage_nvidia_key.ps1 -Action Status
+```
+
+The V6 development route uses the exact model ID
 `nvidia/nemotron-3.5-lightning-30b-a3b`. It allows at most 90 hosted requests and
-removes a newly entered key when the process ends. The key is never stored in Project
-Theta data. NVIDIA does not return a dollar charge with each response, so the project
+removes the active plaintext key when the process ends. NVIDIA does not return a dollar charge with each response, so the project
 records tokens and route provenance but does not invent a cost estimate.
 
 This route is useful for development and cross-model replication because it does not
@@ -191,8 +203,8 @@ Get-Content .\preregistration\nvidia-nim-v10-multi-body-reliability-01.md
 .\scripts\run_nvidia_nim_v10_gpt_oss_reliability.ps1
 ```
 
-The launcher refuses an existing database unless `-Recover` is explicit, asks privately
-for a fresh key, runs preflight plus the schedule and execution audits, and writes the
+The launcher refuses an existing database unless `-Recover` is explicit, loads the
+Windows-encrypted key, runs preflight plus the schedule and execution audits, and writes the
 frozen analysis beside the study database. The fixed worker preserves an interrupted
 attempt, retries the affected seed once from trial zero, skips completed seeds, and blocks
 duplicate completions. Confirm that no worker is active before using recovery:

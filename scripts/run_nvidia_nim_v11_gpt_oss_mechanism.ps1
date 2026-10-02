@@ -5,6 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
+. (Join-Path $PSScriptRoot "nvidia_key.ps1")
 $theta = Join-Path $projectRoot ".venv\Scripts\theta.exe"
 $python = Join-Path $projectRoot ".venv\Scripts\python.exe"
 $spec = Join-Path $projectRoot "workers\nvidia-nim-v11-gpt-oss-mechanism-01.json"
@@ -13,7 +14,7 @@ $seeds = "7300,7301,7302,7303,7304,7305"
 $conditions = "full,shuffled_interoception,incorrect_association_summary,raw_history,bridge_incorrect,explicit_mapping"
 $previousDatabase = $env:THETA_DATABASE
 $previousGate = $env:THETA_ENABLE_MODEL_RUNS
-$keyWasEntered = $false
+$keyWasLoadedByLauncher = $false
 $locationPushed = $false
 $databasePath = if ([System.IO.Path]::IsPathRooted($Database)) {
     $Database
@@ -47,17 +48,7 @@ try {
     & $theta audit --experiment multi_body_mechanism_v11 --seeds $seeds
     if ($LASTEXITCODE -ne 0) { throw "V11 schedule audit failed." }
 
-    if (-not $env:NVIDIA_API_KEY) {
-        $secureKey = Read-Host "Paste a fresh NVIDIA API key (input is hidden)" -AsSecureString
-        $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
-        try {
-            $env:NVIDIA_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
-            $keyWasEntered = $true
-        }
-        finally {
-            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
-        }
-    }
+    $keyWasLoadedByLauncher = Import-ProjectThetaNvidiaApiKey
     if (-not $env:NVIDIA_API_KEY) { throw "No NVIDIA API key was supplied." }
     $env:THETA_ENABLE_MODEL_RUNS = "YES"
 
@@ -84,5 +75,5 @@ finally {
         Remove-Item Env:THETA_ENABLE_MODEL_RUNS -ErrorAction SilentlyContinue
     }
     else { $env:THETA_ENABLE_MODEL_RUNS = $previousGate }
-    if ($keyWasEntered) { Remove-Item Env:NVIDIA_API_KEY -ErrorAction SilentlyContinue }
+    if ($keyWasLoadedByLauncher) { Remove-Item Env:NVIDIA_API_KEY -ErrorAction SilentlyContinue }
 }
