@@ -17,7 +17,8 @@ the V10 outcomes were inspected, as was the
 [results reporting template](docs/v10-results-reporting-template.md). The
 [analysis integrity amendment](docs/v10-analysis-amendment-2026-10-02.md) records all
 post-freeze validation changes and requires the frozen and hardened analyzers to be
-reported together.
+reported together. The [V10 data release checklist](docs/v10-data-release-checklist.md)
+defines preservation, hashing, credential scanning, dual analysis, and public exports.
 
 Requires Python 3.10 or newer.
 
