@@ -6,10 +6,15 @@ not detect, prove, create, or rule out phenomenal consciousness.
 
 Research site: [projecttheta.org](https://projecttheta.org)
 
-Current methods status: V9.1 fixed the neutral response interface, passed its competence
-gate, then failed its frozen reliability rules on a fresh seed. V10 is frozen to test
-six seeds and 24 independently mapped body families without a single-seed continuation
-gate. Read the [V9.1 result](results/nvidia-nim-v9-1-gpt-oss-development-01.md),
+Current methods status: V10 completed six fixed seeds, 24 independently mapped body
+families and 1,056 audited model calls. It passed all 11 frozen progression rules. The
+result unlocks a multi-condition mechanism cohort but does not support a consciousness
+claim. Read the [V10 result](docs/results-nvidia-nim-v10-gpt-oss-reliability-02.md),
+[release manifest](releases/v10-2026-10-02/MANIFEST.md),
+[V11 mechanism design](docs/v11-mechanism-cohort-design.md),
+[V11 preregistration](preregistration/nvidia-nim-v11-mechanism-cohort-01.md),
+[V11 pre-run audit](review/v11-pre-run-methods-audit.md),
+[V9.1 result](results/nvidia-nim-v9-1-gpt-oss-development-01.md),
 [V10 design](docs/v10-multi-body-reliability-design.md), and
 [study registry](docs/study-registry.md). The
 [post-result decision tree](docs/v10-post-result-decision-tree.md) was recorded before

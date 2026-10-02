@@ -13,7 +13,10 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
-from project_theta.audits import audit_multi_body_reliability_v10_schedules
+from project_theta.audits import (
+    audit_multi_body_mechanism_v11_schedules,
+    audit_multi_body_reliability_v10_schedules,
+)
 from project_theta.trials import build_trials
 
 
@@ -31,7 +34,9 @@ def _action_for_token(public: dict[str, Any], token: str) -> str:
     )
 
 
-def _transparent_solver_scores(seeds: list[int]) -> dict[str, float]:
+def _transparent_solver_scores(
+    seeds: list[int], experiment: str = "multi_body_reliability_v10"
+) -> dict[str, float]:
     """Score a simple stateful controller using the intended observable relations.
 
     The hidden schedule is used only to generate the direction that a perfectly compliant
@@ -43,7 +48,7 @@ def _transparent_solver_scores(seeds: list[int]) -> dict[str, float]:
     totals: dict[str, int] = {}
     for seed in seeds:
         effects: dict[str, dict[str, float]] = {}
-        for trial in build_trials("multi_body_reliability_v10", seed):
+        for trial in build_trials(experiment, seed):
             public = trial.public_task()
             family = str(public["family_token"])
             effects.setdefault(family, {})
@@ -88,12 +93,14 @@ def _checksum(value: str) -> int:
     return sum(ord(character) for character in value)
 
 
-def _rows(seeds: list[int]) -> list[dict[str, Any]]:
+def _rows(
+    seeds: list[int], experiment: str = "multi_body_reliability_v10"
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for seed in seeds:
         probes = [
             trial
-            for trial in build_trials("multi_body_reliability_v10", seed)
+            for trial in build_trials(experiment, seed)
             if trial.kind in REGULATION_KINDS
         ]
         for order, trial in enumerate(probes):
@@ -198,29 +205,37 @@ def _fit_and_score(
     return dict(sorted(scores.items()))
 
 
-def run_red_team(start_seed: int, count: int) -> dict[str, Any]:
+def run_red_team(
+    start_seed: int,
+    count: int,
+    experiment: str = "multi_body_reliability_v10",
+) -> dict[str, Any]:
     if count < 20 or count % 2:
         raise ValueError("count must be an even integer of at least 20")
     seeds = list(range(start_seed, start_seed + count))
     split = count // 2
-    training = _rows(seeds[:split])
-    test = _rows(seeds[split:])
+    training = _rows(seeds[:split], experiment)
+    test = _rows(seeds[split:], experiment)
     scores = _fit_and_score(training, test)
-    transparent_solver = _transparent_solver_scores(seeds[split:])
+    transparent_solver = _transparent_solver_scores(seeds[split:], experiment)
     threshold = 0.55
     public_text = json.dumps(
         [row["public"] for row in training + test], sort_keys=True
     ).lower()
     forbidden = (
         "correct_action",
-        "multi_body_reliability_v10",
+        experiment,
         '"owner"',
         '"seed"',
         '"condition"',
         "mapping_0",
         "mapping_1",
     )
-    schedule = audit_multi_body_reliability_v10_schedules(seeds)
+    schedule = (
+        audit_multi_body_mechanism_v11_schedules(seeds)
+        if experiment == "multi_body_mechanism_v11"
+        else audit_multi_body_reliability_v10_schedules(seeds)
+    )
     best_name = max(scores, key=scores.get)
     best_score = scores[best_name]
     forbidden_found = [term for term in forbidden if term in public_text]
@@ -232,7 +247,7 @@ def run_red_team(start_seed: int, count: int) -> dict[str, Any]:
         else "fail"
     )
     return {
-        "experiment": "multi_body_reliability_v10",
+        "experiment": experiment,
         "status": status,
         "epistemic_notice": (
             "Passing excludes only the tested public-metadata shortcut family. "
@@ -258,9 +273,14 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--start-seed", type=int, default=20000)
     parser.add_argument("--count", type=int, default=400)
+    parser.add_argument(
+        "--experiment",
+        choices=["multi_body_reliability_v10", "multi_body_mechanism_v11"],
+        default="multi_body_reliability_v10",
+    )
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
-    result = run_red_team(args.start_seed, args.count)
+    result = run_red_team(args.start_seed, args.count, args.experiment)
     rendered = json.dumps(result, indent=2, sort_keys=True)
     print(rendered)
     if args.output:

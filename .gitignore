@@ -9,3 +9,4 @@ runs/
 private-source-data/
 *.sqlite
 *.sqlite3
+releases/*/raw/

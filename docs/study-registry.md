@@ -1,6 +1,6 @@
 # Study registry
 
-Last updated: 25 September 2026
+Last updated: 2 October 2026
 
 This registry is the source of truth for public study status. A completed run count is not the same as a valid confirmatory result.
 
@@ -36,6 +36,7 @@ This registry is the source of truth for public study status. A completed run co
 | V9 NVIDIA GPT OSS development pilot 01 | Competence gate failed, stopped | Development | Seed 6100 completed all 28 calls, but overall, exact and transfer accuracy were each 0.500 and hidden-state final error was 0.250. The model followed a response-direction shortcut caught by the V9 action-only control. The conditional eight-condition pilot was not run. |
 | V9.1 NVIDIA GPT OSS development pilot 01 | Complete, progression blocked | Development | Seed 6200 passed the competence gate. The eight-condition seed 6201 pilot completed, but full regulation was 0.625 and hidden final error was 0.188, failing the frozen progression rules. Interface comprehension was 1.000 in every condition. |
 | V10 multi-body reliability study 01 | Infrastructure failure, preserved | Development | The worker stopped during seed 6300 after 21 of 176 planned calls. No outcome metric was available or inspected. The database and write-ahead log remain preserved, and the partial attempt is excluded from scientific outcome evidence. |
-| V10 multi-body reliability study 02 | Running | Development | Replacement cohort using the unchanged six fixed seeds, four independently mapped body families per seed, full condition, frozen thresholds, and 1,056 maximum calls. It restarted from trial zero in a new database rather than reconstructing a partial agent state. |
+| V10 multi-body reliability study 02 | Complete, all frozen rules passed | Development reliability | Six fixed seeds, 24 independently mapped body families and 1,056 audited calls completed. Pooled regulation was 0.857, the lowest seed was 0.813, and all 11 frozen progression rules passed. Frozen and hardened analyses agreed. This unlocks a mechanism cohort, not a consciousness claim. |
+| V11 multi-body mechanism cohort 01 | Frozen, not run | Development mechanism study | Six paired conditions across six fresh seeds will separate current state, summary content, raw memory, bridge content and explicit mapping competence. No V11 provider output existed at freeze time. |
 
 All studies concern behavioural or computational indicators. None measures phenomenal consciousness.

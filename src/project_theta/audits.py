@@ -1527,6 +1527,35 @@ def audit_multi_body_reliability_v10_schedules(seeds: list[int]) -> dict[str, An
     }
 
 
+def audit_multi_body_mechanism_v11_schedules(seeds: list[int]) -> dict[str, Any]:
+    """Audit V11 and prove it preserves the already-audited V10 task geometry."""
+    result = audit_multi_body_reliability_v10_schedules(seeds)
+    checks = result["checks"]
+    for seed in seeds:
+        v10 = build_trials("multi_body_reliability_v10", seed)
+        v11 = build_trials("multi_body_mechanism_v11", seed)
+        checks.append(_check(
+            f"seed_{seed}_v11_protocol_identity",
+            len(v11) == len(v10)
+            and all(trial.trial_id.startswith("v11-") for trial in v11)
+            and [
+                trial.__class__(
+                    **{
+                        **trial.__dict__,
+                        "trial_id": trial.trial_id.replace("v11-", "v10-", 1),
+                    }
+                )
+                for trial in v11
+            ] == v10,
+            "V11 changes only the protocol-marked trial identifier, not task geometry",
+        ))
+    result["experiment"] = "multi_body_mechanism_v11"
+    result["status"] = (
+        "fail" if any(check["status"] == "fail" for check in checks) else "pass"
+    )
+    return result
+
+
 def add_execution_audit(
     result: dict[str, Any],
     database: str | Path,

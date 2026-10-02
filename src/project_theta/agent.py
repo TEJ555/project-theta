@@ -81,13 +81,31 @@ class PersistentAgent:
                 for key, records in sorted(groups.items())
             }
 
-        return {
+        summary = {
             "by_cue": summarize(by_cue),
             "by_feature": summarize(by_tag),
             "by_stage_cue": {
                 stage: summarize(groups) for stage, groups in sorted(by_stage_cue.items())
             },
         }
+        mode = self.config.active_control.association_summary_mode
+        if mode == "truthful":
+            return summary
+        if mode != "inverted":
+            raise ValueError(f"Unknown association summary mode: {mode}")
+
+        def invert(entries: dict[str, dict[str, float | int]]) -> None:
+            for values in entries.values():
+                values["mean_signal"] = round(1.0 - float(values["mean_signal"]), 6)
+                values["mean_signal_delta"] = round(
+                    -float(values["mean_signal_delta"]), 6
+                )
+
+        invert(summary["by_cue"])
+        invert(summary["by_feature"])
+        for entries in summary["by_stage_cue"].values():
+            invert(entries)
+        return summary
 
     @staticmethod
     def _generic_source_bindings(memories: list[MemoryRecord]) -> dict[str, float]:

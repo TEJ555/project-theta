@@ -22,6 +22,27 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(spec["max_attempts_per_job"], 2)
         self.assertEqual(spec["model"], "openai/gpt-oss-20b")
 
+    def test_v11_worker_spec_is_fixed_paired_and_recoverable(self):
+        root = Path(__file__).resolve().parents[1]
+        spec = load_worker_spec(root / "workers" / "nvidia-nim-v11-gpt-oss-mechanism-01.json")
+
+        self.assertEqual(spec["experiment"], "multi_body_mechanism_v11")
+        self.assertEqual(
+            spec["conditions"],
+            [
+                "full",
+                "shuffled_interoception",
+                "incorrect_association_summary",
+                "raw_history",
+                "bridge_incorrect",
+                "explicit_mapping",
+            ],
+        )
+        self.assertEqual(spec["seeds"], [7300, 7301, 7302, 7303, 7304, 7305])
+        self.assertEqual(spec["max_total_runs"], 36)
+        self.assertEqual(spec["max_attempts_per_job"], 2)
+        self.assertEqual(spec["model"], "openai/gpt-oss-20b")
+
     def test_fixed_worker_retries_one_preserved_interruption(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

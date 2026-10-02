@@ -283,6 +283,30 @@ PROTOCOLS: dict[str, ExperimentProtocol] = {
         acquisition_end=48,
         include_in_battery=False,
     ),
+    "multi_body_mechanism_v11": ExperimentProtocol(
+        "multi_body_mechanism_v11",
+        (
+            "Which current-state, memory-summary, transfer-bridge and explicit-mapping "
+            "components causally support reliable multi-body regulation?"
+        ),
+        (
+            "active_regulation_accuracy",
+            "active_exact_accuracy",
+            "active_transfer_accuracy",
+            "hidden_regulation_final_error",
+        ),
+        (
+            "full",
+            "shuffled_interoception",
+            "incorrect_association_summary",
+            "raw_history",
+            "bridge_incorrect",
+            "explicit_mapping",
+        ),
+        max_steps=176,
+        acquisition_end=48,
+        include_in_battery=False,
+    ),
     "memory_ablation": ExperimentProtocol(
         "memory_ablation",
         "Is performance causally dependent on episodic memory access?",

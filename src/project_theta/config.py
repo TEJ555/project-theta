@@ -78,6 +78,7 @@ class ActiveControlConfig:
     disclose_mapping: bool = False
     evaluation_learning_enabled: bool = False
     association_summary_visible: bool = True
+    association_summary_mode: str = "truthful"  # truthful | inverted
 
 
 @dataclass(frozen=True)
@@ -139,6 +140,9 @@ def apply_condition(config: RunConfig, condition: str) -> RunConfig:
         body = replace(body, body_enabled=False, signal_mode="absent")
     elif condition == "shuffled_interoception":
         body = replace(body, signal_mode="shuffled")
+        # Active-control schedules balance low and high probe states exactly. Swapping
+        # them is therefore a deterministic, distribution-matched shuffle.
+        active = replace(active, probe_state_mode="inverted")
     elif condition == "sham_body":
         body = replace(body, signal_mode="sham")
     elif condition == "matched_sham":
@@ -209,6 +213,8 @@ def apply_condition(config: RunConfig, condition: str) -> RunConfig:
         active = replace(active, transfer_bridge_mode="incorrect")
     elif condition == "raw_history":
         active = replace(active, association_summary_visible=False)
+    elif condition == "incorrect_association_summary":
+        active = replace(active, association_summary_mode="inverted")
     else:
         raise ValueError(f"Unknown condition: {condition}")
     return replace(

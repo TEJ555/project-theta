@@ -38,6 +38,10 @@ class AblationTests(unittest.TestCase):
         self.assertEqual(apply_condition(base, "no_body").body.signal_mode, "absent")
         self.assertFalse(apply_condition(base, "no_body").body.body_enabled)
         self.assertEqual(apply_condition(base, "shuffled_interoception").body.signal_mode, "shuffled")
+        self.assertEqual(
+            apply_condition(base, "shuffled_interoception").active_control.probe_state_mode,
+            "inverted",
+        )
         self.assertEqual(apply_condition(base, "sham_body").body.signal_mode, "sham")
         self.assertEqual(apply_condition(base, "matched_sham").body.signal_mode, "matched_sham")
         self.assertFalse(apply_condition(base, "no_recurrence").architecture.recurrence_enabled)
@@ -57,6 +61,12 @@ class AblationTests(unittest.TestCase):
         self.assertTrue(apply_condition(base, "explicit_mapping").active_control.disclose_mapping)
         self.assertFalse(
             apply_condition(base, "raw_history").active_control.association_summary_visible
+        )
+        self.assertEqual(
+            apply_condition(
+                base, "incorrect_association_summary"
+            ).active_control.association_summary_mode,
+            "inverted",
         )
 
     def test_unknown_condition_fails(self):

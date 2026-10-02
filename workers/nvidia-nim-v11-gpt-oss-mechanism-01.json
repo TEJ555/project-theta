@@ -1,0 +1,27 @@
+{
+  "worker_id": "nvidia-nim-v11-gpt-oss-mechanism-01",
+  "database": "runs/nvidia-nim-v11-gpt-oss-mechanism-01.sqlite",
+  "base_config": "configs/nvidia-nim-v11-gpt-oss-mechanism-01.json",
+  "experiment": "multi_body_mechanism_v11",
+  "conditions": [
+    "full",
+    "shuffled_interoception",
+    "incorrect_association_summary",
+    "raw_history",
+    "bridge_incorrect",
+    "explicit_mapping"
+  ],
+  "seeds": [
+    7300,
+    7301,
+    7302,
+    7303,
+    7304,
+    7305
+  ],
+  "adapter": "nvidia_nim",
+  "model": "openai/gpt-oss-20b",
+  "temperature": 0.0,
+  "max_total_runs": 36,
+  "max_attempts_per_job": 2
+}

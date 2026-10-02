@@ -86,6 +86,7 @@ _CODES = {
     "active_interoceptive_control_v9": 0xF31,
     "active_interoceptive_control_v9_1": 0xF42,
     "multi_body_reliability_v10": 0xF53,
+    "multi_body_mechanism_v11": 0xF64,
 }
 
 
@@ -1363,6 +1364,19 @@ def _multi_body_reliability_v10_trials(seed: int) -> list[ControlledTrial]:
     ]
 
 
+def _multi_body_mechanism_v11_trials(seed: int) -> list[ControlledTrial]:
+    """Reuse the audited V10 task geometry under a new protocol identifier.
+
+    V11 uses fresh preregistered seeds. Keeping the task geometry fixed makes the
+    paired condition contrasts interpretable while trial identifiers clearly mark
+    the new cohort.
+    """
+    return [
+        replace(trial, trial_id=trial.trial_id.replace("v10-", "v11-", 1))
+        for trial in _multi_body_reliability_v10_trials(seed)
+    ]
+
+
 def _paired_acquisition(
     experiment: str,
     seed: int,
@@ -1519,6 +1533,8 @@ def build_trials(experiment: str, seed: int, profile: str = "standard") -> list[
         return _active_interoceptive_control_v9_1_trials(seed)
     if experiment == "multi_body_reliability_v10":
         return _multi_body_reliability_v10_trials(seed)
+    if experiment == "multi_body_mechanism_v11":
+        return _multi_body_mechanism_v11_trials(seed)
 
     if experiment == "temporal_self":
         cue_a = ("sequence-lumen", ("sequence", "lumen"))

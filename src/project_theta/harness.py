@@ -229,12 +229,14 @@ class ExperimentHarness:
             "active_interoceptive_control_v9",
             "active_interoceptive_control_v9_1",
             "multi_body_reliability_v10",
+            "multi_body_mechanism_v11",
         }
         active_interoception = protocol.name in {
             "active_interoceptive_control_v8",
             "active_interoceptive_control_v9",
             "active_interoceptive_control_v9_1",
             "multi_body_reliability_v10",
+            "multi_body_mechanism_v11",
         }
 
         with RunStore(self.db_path) as store:

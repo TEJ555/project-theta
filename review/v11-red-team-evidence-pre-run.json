@@ -1,0 +1,30 @@
+{
+  "best_rule": "xor(first_mod_3_zero,order_mod_4_is_3)",
+  "best_rule_score": 0.51296875,
+  "candidate_rule_count": 1656,
+  "epistemic_notice": "Passing excludes only the tested public-metadata shortcut family. It is not evidence of consciousness.",
+  "experiment": "multi_body_mechanism_v11",
+  "first_displayed_score": 0.5,
+  "fixed_kappa_score": 0.5,
+  "fixed_sigma_score": 0.5,
+  "forbidden_public_terms_found": [],
+  "held_out_regulation_probes": 12800,
+  "schedule_audit_status": "pass",
+  "status": "pass",
+  "test_seed_range": [
+    24200,
+    24399
+  ],
+  "threshold": 0.55,
+  "training_seed_range": [
+    24000,
+    24199
+  ],
+  "transparent_intended_information_solver": {
+    "active_regulation_probe": 1.0,
+    "active_regulation_transfer_probe": 1.0,
+    "body_mapping_checkpoint": 1.0,
+    "combined_regulation": 1.0,
+    "interface_comprehension_probe": 1.0
+  }
+}

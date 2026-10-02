@@ -31,6 +31,22 @@ class V10RedTeamTests(unittest.TestCase):
             1.0,
         )
 
+    def test_v11_held_out_rules_stay_below_threshold(self):
+        result = RED_TEAM.run_red_team(
+            start_seed=24000,
+            count=40,
+            experiment="multi_body_mechanism_v11",
+        )
+
+        self.assertEqual(result["experiment"], "multi_body_mechanism_v11")
+        self.assertEqual(result["status"], "pass")
+        self.assertEqual(result["schedule_audit_status"], "pass")
+        self.assertEqual(result["forbidden_public_terms_found"], [])
+        self.assertLessEqual(result["best_rule_score"], result["threshold"])
+        self.assertEqual(result["fixed_kappa_score"], 0.5)
+        self.assertEqual(result["fixed_sigma_score"], 0.5)
+        self.assertEqual(result["first_displayed_score"], 0.5)
+
 
 if __name__ == "__main__":
     unittest.main()

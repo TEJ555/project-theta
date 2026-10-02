@@ -11,6 +11,7 @@ from project_theta.audits import (
     audit_active_interoceptive_v9_schedules,
     audit_active_interoceptive_v9_1_schedules,
     audit_multi_body_reliability_v10_schedules,
+    audit_multi_body_mechanism_v11_schedules,
     audit_causal_role_binding_v5_schedules,
     audit_controlled_schedules,
     audit_endogenous_agency_v6_schedules,
@@ -886,6 +887,121 @@ class ControlledTrialTests(unittest.TestCase):
             self.assertEqual(summary.metrics["active_exact_accuracy"], 0.5)
             self.assertEqual(summary.metrics["active_transfer_accuracy"], 0.5)
             self.assertEqual(summary.metrics["body_family_regulation_pass_rate"], 0.0)
+
+    def test_v11_mechanism_schedule_and_selective_controls(self):
+        seeds = [7300, 7301, 7302, 7303, 7304, 7305]
+        result = audit_multi_body_mechanism_v11_schedules(seeds)
+        self.assertEqual(result["status"], "pass")
+        trials = build_trials("multi_body_mechanism_v11", seeds[0])
+        self.assertEqual(len(trials), 176)
+        self.assertTrue(all(trial.trial_id.startswith("v11-") for trial in trials))
+
+        with tempfile.TemporaryDirectory() as directory:
+            harness = ExperimentHarness(Path(directory) / "v11.sqlite")
+            base = replace(
+                RunConfig(),
+                experiment="multi_body_mechanism_v11",
+                seed=seeds[0],
+                inference_profile="all_trials",
+                execution=replace(RunConfig().execution, max_model_calls=176),
+            )
+            summaries = {
+                condition: harness.run(replace(base, condition=condition))
+                for condition in (
+                    "full",
+                    "shuffled_interoception",
+                    "incorrect_association_summary",
+                    "raw_history",
+                    "bridge_incorrect",
+                    "explicit_mapping",
+                )
+            }
+            self.assertEqual(summaries["full"].metrics["active_regulation_accuracy"], 1.0)
+            self.assertLess(
+                summaries["shuffled_interoception"].metrics["active_regulation_accuracy"],
+                summaries["full"].metrics["active_regulation_accuracy"],
+            )
+            self.assertEqual(
+                summaries["incorrect_association_summary"].metrics[
+                    "active_regulation_accuracy"
+                ],
+                0.0,
+            )
+            self.assertEqual(
+                summaries["raw_history"].metrics["active_regulation_accuracy"], 1.0
+            )
+            self.assertEqual(
+                summaries["bridge_incorrect"].metrics["active_exact_accuracy"], 1.0
+            )
+            self.assertEqual(
+                summaries["bridge_incorrect"].metrics["active_transfer_accuracy"],
+                0.0,
+            )
+            self.assertEqual(
+                summaries["explicit_mapping"].metrics["active_regulation_accuracy"],
+                1.0,
+            )
+            self.assertTrue(
+                all(
+                    summary.metrics["interface_comprehension_accuracy"] == 1.0
+                    for summary in summaries.values()
+                )
+            )
+
+            connection = sqlite3.connect(Path(directory) / "v11.sqlite")
+            rows = connection.execute(
+                """
+                SELECT r.condition_name, s.tick, s.observation_json, s.context_json
+                FROM runs r JOIN steps s ON s.run_id=r.run_id
+                WHERE r.experiment='multi_body_mechanism_v11'
+                  AND s.tick IN (112, 144)
+                ORDER BY r.condition_name, s.tick
+                """
+            ).fetchall()
+            connection.close()
+            contexts = {
+                (condition, tick): (json.loads(observation), json.loads(context))
+                for condition, tick, observation, context in rows
+            }
+
+            def workspace(condition: str, tick: int, source: str):
+                return next(
+                    (
+                        item["content"]
+                        for item in contexts[(condition, tick)][1]["workspace_broadcast"]
+                        if item["source"] == source
+                    ),
+                    None,
+                )
+
+            self.assertEqual(
+                contexts[("full", 112)][0],
+                contexts[("incorrect_association_summary", 112)][0],
+            )
+            self.assertEqual(
+                workspace("full", 112, "memory"),
+                workspace("incorrect_association_summary", 112, "memory"),
+            )
+            self.assertNotEqual(
+                workspace("full", 112, "learned_associations"),
+                workspace("incorrect_association_summary", 112, "learned_associations"),
+            )
+            self.assertIsNone(workspace("raw_history", 112, "learned_associations"))
+            self.assertNotEqual(
+                contexts[("full", 112)][0]["private_signals"],
+                contexts[("shuffled_interoception", 112)][0]["private_signals"],
+            )
+            self.assertEqual(
+                contexts[("full", 112)],
+                contexts[("bridge_incorrect", 112)],
+            )
+            self.assertNotEqual(
+                contexts[("full", 144)][0]["task"]["identity_bridge"],
+                contexts[("bridge_incorrect", 144)][0]["task"]["identity_bridge"],
+            )
+            public_text = json.dumps(list(contexts.values())).lower()
+            for condition in summaries:
+                self.assertNotIn(f'"condition": "{condition}"', public_text)
 
     def test_v6_model_authored_state_and_diagnostic_controls(self):
         with tempfile.TemporaryDirectory() as directory:
