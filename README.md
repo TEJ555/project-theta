@@ -318,7 +318,9 @@ until the controls in `review/v5-external-review-packet.md` are implemented and 
 See the [full literature review](docs/literature-review.md), [evidence table](research/evidence-table.md),
 [research framing](docs/research-framing.md), [technical specification](docs/technical-spec.md),
 [hypotheses](docs/hypotheses.md), [ethics and stop rules](docs/ethics.md), and
-[experiment protocol](docs/experiment-protocol.md).
+[experiment protocol](docs/experiment-protocol.md). The
+[funding and programme case](docs/funding-and-programme-case.md) turns the next twelve
+months into reviewable work packages without selling a consciousness claim.
 
 The completed six-seed Claude study is documented in
 [replication results](results/claude-replication-01.md). Public repository and website
