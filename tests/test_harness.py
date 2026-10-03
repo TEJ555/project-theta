@@ -17,6 +17,12 @@ class StopAdapter(ModelAdapter):
         return Decision("wait", request_stop=True, self_report="Operational stop request")
 
 
+class InvalidForcedChoiceAdapter(ModelAdapter):
+    def decide(self, context):
+        self.begin_call()
+        return Decision("wait", rationale="No listed option selected")
+
+
 class HarnessTests(unittest.TestCase):
     def test_smoke_run_logs_separate_visible_and_hidden_state(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -61,6 +67,34 @@ class HarnessTests(unittest.TestCase):
             connection = sqlite3.connect(db)
             hidden = json.loads(connection.execute("SELECT hidden_world_json FROM steps").fetchone()[0])
             self.assertEqual(hidden["tick"], 0)
+            connection.close()
+
+    def test_invalid_forced_choices_preserve_raw_action_and_cannot_score_correct(self):
+        with tempfile.TemporaryDirectory() as directory:
+            db = Path(directory) / "invalid.sqlite"
+            base = RunConfig()
+            config = replace(
+                base,
+                experiment="multi_body_mechanism_v11",
+                execution=replace(base.execution, max_model_calls=176),
+            )
+            with patch(
+                "project_theta.harness.make_adapter",
+                return_value=InvalidForcedChoiceAdapter("invalid-test", max_calls=176),
+            ):
+                summary = ExperimentHarness(db).run(config)
+
+            self.assertEqual(summary.metrics["invalid_action_count"], 176)
+            self.assertEqual(summary.metrics["active_regulation_accuracy"], 0.0)
+            connection = sqlite3.connect(db)
+            hidden, decision = connection.execute(
+                "SELECT hidden_world_json, decision_json FROM steps ORDER BY tick LIMIT 1"
+            ).fetchone()
+            hidden_payload = json.loads(hidden)
+            decision_payload = json.loads(decision)
+            self.assertTrue(hidden_payload["invalid_action"])
+            self.assertEqual(hidden_payload["raw_action"], "wait")
+            self.assertIn(decision_payload["action"], {"respond_kappa", "respond_sigma"})
             connection.close()
 
 

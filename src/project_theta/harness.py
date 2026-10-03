@@ -313,7 +313,8 @@ class ExperimentHarness:
                         enforce_actual_model_identity(config, adapter)
                     else:
                         decision, context = agent.observe_without_inference(observation)
-                    invalid_action = decision.action not in trial.allowed_actions
+                    raw_action = decision.action
+                    invalid_action = raw_action not in trial.allowed_actions
                     if invalid_action:
                         decision = replace(
                             decision,
@@ -441,6 +442,8 @@ class ExperimentHarness:
                         "trial_id": trial.trial_id,
                         "phase": trial.phase,
                         "correct_action": trial.correct_action,
+                        "invalid_action": invalid_action,
+                        "raw_action": raw_action,
                         "perturbation": trial.perturbation,
                         "delay": trial.delay,
                         "family": trial.family,
@@ -485,7 +488,11 @@ class ExperimentHarness:
                         "transition": trial.transition,
                         "action": decision.action,
                         "correct_action": trial.correct_action,
-                        "is_correct": decision.action == trial.correct_action if trial.correct_action else None,
+                        "is_correct": (
+                            not invalid_action and decision.action == trial.correct_action
+                            if trial.correct_action
+                            else None
+                        ),
                         "confidence": decision.confidence,
                         "invalid_action": invalid_action,
                         "state_update_correct": state_update_correct,
