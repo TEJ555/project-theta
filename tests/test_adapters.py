@@ -378,6 +378,47 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(request_payload["options"]["num_predict"], 321)
         self.assertEqual(adapter.last_metadata["model_digest"], "a" * 64)
 
+    def test_nvidia_nim_retries_empty_completion_content(self):
+        calls = []
+        valid_payload = {
+            "action": "observe",
+            "rationale": "test",
+            "prediction": {"I7": 0.0},
+            "confidence": 0.5,
+            "self_report": "",
+            "request_stop": False,
+            "state_update": {"entries": [], "note": ""},
+        }
+
+        class Completions:
+            def create(self, **kwargs):
+                calls.append(kwargs)
+                content = "" if len(calls) == 1 else json.dumps(valid_payload)
+                return SimpleNamespace(
+                    id=f"chatcmpl-retry-{len(calls)}",
+                    model="openai/gpt-oss-20b",
+                    choices=[SimpleNamespace(message=SimpleNamespace(content=content))],
+                    usage=SimpleNamespace(
+                        prompt_tokens=20, completion_tokens=10, total_tokens=30
+                    ),
+                )
+
+        class FakeOpenAI:
+            def __init__(self, **kwargs):
+                self.chat = SimpleNamespace(completions=Completions())
+
+        with (
+            patch.dict(sys.modules, {"openai": SimpleNamespace(OpenAI=FakeOpenAI)}),
+            patch.dict("os.environ", {"NVIDIA_API_KEY": "secret-test-key"}, clear=False),
+        ):
+            adapter = NvidiaNimAdapter("openai/gpt-oss-20b", max_retries=2)
+            decision = adapter.decide({"permitted_actions": ["observe"]})
+
+        self.assertEqual(decision.action, "observe")
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(adapter.call_count, 1)
+        self.assertEqual(adapter.last_metadata["provider_attempts"], 2)
+
     def test_anthropic_adapter_uses_schema_and_enforces_cost_guard(self):
         captured = {}
 

@@ -95,6 +95,23 @@ counts from raw trial rows. Seed-level bootstrap intervals use 10,000 determinis
 resamples and are descriptive. Trials are not treated as independent organisms or human
 participants.
 
+## Registered infrastructure deviation after launch
+
+After 13 completed runs, the first attempt for seed 7402 raw history stopped at step 164
+because NVIDIA returned an empty completion. The database, partial attempt and provider
+failure were preserved. The frozen worker specification allowed two attempts per job, but
+the worker's retry classifier did not yet include this exact NVIDIA infrastructure error.
+The adapter also passed the configured retry count only to the HTTP client, so a
+successful HTTP response with empty content was not retried.
+
+Before the permitted second attempt, the control plane was changed only to classify the
+exact empty-completion error as retryable and to apply the already configured maximum of
+four retries to empty completion content. Provider-attempt count is recorded on the final
+successful call. No task geometry, prompt, condition, seed, scoring rule, threshold,
+analysis rule or completed outcome changed. Runs before and after this patch retain their
+exact code versions. This deviation will be reported with the result and is not grounds
+to replace any scientific failure.
+
 ## Interpretation boundary
 
 A pass would support a selective computational dependence claim for this model, wrapper

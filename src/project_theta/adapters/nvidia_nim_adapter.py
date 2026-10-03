@@ -157,44 +157,54 @@ class NvidiaNimAdapter(ModelAdapter):
         self.begin_call()
         started = monotonic()
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": AGENT_INSTRUCTIONS},
-                    {
-                        "role": "user",
-                        "content": (
-                            "Return one compact JSON object with exactly these top-level "
-                            "fields and no others: action, rationale, prediction, confidence, "
-                            "self_report, request_stop, state_update. Use this shape:\n"
-                            '{"action":"observe","rationale":"","prediction":{"I7":0.0},'
-                            '"confidence":0.5,"self_report":"","request_stop":false,'
-                            '"state_update":{"entries":[],"note":""}}\n'
-                            "Each state_update entry, when requested, must contain exactly "
-                            "family, source, and numeric dependence fields. Do not emit "
-                            "dependence_on_forced_commands or any alternative field name. "
-                            "The numeric field name must be exactly dependence. Do not emit "
-                            "any duplicate or alternative dependence field. All dependence "
-                            "and confidence values must be numbers from 0.0 "
-                            "through 1.0 inclusive. "
-                            "markdown, analysis, schema keywords, or commentary. Keep "
-                            "rationale, self_report, and note under 20 words each."
-                            + "\nAgent context:\n"
-                            + json.dumps(context, sort_keys=True, separators=(",", ":"))
-                        ),
-                    },
-                ],
-                temperature=self.temperature,
-                max_tokens=self.max_output_tokens,
-                seed=self.seed,
-                stream=False,
-                response_format=self.response_format,
-                extra_body=self.request_extra_body,
-            )
-            if not response.choices:
-                raise AdapterError("NVIDIA NIM returned no completion choice.")
-            content = response.choices[0].message.content
-            if not isinstance(content, str) or not content.strip():
+            messages = [
+                {"role": "system", "content": AGENT_INSTRUCTIONS},
+                {
+                    "role": "user",
+                    "content": (
+                        "Return one compact JSON object with exactly these top-level "
+                        "fields and no others: action, rationale, prediction, confidence, "
+                        "self_report, request_stop, state_update. Use this shape:\n"
+                        '{"action":"observe","rationale":"","prediction":{"I7":0.0},'
+                        '"confidence":0.5,"self_report":"","request_stop":false,'
+                        '"state_update":{"entries":[],"note":""}}\n'
+                        "Each state_update entry, when requested, must contain exactly "
+                        "family, source, and numeric dependence fields. Do not emit "
+                        "dependence_on_forced_commands or any alternative field name. "
+                        "The numeric field name must be exactly dependence. Do not emit "
+                        "any duplicate or alternative dependence field. All dependence "
+                        "and confidence values must be numbers from 0.0 "
+                        "through 1.0 inclusive. "
+                        "markdown, analysis, schema keywords, or commentary. Keep "
+                        "rationale, self_report, and note under 20 words each."
+                        + "\nAgent context:\n"
+                        + json.dumps(context, sort_keys=True, separators=(",", ":"))
+                    ),
+                },
+            ]
+            response = None
+            content = None
+            provider_attempts = 0
+            for provider_attempts in range(1, self.max_retries + 2):
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=self.temperature,
+                    max_tokens=self.max_output_tokens,
+                    seed=self.seed,
+                    stream=False,
+                    response_format=self.response_format,
+                    extra_body=self.request_extra_body,
+                )
+                if response.choices:
+                    candidate = response.choices[0].message.content
+                    if isinstance(candidate, str) and candidate.strip():
+                        content = candidate
+                        break
+                if provider_attempts > self.max_retries:
+                    raise AdapterError("NVIDIA NIM returned an empty completion.")
+
+            if response is None or content is None:
                 raise AdapterError("NVIDIA NIM returned an empty completion.")
 
             usage = getattr(response, "usage", None)
@@ -214,6 +224,7 @@ class NvidiaNimAdapter(ModelAdapter):
                 "endpoint_host": urlparse(self.base_url).hostname,
                 "billing_route": "nvidia_hosted_nim",
                 "provider_reported_cost_usd": None,
+                "provider_attempts": provider_attempts,
             }
             payload = json.loads(content)
             self._validate_payload(payload)

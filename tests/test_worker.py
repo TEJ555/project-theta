@@ -130,6 +130,36 @@ class WorkerTests(unittest.TestCase):
                 ).fetchall()
             self.assertEqual(statuses, [("failed",), ("completed",)])
 
+    def test_fixed_worker_retries_nvidia_empty_completion(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            database = root / "nvidia-empty.sqlite"
+            spec = root / "nvidia-empty.json"
+            spec.write_text(json.dumps({
+                "worker_id": "nvidia-empty-test",
+                "database": str(database),
+                "experiment": "memory_ablation",
+                "conditions": ["full"],
+                "seeds": [705],
+                "adapter": "scripted",
+                "model": "scripted-baseline-v1",
+                "max_total_runs": 1,
+                "max_attempts_per_job": 2,
+            }), encoding="utf-8")
+            config = RunConfig(experiment="memory_ablation", condition="full", seed=705)
+            with RunStore(database) as store:
+                store.start_run("nvidia-empty-run", config.to_dict())
+                store.fail_run(
+                    "nvidia-empty-run",
+                    "AdapterError: NVIDIA NIM returned an empty completion.",
+                )
+            self.assertEqual(run_worker(spec), 0)
+            with RunStore(database) as store:
+                statuses = store.connection.execute(
+                    "SELECT status FROM runs ORDER BY created_at"
+                ).fetchall()
+            self.assertEqual(statuses, [("failed",), ("completed",)])
+
     def test_fixed_worker_runs_each_job_once_and_resumes_without_duplicates(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
