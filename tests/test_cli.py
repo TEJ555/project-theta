@@ -113,6 +113,54 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(audit["status"], "pass")
 
+    def test_execution_audit_accepts_only_exact_nvidia_empty_completion(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "nvidia-empty-retry.sqlite"
+            ExperimentHarness(database).run_study(
+                "independent_theta",
+                [405],
+                RunConfig(),
+                conditions=["full"],
+                max_runs=1,
+            )
+            failed_config = replace(
+                RunConfig(),
+                experiment="independent_theta",
+                condition="full",
+                seed=405,
+            )
+            with RunStore(database) as store:
+                store.start_run("allowed-nvidia-empty-attempt", failed_config.to_dict())
+                store.fail_run(
+                    "allowed-nvidia-empty-attempt",
+                    "AdapterError: NVIDIA NIM returned an empty completion.",
+                )
+            accepted = add_execution_audit(
+                audit_independent_schedules([405]),
+                database,
+                [405],
+                60,
+                expected_experiment="independent_theta",
+                expected_conditions=["full"],
+            )
+            self.assertEqual(accepted["status"], "pass")
+
+            with RunStore(database) as store:
+                store.start_run("rejected-nvidia-failure", failed_config.to_dict())
+                store.fail_run(
+                    "rejected-nvidia-failure",
+                    "AdapterError: NVIDIA NIM returned malformed content.",
+                )
+            rejected = add_execution_audit(
+                audit_independent_schedules([405]),
+                database,
+                [405],
+                60,
+                expected_experiment="independent_theta",
+                expected_conditions=["full"],
+            )
+            self.assertEqual(rejected["status"], "fail")
+
     def test_config_experiment_is_used_when_cli_option_is_omitted(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

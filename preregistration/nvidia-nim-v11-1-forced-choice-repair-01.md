@@ -119,3 +119,19 @@ and benchmark after the measurement repair. It would not establish awareness, fe
 suffering, sentience or phenomenal consciousness. A non-conscious controller can produce
 the target pattern.
 
+## Post-completion audit compatibility amendment
+
+Added 5 October 2026 after outcomes were available. The generic execution audit and the
+V11.1 analyzer recognised `interrupted_before_completion` as a preserved retry but did
+not recognise the exact NVIDIA empty-completion failure documented above. Consequently,
+they rejected the database despite exactly one completed run for every planned pair.
+
+The audit is amended to accept only the exact preserved stop reason
+`AdapterError: NVIDIA NIM returned an empty completion.` under the existing limit of no
+more than one failed recovery attempt per seed-condition pair. The failed attempt remains
+in the database, contributes no outcome rows or completed-call identifiers, and is not
+pooled with the successful attempt. Other provider failures, a second recovery failure,
+duplicate completions, missing calls and all scientific failures remain disallowed. This
+post-completion amendment changes no prompt, seed, condition, denominator, metric,
+threshold or observed result.
+

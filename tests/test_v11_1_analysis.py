@@ -8,6 +8,7 @@ from pathlib import Path
 
 from project_theta.config import RunConfig
 from project_theta.harness import ExperimentHarness
+from project_theta.storage import RunStore
 
 
 def _load_analyzer():
@@ -86,6 +87,61 @@ class V111AnalysisTests(unittest.TestCase):
             )
             connection.commit()
             connection.close()
+
+            rejected = ANALYZER.analyze(database, bootstrap_samples=10)
+            self.assertFalse(rejected["complete"])
+            self.assertFalse(rejected["mechanism_progression_pass"])
+
+    def test_exact_documented_empty_completion_is_preserved_but_not_analyzed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "v11-1-recovery.sqlite"
+            self._fixture(database)
+            failed = replace(
+                RunConfig(),
+                experiment="multi_body_mechanism_v11",
+                condition="raw_history",
+                seed=7402,
+            )
+            with RunStore(database) as store:
+                store.start_run("preserved-empty-completion", failed.to_dict())
+                store.fail_run(
+                    "preserved-empty-completion",
+                    ANALYZER.ALLOWED_INFRASTRUCTURE_FAILURE,
+                )
+
+            accepted = ANALYZER.analyze(database, bootstrap_samples=10)
+            self.assertTrue(accepted["complete"])
+            self.assertTrue(accepted["mechanism_progression_pass"])
+            self.assertEqual(
+                accepted["execution"]["preserved_nvidia_empty_completions"], 1
+            )
+            self.assertEqual(accepted["execution"]["provider_calls"], 6_336)
+
+            with RunStore(database) as store:
+                store.start_run("unrecognised-provider-failure", failed.to_dict())
+                store.fail_run(
+                    "unrecognised-provider-failure",
+                    "AdapterError: NVIDIA NIM returned malformed content.",
+                )
+
+            rejected = ANALYZER.analyze(database, bootstrap_samples=10)
+            self.assertFalse(rejected["complete"])
+            self.assertFalse(rejected["mechanism_progression_pass"])
+
+    def test_second_recovery_attempt_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "v11-1-duplicate-recovery.sqlite"
+            self._fixture(database)
+            failed = replace(
+                RunConfig(),
+                experiment="multi_body_mechanism_v11",
+                condition="raw_history",
+                seed=7402,
+            )
+            with RunStore(database) as store:
+                for run_id in ("first-empty-completion", "second-empty-completion"):
+                    store.start_run(run_id, failed.to_dict())
+                    store.fail_run(run_id, ANALYZER.ALLOWED_INFRASTRUCTURE_FAILURE)
 
             rejected = ANALYZER.analyze(database, bootstrap_samples=10)
             self.assertFalse(rejected["complete"])

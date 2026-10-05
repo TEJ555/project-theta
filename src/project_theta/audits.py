@@ -1662,7 +1662,10 @@ def add_execution_audit(
 
 def _is_allowed_recovery_failure(reason: str | None) -> bool:
     """Identify preserved failures that the fixed worker is explicitly allowed to retry."""
-    if reason == "interrupted_before_completion":
+    if reason in {
+        "interrupted_before_completion",
+        "AdapterError: NVIDIA NIM returned an empty completion.",
+    }:
         return True
     detail = str(reason or "")
     return (

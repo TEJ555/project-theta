@@ -20,6 +20,7 @@ CONDITIONS = (
     "explicit_mapping",
 )
 REQUIRED_MODEL = "openai/gpt-oss-20b"
+ALLOWED_INFRASTRUCTURE_FAILURE = "AdapterError: NVIDIA NIM returned an empty completion."
 REQUIRED_METRICS = {
     "active_regulation_accuracy",
     "active_exact_accuracy",
@@ -126,6 +127,14 @@ def _bootstrap_effect(values: list[float], seed: int, samples: int) -> dict[str,
     }
 
 
+def _is_allowed_recovery_failure(reason: str | None) -> bool:
+    """Accept only the two pre-documented, non-outcome recovery states."""
+    return reason in {
+        "interrupted_before_completion",
+        ALLOWED_INFRASTRUCTURE_FAILURE,
+    }
+
+
 def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
     connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
     runs = connection.execute(
@@ -140,7 +149,7 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
     completed: dict[tuple[int, str], list[tuple[str, str, str | None]]] = {
         key: [] for key in expected_keys
     }
-    interruptions: dict[tuple[int, str], int] = {key: 0 for key in expected_keys}
+    recovery_failures: dict[tuple[int, str], int] = {key: 0 for key in expected_keys}
     execution_rows: list[dict[str, Any]] = []
     all_provider_ids: list[str] = []
     all_models: list[str] = []
@@ -149,8 +158,8 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
         key = (int(seed), str(condition))
         if key in completed and status == "completed" and stop_reason is None:
             completed[key].append((run_id, status, stop_reason))
-        if key in interruptions and status == "failed" and stop_reason == "interrupted_before_completion":
-            interruptions[key] += 1
+        if key in recovery_failures and status == "failed" and _is_allowed_recovery_failure(stop_reason):
+            recovery_failures[key] += 1
         steps = int(connection.execute(
             "SELECT COUNT(*) FROM steps WHERE run_id=?", (run_id,)
         ).fetchone()[0])
@@ -190,7 +199,7 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
             for _, seed, condition, _, _ in runs
         )
         and all(len(completed[key]) == 1 for key in expected_keys)
-        and all(interruptions[key] <= 1 for key in expected_keys)
+        and all(recovery_failures[key] <= 1 for key in expected_keys)
         and all(
             (
                 row["status"] == "completed"
@@ -202,7 +211,7 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
             )
             or (
                 row["status"] == "failed"
-                and row["stop_reason"] == "interrupted_before_completion"
+                and _is_allowed_recovery_failure(row["stop_reason"])
                 and row["steps"] < 176
                 and row["provider_calls"] == row["steps"]
                 and row["provider_alignment"]
@@ -406,7 +415,17 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
         "runs": results,
         "execution": {
             "rows": execution_rows,
-            "preserved_interruptions": sum(interruptions.values()),
+            "preserved_recovery_failures": sum(recovery_failures.values()),
+            "preserved_interruptions": sum(
+                row["status"] == "failed"
+                and row["stop_reason"] == "interrupted_before_completion"
+                for row in execution_rows
+            ),
+            "preserved_nvidia_empty_completions": sum(
+                row["status"] == "failed"
+                and row["stop_reason"] == ALLOWED_INFRASTRUCTURE_FAILURE
+                for row in execution_rows
+            ),
             "provider_calls": len(all_provider_ids),
             "unique_provider_ids": len(set(all_provider_ids)),
             "models": sorted(set(all_models)),
