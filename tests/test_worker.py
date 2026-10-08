@@ -43,6 +43,30 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(spec["max_attempts_per_job"], 2)
         self.assertEqual(spec["model"], "openai/gpt-oss-20b")
 
+    def test_v12_worker_spec_is_fixed_cross_model_and_recoverable(self):
+        root = Path(__file__).resolve().parents[1]
+        spec = load_worker_spec(
+            root / "workers" / "nvidia-nim-v12-nemotron-cross-model-01.json"
+        )
+
+        self.assertEqual(spec["experiment"], "multi_body_mechanism_v11")
+        self.assertEqual(
+            spec["conditions"],
+            [
+                "full",
+                "shuffled_interoception",
+                "incorrect_association_summary",
+                "raw_history",
+                "bridge_incorrect",
+                "explicit_mapping",
+            ],
+        )
+        self.assertEqual(spec["seeds"], [7500, 7501, 7502, 7503, 7504, 7505])
+        self.assertEqual(spec["max_total_runs"], 36)
+        self.assertEqual(spec["max_attempts_per_job"], 2)
+        self.assertEqual(spec["model"], "nvidia/nemotron-3-super-120b-a12b")
+        self.assertEqual(spec["temperature"], 1.0)
+
     def test_fixed_worker_retries_one_preserved_interruption(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

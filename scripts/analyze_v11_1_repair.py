@@ -135,7 +135,13 @@ def _is_allowed_recovery_failure(reason: str | None) -> bool:
     }
 
 
-def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
+def analyze(
+    database: Path,
+    bootstrap_samples: int = 10_000,
+    *,
+    planned_seeds: tuple[int, ...] = PLANNED_SEEDS,
+    required_model: str = REQUIRED_MODEL,
+) -> dict[str, Any]:
     connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
     runs = connection.execute(
         """
@@ -145,7 +151,7 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
         ORDER BY seed, condition_name, created_at
         """
     ).fetchall()
-    expected_keys = {(seed, condition) for seed in PLANNED_SEEDS for condition in CONDITIONS}
+    expected_keys = {(seed, condition) for seed in planned_seeds for condition in CONDITIONS}
     completed: dict[tuple[int, str], list[tuple[str, str, str | None]]] = {
         key: [] for key in expected_keys
     }
@@ -207,7 +213,7 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
                 and row["steps"] == 176
                 and row["provider_calls"] == 176
                 and row["provider_alignment"]
-                and row["models"] == [REQUIRED_MODEL]
+                and row["models"] == [required_model]
             )
             or (
                 row["status"] == "failed"
@@ -215,13 +221,13 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
                 and row["steps"] < 176
                 and row["provider_calls"] == row["steps"]
                 and row["provider_alignment"]
-                and set(row["models"]) <= {REQUIRED_MODEL}
+                and set(row["models"]) <= {required_model}
             )
             for row in execution_rows
         )
         and len(all_provider_ids) == 6_336
         and len(set(all_provider_ids)) == 6_336
-        and set(all_models) == {REQUIRED_MODEL}
+        and set(all_models) == {required_model}
     )
 
     results: list[dict[str, Any]] = []
@@ -285,7 +291,7 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
     def values(condition: str, metric: str) -> list[float]:
         return [
             float(by_key[(seed, condition)]["metrics"][metric])
-            for seed in PLANNED_SEEDS
+            for seed in planned_seeds
             if (seed, condition) in by_key
         ]
 
@@ -312,7 +318,7 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
         return [
             float(by_key[(seed, left)]["metrics"][metric])
             - float(by_key[(seed, right)]["metrics"][metric])
-            for seed in PLANNED_SEEDS
+            for seed in planned_seeds
             if (seed, left) in by_key and (seed, right) in by_key
         ]
 
@@ -332,14 +338,14 @@ def analyze(database: Path, bootstrap_samples: int = 10_000) -> dict[str, Any]:
         "bridge_incorrect_exact_minus_transfer": [
             float(by_key[(seed, "bridge_incorrect")]["metrics"]["active_exact_accuracy"])
             - float(by_key[(seed, "bridge_incorrect")]["metrics"]["active_transfer_accuracy"])
-            for seed in PLANNED_SEEDS
+            for seed in planned_seeds
             if (seed, "bridge_incorrect") in by_key
         ],
     }
     effect_summaries = {
         name: _bootstrap_effect(items, 20261002 + index, bootstrap_samples)
         for index, (name, items) in enumerate(effects.items())
-        if len(items) == len(PLANNED_SEEDS)
+        if len(items) == len(planned_seeds)
     }
 
     full_values = values("full", "active_regulation_accuracy")
